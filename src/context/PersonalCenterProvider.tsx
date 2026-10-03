@@ -1,24 +1,10 @@
+import { PersonalCenterContext } from './PersonalCenterContext'
 import {
-  createContext,
   useCallback,
-  useContext,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
-
-/**
- * 个人中心抽屉开关
- * 由 Banner 头像打开，侧栏关闭按钮 / 遮罩关闭
- */
-interface PersonalCenterContextValue {
-  open: boolean
-  openPersonalCenter: () => void
-  closePersonalCenter: () => void
-  togglePersonalCenter: () => void
-}
-
-const PersonalCenterContext = createContext<PersonalCenterContextValue | null>(null)
 
 export function PersonalCenterProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -37,10 +23,3 @@ export function PersonalCenterProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function usePersonalCenter() {
-  const ctx = useContext(PersonalCenterContext)
-  if (!ctx) {
-    throw new Error('usePersonalCenter must be used within PersonalCenterProvider')
-  }
-  return ctx
-}

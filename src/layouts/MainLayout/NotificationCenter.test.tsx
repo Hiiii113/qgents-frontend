@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PATHS } from '@/routes/paths'
 import type { Notification } from '@/types'
-import { notificationTargetPath } from './NotificationCenter'
+import { notificationTargetPath } from './notificationTargetPath'
 
 const taskFailed: Notification = {
   id: 'notification-1',

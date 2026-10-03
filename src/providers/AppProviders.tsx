@@ -1,8 +1,9 @@
 import { App as AntdApp, ConfigProvider, Spin } from 'antd'
 import type { ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider, useAuth } from '@/context/AuthContext'
-import { PersonalCenterProvider } from '@/context/PersonalCenterContext'
+import { useAuth } from '@/context/AuthContext'
+import { AuthProvider } from '@/context/AuthProvider'
+import { PersonalCenterProvider } from '@/context/PersonalCenterProvider'
 import { queryClient } from '@/query'
 import { QG_FONT_FAMILY } from '@/theme/antdTheme'
 
