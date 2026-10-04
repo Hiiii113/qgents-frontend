@@ -95,7 +95,7 @@ export default function CreateTeamPage() {
       <form className="create-team__card" onSubmit={handleSubmit}>
         {/* 头像 —— 创建成功后回写；本地先预览 */}
         <div className="create-team__avatar-row">
-          <label className="create-team__avatar-btn">
+          <label className="create-team__avatar-btn" title={avatarPreview ? '点击更换头像' : '上传头像'}>
             {avatarPreview ? (
               <img className="create-team__avatar-preview" src={avatarPreview} alt="团队头像预览" />
             ) : (
@@ -103,6 +103,7 @@ export default function CreateTeamPage() {
             )}
             <input
               type="file"
+              aria-label={avatarPreview ? '更换团队头像' : '上传团队头像'}
               accept="image/*"
               hidden
               disabled={avatarUploading}
@@ -112,9 +113,9 @@ export default function CreateTeamPage() {
                 e.target.value = ''
               }}
             />
-            <span>{avatarUploading ? '上传中…' : avatarPreview ? '更换头像' : '上传头像'}</span>
+            {!avatarPreview && <span>上传头像</span>}
           </label>
-          <p className="create-team__hint">支持 JPG / PNG / WEBP，建议 200×200 方形图片，≤5MB</p>
+          <p className="create-team__hint">图片不超过 5MB</p>
         </div>
 
         {/* —— 错误提示 —— */}
@@ -145,14 +146,6 @@ export default function CreateTeamPage() {
             rows={3}
           />
         </label>
-
-        {/* 邀请成员 —— 创建完成后在团队详情页操作，此处仅提示 */}
-        <div className="create-team__field">
-          <span className="create-team__label">邀请成员</span>
-          <p className="create-team__hint" style={{ margin: 0 }}>
-            团队创建后，可在团队详情页通过邮箱邀请成员加入
-          </p>
-        </div>
 
         <div className="create-team__actions">
           <button

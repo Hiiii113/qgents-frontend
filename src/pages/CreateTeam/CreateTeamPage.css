@@ -73,10 +73,11 @@
 }
 
 .create-team__avatar-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
+  /* 图片放在圆形的内接正方形中，保留四角和原始比例。 */
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .create-team__avatar-btn:hover {
