@@ -1,62 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { PATHS } from '@/routes/paths'
-import type { Notification } from '@/types'
 import { notificationTargetPath } from './notificationTargetPath'
-
-const taskFailed: Notification = {
-  id: 'notification-1',
-  kind: 'TASK_FAILED',
-  title: 'Task failed',
-  isRead: false,
-  createdAt: '2026-08-17T00:00:00Z',
-  projectId: 'project-1',
-  resourceId: 'task-1',
-}
-
-describe('notificationTargetPath', () => {
-  it('opens the related Task detail for a task failure', () => {
-    expect(notificationTargetPath(taskFailed)).toBe(PATHS.projectTaskDetail('project-1', 'task-1'))
-  })
-
-  it('falls back to Task Center when a task notification has no resource id', () => {
-    expect(notificationTargetPath({ ...taskFailed, resourceId: undefined })).toBe(PATHS.projectTasks('project-1'))
-  })
-
-  it('opens the Diff detail page for a pending deliverable (resourceId = diffId)', () => {
-    const pending: Notification = {
-      id: 'notification-2',
-      kind: 'DELIVERABLE_PENDING',
-      title: 'Diff 待验收',
-      isRead: false,
-      createdAt: '2026-08-17T00:00:00Z',
-      projectId: 'project-1',
-      resourceId: 'diff-1',
-    }
-    expect(notificationTargetPath(pending)).toBe(PATHS.projectDiff('project-1', 'diff-1'))
-  })
-
-  it('falls back to Delivery Center when a pending deliverable has no resource id', () => {
-    const pending: Notification = {
-      id: 'notification-3',
-      kind: 'DELIVERABLE_PENDING',
-      title: 'Diff 待验收',
-      isRead: false,
-      createdAt: '2026-08-17T00:00:00Z',
-      projectId: 'project-1',
-    }
-    expect(notificationTargetPath(pending)).toBe(PATHS.projectDiffs('project-1'))
-  })
-
-  it('opens the MR detail page for a pending MR when the resource id is present', () => {
-    const pendingMr: Notification = {
-      id: 'notification-4',
-      kind: 'MR_PENDING',
-      title: 'MR 待处理',
-      isRead: false,
-      createdAt: '2026-08-17T00:00:00Z',
-      projectId: 'project-1',
-      resourceId: 'mr-1',
-    }
-    expect(notificationTargetPath(pendingMr)).toBe(PATHS.projectCodeMr('project-1', 'mr-1'))
+import type { Notification } from '@/types'
+const notification: Notification = { id: 'n1', kind: 'MESSAGE_MENTION', projectId: 'p1', groupId: 'g1', resourceId: 'm1', title: '提及你', isRead: false, createdAt: '2026-10-01T00:00:00Z' }
+describe('notification routing', () => {
+  it('opens the project chat and locates a mentioned message', () => expect(notificationTargetPath(notification)).toBe('/app/projects/p1/chat?messageId=m1&groupId=g1'))
+  it('opens invitations and safely handles missing project context', () => {
+    expect(notificationTargetPath({ ...notification, kind: 'INVITED' })).toBe('/app/teams/join')
+    expect(notificationTargetPath({ ...notification, projectId: undefined })).toBeNull()
   })
 })

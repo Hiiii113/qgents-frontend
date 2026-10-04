@@ -1,62 +1,35 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { agentApi } from './agent'
-
+import { chatApi } from './chat'
+import { repositoriesApi } from './repositories'
+const response = (data: unknown) => new Response(JSON.stringify({ data }), { headers: { 'Content-Type': 'application/json' } })
 afterEach(() => vi.restoreAllMocks())
-
-describe('agentApi', () => {
-  it('unwraps the Agent list envelope exactly once', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
-      data: [{ id: 'agent-one', name: 'Agent One' }],
-      page: { nextCursor: null, hasMore: false },
-      requestId: 'request-one',
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-
-    await expect(agentApi.list('team-one')).resolves.toEqual({
-      data: [{ id: 'agent-one', name: 'Agent One' }],
-      page: { nextCursor: null, hasMore: false },
-    })
-    expect(fetchMock).toHaveBeenCalledWith('/api/teams/team-one/agents', expect.any(Object))
+describe('current backend contracts', () => {
+  it('configures GitHub capability with a boolean', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => response({ id: 'a1', githubEnabled: true }))
+    await agentApi.configureGithub('t1', 'a1', true)
+    expect(spy).toHaveBeenLastCalledWith('/api/teams/t1/agents/a1/github-capability', expect.objectContaining({ method: 'PUT', body: JSON.stringify({ enabled: true }) }))
+    await agentApi.configureGithub('t1', 'a1', false)
+    expect(spy).toHaveBeenLastCalledWith('/api/teams/t1/agents/a1/github-capability', expect.objectContaining({ method: 'PUT', body: JSON.stringify({ enabled: false }) }))
   })
-
-  it('uses the project Agent TaskRun filter through the shared client', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
-      data: [],
-      page: { nextCursor: null, hasMore: false },
-      requestId: 'request-two',
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-
-    await expect(agentApi.taskRuns('project-one', { agentId: 'agent-one', status: 'FAILED', cursor: '1', limit: 10 })).resolves.toMatchObject({ data: [], page: { nextCursor: null, hasMore: false }, requestId: 'request-two' })
-    expect(fetchMock).toHaveBeenCalledWith('/api/projects/project-one/task-runs?agentId=agent-one&status=FAILED&cursor=1&limit=10', expect.any(Object))
+  it('loads a team Agent list from a plain data envelope', async () => {
+    const agents = [{ id: 'a1', name: '助手' }]
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(response(agents))
+    expect(await agentApi.list('t1')).toEqual(agents)
+    expect(fetch).toHaveBeenCalledWith('/api/teams/t1/agents', expect.any(Object))
   })
-
-  it('passes project context to the Agent detail endpoint', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
-      data: { id: 'agent-one', name: 'Agent One' },
-      requestId: 'request-agent-detail',
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-
-    await expect(agentApi.get('team-one', 'agent-one', 'project-one')).resolves.toMatchObject({ id: 'agent-one' })
-    expect(fetchMock).toHaveBeenCalledWith('/api/teams/team-one/agents/agent-one?projectId=project-one', expect.any(Object))
+  it('sends TEXT replies without Task configuration and unwraps the message directly', async () => {
+    const message = { id: 'm2', type: 'TEXT', sequence: 2 }
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(response(message))
+    const payload = { type: 'TEXT' as const, content: { text: '普通讨论' }, replyToId: 'm1', mentions: [], clientMessageId: 'send-1' }
+    expect(await chatApi.send('p1', 'g1', payload)).toEqual(message)
+    expect(fetch).toHaveBeenCalledWith('/api/projects/p1/groups/g1/messages', expect.objectContaining({ method: 'POST', body: JSON.stringify(payload), headers: expect.objectContaining({ 'Idempotency-Key': 'send-1' }) }))
   })
-
-  it('uses optional assignment filters and preserves the cursor envelope', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
-      data: [],
-      page: { nextCursor: null, hasMore: false },
-      requestId: 'request-three',
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-
-    await expect(agentApi.assignments('project-one', 'agent-one', { limit: 20 })).resolves.toMatchObject({ requestId: 'request-three' })
-    expect(fetchMock).toHaveBeenCalledWith('/api/projects/project-one/agents/agent-one/assignments?limit=20', expect.any(Object))
-  })
-
-  it('reads runtime through the dedicated project endpoint', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
-      data: { status: 'IDLE', activeRunCount: 0, concurrencyLimit: null, assignmentUsage: { requirementGroups: { assignedCount: 0, assignableCount: 0 }, workflows: { assignedCount: 0, assignableCount: 0 } }, skillAccessScope: 'PROJECT', memoryAccessScope: 'PROJECT' },
-      requestId: 'request-four',
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-
-    await expect(agentApi.runtime('project-one', 'agent-one')).resolves.toMatchObject({ status: 'IDLE', concurrencyLimit: null })
-    expect(fetchMock).toHaveBeenCalledWith('/api/projects/project-one/agents/agent-one/runtime', expect.any(Object))
+  it('stops Agent execution by trigger message and imports by numeric provider ID', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => response({ cancelledRuns: 2 }))
+    expect(await chatApi.cancel('p1', 'g1', 'm1')).toEqual({ cancelledRuns: 2 })
+    expect(spy).toHaveBeenLastCalledWith('/api/projects/p1/groups/g1/messages/m1/cancel-agent', expect.objectContaining({ method: 'POST' }))
+    await repositoriesApi.import('p1', { installationId: 'i1', repositoryId: 123 })
+    expect(spy).toHaveBeenLastCalledWith('/api/projects/p1/repositories', expect.objectContaining({ body: JSON.stringify({ installationId: 'i1', repositoryId: 123 }) }))
   })
 })

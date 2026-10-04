@@ -10,12 +10,12 @@ import './ForgotPasswordPage.css'
 type Stage = 'request' | 'reset' | 'done'
 
 /**
- * 忘记密码 —— 对齐接口文档 §4
+ * 忘记密码 —— 对齐
  *
  * 第一步：输入邮箱 → POST /auth/password-reset-requests 发起找回密码邮件
  *          （后端邮件内含重置令牌/验证码）
  * 第二步：输入验证码（重置令牌）+ 新密码 → POST /auth/password-resets
- *          newPassword 使用平台 RSA 公钥加密后提交（§4.1）
+ *          newPassword 使用平台 RSA 公钥加密后提交
  */
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
     }
     setSubmitting(true)
     try {
-      // §4.1：newPassword 必须为 RSA 加密后的 Base64 密文
+      // ：newPassword 必须为 RSA 加密后的 Base64 密文
       const encryptedPassword = await encryptPassword(newPassword)
       await authApi.resetPassword({
         email: email.trim(),

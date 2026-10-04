@@ -15,7 +15,7 @@ const AUTH_REFRESHED = 'qgents:sse:token-refreshed'
  *
  * 与 B 的项目级 ProjectEventConnection 同源（fetchEventSource + Last-Event-ID 续传），
  * 但简化：不做事件去重，收到事件后由 onEvent 直接 invalidate 对应 query。
- * 事件仅用于刷新界面，恢复连接后以查询接口为准（接口文档 §12.1）。
+ * 事件仅用于刷新界面，恢复连接后以查询接口为准。
  *
  * 401 自愈：access token 过期时，先尝试用 refresh token 换新 token 再重连；
  * refresh 也失效则停止重连，避免 401 死循环刷屏。

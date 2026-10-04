@@ -2,13 +2,13 @@
   max-width: 560px;
   margin: 0 auto;
   padding: 28px;
-  color: var(--qg-text-on-dark);
+  color: #354f36;
 }
 
 .join-team__back {
   display: inline-block;
   margin-bottom: 16px;
-  color: var(--qg-text-on-dark-secondary);
+  color: #7b8d73;
   font-size: 13px;
 }
 
@@ -19,7 +19,7 @@
 
 .join-team__desc {
   margin: 0 0 24px;
-  color: var(--qg-text-on-dark-secondary);
+  color: #7b8d73;
 }
 
 .join-team__error {
@@ -41,8 +41,8 @@
 }
 
 .join-team__card {
-  background: var(--qg-navy-card);
-  border: 1px solid var(--qg-border-dark);
+  background: #fff;
+  border: 1px solid #dce5d3;
   border-radius: 14px;
   padding: 24px;
   display: flex;
@@ -60,10 +60,10 @@
 
 .join-team__card input {
   height: 42px;
-  border: 1px solid var(--qg-border-dark);
+  border: 1px solid #dce5d3;
   border-radius: var(--qg-radius-sm);
-  background: var(--qg-navy-3);
-  color: var(--qg-text-on-dark);
+  background: #f6f9f2;
+  color: #354f36;
   padding: 0 12px;
 }
 
@@ -71,13 +71,13 @@
   height: 42px;
   border: none;
   border-radius: var(--qg-radius-sm);
-  background: var(--qg-green);
+  background: #456c48;
   color: #fff;
   font-weight: 600;
 }
 
 .join-team__card button:hover:not(:disabled) {
-  background: var(--qg-green-hover);
+  background: #355539;
 }
 
 .join-team__card button:disabled {
@@ -94,10 +94,10 @@
 }
 
 .join-team__placeholder {
-  color: var(--qg-text-on-dark-secondary);
+  color: #7b8d73;
   font-size: 13px;
   padding: 20px;
-  border: 1px dashed var(--qg-border-dark);
+  border: 1px dashed #dce5d3;
   border-radius: 10px;
 }
 /* ===== 邀请列表 ===== */
@@ -111,15 +111,15 @@
 }
 
 .join-team__invite-item {
-  background: var(--qg-navy-card);
-  border: 1px solid var(--qg-border-dark);
+  background: #fff;
+  border: 1px solid #dce5d3;
   border-radius: 12px;
   padding: 16px 18px;
   transition: border-color 0.2s;
 }
 
 .join-team__invite-item:hover {
-  border-color: var(--qg-green);
+  border-color: #456c48;
 }
 
 .join-team__invite-main {
@@ -145,7 +145,7 @@
 
 .join-team__invite-title strong {
   font-size: 15px;
-  color: var(--qg-text-on-dark);
+  color: #354f36;
 }
 
 .join-team__invite-meta {
@@ -153,12 +153,12 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--qg-text-on-dark-secondary);
+  color: #7b8d73;
   flex-wrap: wrap;
 }
 
 .join-team__invite-dot {
-  color: var(--qg-border-dark);
+  color: #dce5d3;
 }
 
 .join-team__invite-item .ant-btn {

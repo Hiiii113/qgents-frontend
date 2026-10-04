@@ -5,30 +5,30 @@
  * 业务事件语义与 SSE 完全一致（type 对应 SSE eventType），仅多了 scope 信封。
  */
 
-/** 帧 scope：事件归属域（§三） */
+// 帧 scope：事件归属域
 export type RealtimeScope = 'project' | 'team' | 'notification'
 
-/** 服务端 → 客户端业务事件帧 */
+// 服务端 → 客户端业务事件帧
 export interface RealtimeFrame {
-  /** 事件类型，对应 SSE eventType（message.created / task.updated / notification.created …） */
+  // 事件类型，对应 SSE eventType（message.created / group.updated / notification.created …）
   type: string
   scope: RealtimeScope
-  /** scope=project 时非空 */
+  // scope=project 时非空
   projectId?: string | null
-  /** 关联需求群（可为 null） */
+  // 关联项目群聊（可为 null）
   groupId?: string | null
-  /** scope=team 时非空 */
+  // scope=team 时非空
   teamId?: string | null
-  /** scope=notification 时非空 */
+  // scope=notification 时非空
   recipientUserId?: string | null
-  /** 关联资源 id 字符串（可为 null） */
+  // 关联资源 id 字符串（可为 null）
   resourceId?: string | null
-  /** 与 SSE data 同源脱敏，不含 Token/私钥/宿主机路径 */
+  // 与 SSE data 同源脱敏，不含 Token/私钥/宿主机路径
   payload: Record<string, unknown>
   sentAt?: string
 }
 
-/** 握手确认帧：{"type":"hello","userId":"<登录用户id>"}，收到后连接才算可用 */
+// 握手确认帧：{"type":"hello","userId":"<登录用户id>"}，收到后连接才算可用
 export interface RealtimeHelloFrame {
   type: 'hello'
   userId?: string

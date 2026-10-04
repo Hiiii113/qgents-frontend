@@ -1,8 +1,8 @@
 :root {
-  --qg-teal: #0d9b8a; --qg-teal-dark: #0a7d6f; --qg-teal-bright: #14b8a6; --qg-mint: #2dd4a8;
-  --qg-bg-light: #f3f5f7; --qg-card: #ffffff; --qg-border-light: #e5e7eb;
+  --qg-teal: #4f7146; --qg-teal-dark: #3d5a35; --qg-teal-bright: #14b8a6; --qg-mint: #2dd4a8;
+  --qg-bg-light: #f7f8f2; --qg-card: #ffffff; --qg-border-light: #e5e7eb;
   --qg-text-primary: #111827; --qg-text-secondary: #6b7280; --qg-text-muted: #9ca3af;
-  --qg-navy: #0b1424; --qg-navy-2: #111c2e; --qg-navy-3: #162033; --qg-navy-card: #1a2438;
+  --qg-navy: #253d32; --qg-navy-2: #304739; --qg-navy-3: #3a5141; --qg-navy-card: #334c3f;
   --qg-border-dark: #2a3548; --qg-text-on-dark: #f3f4f6; --qg-text-on-dark-secondary: #9aa3b5;
   --qg-blue: #3b82f6; --qg-blue-hover: #2563eb; --qg-green: #22c55e; --qg-green-hover: #16a34a;
   --qg-danger: #ef4444; --qg-avatar-orange: #f97316;
@@ -114,41 +114,6 @@ img {
   background: radial-gradient(ellipse at 50% 0%, #142038 0%, #0b1424 55%);
 }
 
-/* ──── Banner 暗色覆盖 ──── */
-.qg-banner {
-  background: linear-gradient(90deg, #0a1220 0%, #0f1a2c 50%, #0b1524 100%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-}
-
-.qg-banner .ant-menu-horizontal {
-  border-bottom: none;
-}
-
-.qg-banner .ant-menu-item {
-  color: var(--qg-text-on-dark-secondary) !important;
-}
-
-.qg-banner .ant-menu-item:hover {
-  color: var(--qg-text-on-dark) !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-}
-
-.qg-banner .ant-menu-item-selected {
-  color: var(--qg-text-on-dark) !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-}
-
-/* —— Banner 窄屏：隐藏次要文字（品牌名 / 用户名），避免与导航重叠 —— */
-@media (max-width: 640px) {
-  .qg-banner {
-    padding: 0 12px !important;
-  }
-  .qg-banner__brand-text,
-  .qg-banner__user-name {
-    display: none;
-  }
-}
-
 /* ──── 全局滚动条 ──── */
 ::-webkit-scrollbar {
   width: 8px;
@@ -206,15 +171,4 @@ img {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-/* ──── 聊天消息气泡：hover 显示「回复」按钮 ────
-   回复按钮始终占据布局空间（visibility 控制显隐），
-   避免按钮出现/消失改变消息尺寸导致 hover 区域抖动循环。 */
-.chat-message-bubble__reply {
-  visibility: hidden;
-}
-
-.chat-message-bubble:hover .chat-message-bubble__reply {
-  visibility: visible;
 }

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button, Tag } from 'antd'
+import { App, Button, Tag } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PATHS } from '@/routes/paths'
 import { useAuth } from '@/context/AuthContext'
@@ -9,12 +9,13 @@ import type { MyTeamInvitation } from '@/types'
 import './JoinTeamPage.css'
 
 /**
- * 加入已有团队 —— 对齐接口文档 v1.1.4 §5.1
+ * 加入已有团队 —— 当前接口
  *
  * 用户粘贴邮件邀请中的邀请令牌，调 POST /team-invitations/{token}/accept
  */
 export default function JoinTeamPage() {
   const navigate = useNavigate()
+  const { message } = App.useApp()
   const { setHasTeam } = useAuth()
   const queryClient = useQueryClient()
   const [token, setToken] = useState('')
@@ -37,9 +38,8 @@ export default function JoinTeamPage() {
       queryClient.invalidateQueries({ queryKey: ['team-invitations', 'mine'] })
       queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
       queryClient.invalidateQueries({queryKey:['teams',inv.teamId,'projects']})
-      setTimeout(() => {
-        navigate(PATHS.teamDetail(inv.teamId), { replace: true })
-      }, 1000)
+      void message.success(`已加入「${inv.teamName}」`)
+      navigate(PATHS.teamDetail(inv.teamId), { replace: true })
     },
     onError: (err) => setError(err instanceof Error ? err.message : '接受邀请失败'),
   })
@@ -55,10 +55,10 @@ export default function JoinTeamPage() {
       await teamApi.acceptInvitation(token.trim())
       setHasTeam(true)
       setSuccess('已成功加入团队')
-      // 延迟跳转，让用户看到成功提示（接受响应不含 teamId，回团队列表）
-      setTimeout(() => {
-        navigate(PATHS.MY_TEAMS, { replace: true })
-      }, 1000)
+      void queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
+      void message.success('已成功加入团队')
+      // 令牌接受响应不含团队 ID，回到刷新后的团队列表选择项目。
+      navigate(PATHS.MY_TEAMS, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : '加入失败，邀请令牌可能已过期')
     } finally {

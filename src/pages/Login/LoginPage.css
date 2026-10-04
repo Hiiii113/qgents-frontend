@@ -7,7 +7,7 @@
 
 /* —— 左侧品牌 —— */
 .login-page__brand {
-  background: linear-gradient(165deg, #0a1628 0%, #0d1f38 55%, #0a1830 100%);
+  background: linear-gradient(165deg, #253e2e 0%, #344d36 55%, #20392c 100%);
   color: #fff;
   padding: 40px 48px 36px;
   display: flex;
@@ -35,7 +35,7 @@
 }
 
 .login-page__q {
-  color: var(--qg-teal-bright);
+  color: #c2d8a4;
   font-weight: 800;
 }
 
@@ -70,7 +70,7 @@
   height: 40px;
   border-radius: 10px;
   background: rgba(20, 184, 166, 0.15);
-  color: var(--qg-teal-bright);
+  color: #c2d8a4;
   display: grid;
   place-items: center;
 }

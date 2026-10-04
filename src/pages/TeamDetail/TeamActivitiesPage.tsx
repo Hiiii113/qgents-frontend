@@ -1,14 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { List, Spin, Typography } from 'antd'
-import {
-  CheckCircleFilled,
-  CloseCircleFilled,
-  BranchesOutlined,
-  PullRequestOutlined,
-  MergeOutlined,
-  ExclamationCircleFilled,
-} from '@ant-design/icons'
+import { ProjectOutlined } from '@ant-design/icons'
 import { teamApi } from '@/api'
 import { useTeamEvents } from '@/realtime/useTeamEvents'
 import { DarkPage } from '@/components/DarkPage'
@@ -20,14 +13,7 @@ import type { ReactNode } from 'react'
 const { Title, Text } = Typography
 
 /** 动态类型 → 图标 + 颜色（本期后端仅产出 6 类） */
-const TYPE_META: Record<ActivityType, { icon: ReactNode; color: string }> = {
-  TASK_COMPLETED: { icon: <CheckCircleFilled />, color: '#16a34a' },
-  TASK_FAILED: { icon: <CloseCircleFilled />, color: '#ef4444' },
-  DIFF_CREATED: { icon: <BranchesOutlined />, color: '#3b82f6' },
-  MR_CREATED: { icon: <PullRequestOutlined />, color: '#a855f7' },
-  MR_MERGED: { icon: <MergeOutlined />, color: '#22c55e' },
-  TEST_RUN_FAILED: { icon: <ExclamationCircleFilled />, color: '#ef4444' },
-}
+const TYPE_META: Record<ActivityType, { icon: ReactNode; color: string }> = { GROUP_CREATED: { icon: <ProjectOutlined />, color: '#4f7146' } }
 
 /** 相对时间：刚刚 / N 分钟前 / N 小时前 / N 天前 */
 function formatRelativeTime(iso: string): string {
@@ -40,20 +26,8 @@ function formatRelativeTime(iso: string): string {
   return `${Math.floor(hr / 24)} 天前`
 }
 
-/**
- * 动态 → 跳转目标路由。
- * §19.4：响应未下发 projectId，TASK/DIFF/MR 目标暂无法拼项目路由（后端补齐 projectId 后生效）；
- * PROJECT 目标 id 即项目 id，始终可跳。
- */
 function activityTargetPath(activity: Activity): string | null {
-  const { type, id } = activity.target
-  if (type === 'PROJECT') return PATHS.projectDetail(id)
-  const projectId = activity.projectId
-  if (!projectId) return null
-  if (type === 'TASK') return PATHS.projectTaskDetail(projectId, id)
-  if (type === 'DIFF') return PATHS.projectDiff(projectId, id)
-  if (type === 'MR') return PATHS.projectCodeMr(projectId, id)
-  return null
+  return activity.target?.id ? PATHS.projectChat(activity.target.id) : null
 }
 
 /**
@@ -98,7 +72,7 @@ export default function TeamActivitiesPage() {
           <List
             dataSource={activities}
             renderItem={(activity: Activity) => {
-              const meta = TYPE_META[activity.type] ?? TYPE_META.TASK_COMPLETED
+              const meta = TYPE_META[activity.type] ?? TYPE_META.GROUP_CREATED
               const to = activityTargetPath(activity)
               return (
                 <List.Item

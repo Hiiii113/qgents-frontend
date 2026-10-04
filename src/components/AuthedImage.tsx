@@ -5,7 +5,7 @@ import { getStoredToken } from '@/api/client'
 type AntImageProps = ComponentProps<typeof Image>
 
 interface AuthedImageProps extends Omit<AntImageProps, 'src'> {
-  /** 鉴权下载地址（§18.5 /attachments/{id}/content，需要 Bearer token） */
+  /** 鉴权下载地址（ /attachments/{id}/content，需要 Bearer token） */
   src?: string | null
   /** 图片真正加载完成回调（objectURL 就绪、<Image> 渲染出图后触发），与 fetch 完成不同步 */
   onLoad?: () => void

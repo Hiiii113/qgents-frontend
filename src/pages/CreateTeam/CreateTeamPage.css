@@ -2,7 +2,7 @@
   max-width: 720px;
   margin: 0 auto;
   padding: 24px 28px 48px;
-  color: var(--qg-text-on-dark);
+  color: #354f36;
 }
 
 .create-team__top {
@@ -13,13 +13,13 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--qg-text-on-dark-secondary);
+  color: #7b8d73;
   font-size: 13px;
   font-weight: 500;
 }
 
 .create-team__back:hover {
-  color: var(--qg-text-on-dark);
+  color: #354f36;
 }
 
 .create-team__title {
@@ -39,8 +39,8 @@
 }
 
 .create-team__card {
-  background: var(--qg-navy-card);
-  border: 1px solid var(--qg-border-dark);
+  background: #fff;
+  border: 1px solid #dce5d3;
   border-radius: 14px;
   padding: 28px 28px 24px;
   display: flex;
@@ -58,9 +58,9 @@
   width: 88px;
   height: 88px;
   border-radius: 50%;
-  border: 1px dashed var(--qg-border-dark);
-  background: var(--qg-navy-3);
-  color: var(--qg-text-on-dark-secondary);
+  border: 1px dashed #dce5d3;
+  background: #f6f9f2;
+  color: #7b8d73;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -80,13 +80,13 @@
 }
 
 .create-team__avatar-btn:hover {
-  border-color: var(--qg-blue);
-  color: var(--qg-text-on-dark);
+  border-color: #456c48;
+  color: #354f36;
 }
 
 .create-team__hint {
   margin: 0;
-  color: var(--qg-text-on-dark-secondary);
+  color: #7b8d73;
   font-size: 13px;
 }
 
@@ -99,7 +99,7 @@
 .create-team__label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--qg-text-on-dark);
+  color: #354f36;
 }
 
 .create-team__label em {
@@ -111,10 +111,10 @@
 .create-team__field textarea,
 .create-team__invite-row select {
   width: 100%;
-  border: 1px solid var(--qg-border-dark);
+  border: 1px solid #dce5d3;
   border-radius: var(--qg-radius-sm);
-  background: var(--qg-navy-3);
-  color: var(--qg-text-on-dark);
+  background: #f6f9f2;
+  color: #354f36;
   padding: 10px 12px;
   outline: none;
   transition: border-color 0.2s var(--qg-ease);
@@ -123,7 +123,7 @@
 .create-team__field input:focus,
 .create-team__field textarea:focus,
 .create-team__invite-row select:focus {
-  border-color: var(--qg-blue);
+  border-color: #456c48;
 }
 
 .create-team__field input:disabled {
@@ -152,13 +152,13 @@
   padding: 0 18px;
   border: none;
   border-radius: var(--qg-radius-sm);
-  background: var(--qg-blue);
+  background: #456c48;
   color: #fff;
   font-weight: 600;
 }
 
 .create-team__invite-btn:hover {
-  background: var(--qg-blue-hover);
+  background: #355539;
 }
 
 .create-team__actions {
@@ -179,8 +179,8 @@
 
 .create-team__btn--ghost {
   background: transparent;
-  border: 1px solid var(--qg-border-dark);
-  color: var(--qg-text-on-dark);
+  border: 1px solid #dce5d3;
+  color: #354f36;
 }
 
 .create-team__btn--ghost:hover {
@@ -189,12 +189,12 @@
 
 .create-team__btn--primary {
   border: none;
-  background: var(--qg-blue);
+  background: #456c48;
   color: #fff;
 }
 
 .create-team__btn--primary:hover:not(:disabled) {
-  background: var(--qg-blue-hover);
+  background: #355539;
 }
 
 .create-team__btn--primary:disabled {

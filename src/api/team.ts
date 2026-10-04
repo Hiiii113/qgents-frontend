@@ -6,37 +6,14 @@ import type {
   TeamMember,
   TeamInvitation,
   AcceptInvitationResponse,
-  TeamRole,
   Activity,
   MyTeamInvitation,
 } from '@/types'
 
-function isTeamRole(value: unknown): value is TeamRole {
-  return value === 'TEAM_OWNER' || value === 'TEAM_MEMBER'
-}
-
-/** 兼容后端返回 role，或旧字段 myRole；两个字段都补齐，页面读哪个都能工作 */
-function normalizeTeam(team: Team): Team {
-  const extra = team as Team & { myRole?: unknown }
-  const resolved = isTeamRole(team.role)
-    ? team.role
-    : isTeamRole(extra.myRole)
-      ? extra.myRole
-      : team.role
-  return {
-    ...team,
-    role: resolved,
-    myRole: isTeamRole(extra.myRole) ? extra.myRole : resolved,
-  }
-}
-
-/**
- * 团队管理 API —— 对齐接口文档 v1.1.4 §5.1
- */
 export const teamApi = {
   /** GET /teams — 当前用户加入的团队列表 */
   listMine() {
-    return request<Team[]>('/teams').then((teams) => teams.map(normalizeTeam))
+    return request<Team[]>('/teams')
   },
 
   /** GET /teams/{teamId}/activities — 团队最近动态（分页，见后端1对接文档） */
@@ -49,7 +26,7 @@ export const teamApi = {
     return request<Team>('/teams', { method: 'POST', body: payload })
   },
 
-  /** POST /teams/{teamId}/avatar/credential — 签发团队头像直传凭证（§5.1；OSS 未启用时 501） */
+  /** POST /teams/{teamId}/avatar/credential — 签发团队头像直传凭证（OSS 未启用时 501） */
   avatarCredential(teamId: string, input: { mediaType: string; sizeBytes: number }) {
     return request<{ objectKey: string; uploadUrl: string; method: string; headers: Record<string, string>; expiresAt: string }>(
       `/teams/${teamId}/avatar/credential`, { method: 'POST', body: input })
@@ -65,7 +42,7 @@ export const teamApi = {
 
   /** GET /teams/{teamId} — 获取团队资料 */
   getById(teamId: string) {
-    return request<Team>(`/teams/${teamId}`).then(normalizeTeam)
+    return request<Team>(`/teams/${teamId}`)
   },
 
   /** PATCH /teams/{teamId} — 修改团队资料（仅 Team Owner） */
@@ -74,7 +51,6 @@ export const teamApi = {
   },
 
   /** GET /teams/{teamId}/members — 团队成员列表 */
-  /** GET /teams/:id/members */
   listMembers(teamId: string) {
     return request<TeamMember[]>(`/teams/${teamId}/members`)
   },
@@ -134,7 +110,7 @@ export const teamApi = {
   },
 
   /**
-   * 上传团队头像并返回长期公共读 URL：签发凭证 → 直传 OSS → 确认（§28.1）。
+   * 上传团队头像并返回长期公共读 URL：签发凭证 → 直传 OSS → 确认。
    * 失败时抛错，由调用方 toast 展示；OSS 未启用时抛 501 错误。
    * 仅返回 avatarUrl，不自动 PATCH 回写——由调用方决定何时回写（创建团队页在创建后回写）。
    * URL 追加版本参数（?v=时间戳）：每次上传产生新 URL，强制浏览器重新加载，避免旧图缓存 2-3 分钟。

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { PATHS } from '@/routes/paths'
 import { useAuth } from '@/context/AuthContext'
 import { teamApi } from '@/api'
@@ -7,7 +8,7 @@ import { formatApiError } from '@/utils/formatApiError'
 import './CreateTeamPage.css'
 
 /**
- * 创建新团队 —— 对齐接口文档 §5.1 / §28.3（团队头像）
+ * 创建新团队 —— 对齐 / （团队头像）
  *
  * POST /teams 创建团队（创建者自动成为 TEAM_OWNER）
  * 头像：创建成功后以返回的 teamId 走 credential → OSS 直传 → confirm，再 PATCH 回写
@@ -15,6 +16,7 @@ import './CreateTeamPage.css'
  */
 export default function CreateTeamPage() {
   const navigate = useNavigate()
+  const client = useQueryClient()
   const { setHasTeam } = useAuth()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -50,7 +52,7 @@ export default function CreateTeamPage() {
         name: name.trim(),
         description: description.trim() || undefined,
       })
-      // 选了头像：创建成功后用返回的 teamId 上传并回写（§28.3）
+      // 选了头像：创建成功后用返回的 teamId 上传并回写
       if (avatarFile) {
         setAvatarUploading(true)
         try {
@@ -69,8 +71,9 @@ export default function CreateTeamPage() {
           setAvatarUploading(false)
         }
       }
+      void client.invalidateQueries({ queryKey: ['teams', 'mine'] })
       setHasTeam(true)
-      navigate(PATHS.teamDetail(team.id, true), { replace: true })
+      navigate(PATHS.teamDetail(team.id), { replace: true })
     } catch (err) {
       setError(formatApiError(err))
     } finally {

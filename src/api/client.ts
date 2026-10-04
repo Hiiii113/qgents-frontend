@@ -39,8 +39,6 @@ export class ApiError extends Error {
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown
   skipAuth?: boolean
-  /** 保留统一响应 envelope，用于同时包含 data/page/requestId 的分页响应 */
-  unwrapData?: boolean
   /** 取消信号；组件卸载 / StrictMode cleanup 时 abort 可中断 in-flight 请求 */
   signal?: AbortSignal
 }
@@ -50,7 +48,7 @@ export function getStoredToken(): string | null {
   return localStorage.getItem(ACCESS_TOKEN_KEY)
 }
 
-/** 返回 API 基础地址（B 的 projectEvents 等模块需要，用于拼接 SSE 等完整 URL） */
+/** 返回 API 基础地址（用于拼接 SSE 等完整 URL） */
 export function getApiBaseUrl(): string {
   return BASE_URL
 }
@@ -59,7 +57,7 @@ function getStoredRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_TOKEN_KEY)
 }
 
-/** 生成幂等键：UUID v4。后端要求写操作携带 Idempotency-Key（接口文档 §2） */
+/** 生成幂等键：UUID v4。后端要求写操作携带 Idempotency-Key */
 function generateIdempotencyKey(): string {
   return crypto.randomUUID()
 }
@@ -114,7 +112,7 @@ async function doFetch(
   options: RequestOptions,
   idempotencyKey: string | null,
 ): Promise<{ res: Response; json: unknown }> {
-  const { body, skipAuth, headers, unwrapData: _unwrapData, ...rest } = options
+  const { body, skipAuth, headers, ...rest } = options
   const finalHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
 
   if (!skipAuth) {
@@ -201,10 +199,6 @@ async function rawRequest(path: string, options: RequestOptions = {}): Promise<u
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const json = await rawRequest(path, options)
 
-  if (options.unwrapData === false) {
-    return json as T
-  }
-
   if (json && typeof json === 'object' && 'data' in json) {
     return (json as Record<string, unknown>).data as T
   }
@@ -212,7 +206,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return json as T
 }
 
-/** 分页请求：解出 `data` + `page` 层，对齐接口文档 v1.1.8 §2「列表分页」 */
+/** 分页请求：解出 `data` + `page` 层，当前接口「列表分页」 */
 export async function requestPage<T>(path: string, options: RequestOptions = {}): Promise<Page<T>> {
   const json = (await rawRequest(path, options)) as Record<string, unknown> | undefined
 

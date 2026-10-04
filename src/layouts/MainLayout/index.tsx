@@ -17,11 +17,11 @@ export function MainLayout() {
   const isChat = location.pathname.startsWith(PATHS.CHAT)
   const isProject = location.pathname.startsWith('/app/projects/')
 
-  // 全局 WebSocket 实时通道（单连接用户级聚合；SSE 保留兼容）
+  // 全局 WebSocket 实时通道（单连接用户级聚合；断线时由 SSE 接管）
   useRealtimeEvents()
 
   return (
-    <Layout className="qg-full-height" style={{ minHeight: '100%', background: 'var(--qg-navy)' }}>
+    <Layout className="qg-full-height" style={{ minHeight: '100%', background: '#f5f7f2' }}>
       <Banner />
       <Content
         className={isChat || isProject ? 'qg-content-flush' : undefined}
@@ -29,7 +29,7 @@ export function MainLayout() {
           flex: 1,
           overflow: 'auto',
           minWidth: 0,
-          padding: isChat || isProject ? 0 : 24,
+          padding: 0,
         }}
       >
         {/* 页面级错误边界：切路由自动复位，Banner/导航不受影响 */}

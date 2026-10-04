@@ -1,145 +1,87 @@
 import { Link } from 'react-router-dom'
-import { Spin } from 'antd'
+import { Alert, Avatar, Button, Spin } from 'antd'
+import { ArrowRightOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import { PATHS } from '@/routes/paths'
 import { teamApi } from '@/api'
-import { EmptyState } from '@/components/EmptyState'
-import './MyTeamsPage.css'
+import { useAuth } from '@/context/AuthContext'
+import '@/styles/Journey.css'
 
-/**
- * 我的团队列表
- *
- * - 调 GET /teams 获取当前用户的团队列表
- * - 按 myRole 拆成「我创建的」和「我参与的」
- * - 加载中显示 Spin，加载失败显示错误，无团队显示空状态
- */
 export default function MyTeamsPage() {
-  const {
-    data: teams,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ['teams', 'mine'],
-    queryFn: teamApi.listMine,
-  })
-
-  // ──── 加载中 ────
-  if (isLoading) {
-    return (
-      <div className="my-teams">
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
-          <Spin size="large" />
-        </div>
-      </div>
-    )
-  }
-
-  // ──── 加载失败 ────
-  if (isError) {
-    return (
-      <div className="my-teams">
-        <EmptyState
-          icon="⚠️"
-          title="加载失败"
-          description="无法获取团队列表，请检查网络后重试"
-          action={
-            <button className="my-teams__btn my-teams__btn--primary" onClick={() => refetch()}>
-              重新加载
-            </button>
-          }
-        />
-      </div>
-    )
-  }
-
-  // ──── 拆分团队 ────
-  const ownedTeams = (teams ?? []).filter((t) => t.role === 'TEAM_OWNER')
-  const joinedTeams = (teams ?? []).filter((t) => t.role !== 'TEAM_OWNER')
-
+  const { user } = useAuth()
+  const teams = useQuery({ queryKey: ['teams', 'mine'], queryFn: teamApi.listMine })
   return (
-    <div className="my-teams">
-      <div className="my-teams__header">
+    <div className="journey-page">
+      <div className="journey-steps" aria-label="进入聊天的步骤">
+        <span className="is-current">01 选择团队</span>
+        <span>02 选择项目</span>
+        <span>03 开始聊天</span>
+      </div>
+      <header className="journey-hero">
         <div>
-          <h1>我的团队</h1>
-          <p>管理你加入的团队，或创建 / 加入新团队</p>
+          <span className="journey-eyebrow">YOUR TEAM SPACE</span>
+          <h1>{user?.displayName ? `${user.displayName}，欢迎回来` : '选择你的团队'}</h1>
+          <p>找到你的伙伴，从一个项目开始新的讨论。</p>
         </div>
-        <div className="my-teams__actions">
-          <Link to={PATHS.JOIN_TEAM} className="my-teams__btn my-teams__btn--ghost">
-            加入团队
+        <div className="journey-actions">
+          <Link to={PATHS.JOIN_TEAM}>
+            <Button size="large">加入团队</Button>
           </Link>
-          <Link to={PATHS.CREATE_TEAM} className="my-teams__btn my-teams__btn--primary">
-            + 创建团队
+          <Link to={PATHS.CREATE_TEAM}>
+            <Button size="large" type="primary" icon={<PlusOutlined />}>
+              创建团队
+            </Button>
           </Link>
         </div>
+      </header>
+      <div className="journey-section-title">
+        <h2>我的团队</h2>
+        <span>{teams.data?.length ?? 0} 个团队</span>
       </div>
-
-      {/* ──── 我创建的 ──── */}
-      <section className="my-teams__section">
-        <h2>我创建的团队</h2>
-        {ownedTeams.length === 0 ? (
-          <EmptyState
-            icon="🏠"
-            title="还没有创建团队"
-            description="创建你的第一个团队，邀请成员一起协作"
-          />
-        ) : (
-          <div className="my-teams__grid">
-            {ownedTeams.map((t) => (
-              <TeamCard key={t.id} team={t} />
-            ))}
-            <Link to={PATHS.CREATE_TEAM} className="my-teams__card my-teams__card--create">
-              <span aria-hidden>+</span>
-              新建团队
+      {teams.isPending ? (
+        <div className="journey-loading">
+          <Spin />
+        </div>
+      ) : teams.isError ? (
+        <Alert
+          type="error"
+          message="团队加载失败"
+          action={<Button onClick={() => void teams.refetch()}>重试</Button>}
+        />
+      ) : (
+        <div className="journey-grid">
+          {teams.data?.map((team) => (
+            <Link key={team.id} to={PATHS.teamDetail(team.id)} className="journey-card">
+              <div className="journey-card__top">
+                <Avatar shape="square" size={52} src={team.avatarUrl}>
+                  {team.name.slice(0, 1)}
+                </Avatar>
+                <span className="journey-pill">
+                  {team.role === 'TEAM_OWNER' ? '我创建的' : '我加入的'}
+                </span>
+              </div>
+              <h3>{team.name}</h3>
+              <p>{team.memberCount ?? 1} 位伙伴 · 团队协作空间</p>
+              <div className="journey-card__bottom">
+                <span>选择项目</span>
+                <ArrowRightOutlined />
+              </div>
             </Link>
-          </div>
-        )}
-      </section>
-
-      {/* ──── 我参与的 ──── */}
-      <section className="my-teams__section">
-        <h2>我参与的团队</h2>
-        {joinedTeams.length === 0 ? (
-          <EmptyState
-            icon="🤝"
-            title="还没有加入其他团队"
-            description="让朋友邀请你，或输入邀请码加入已有团队"
-          />
-        ) : (
-          <div className="my-teams__grid">
-            {joinedTeams.map((t) => (
-              <TeamCard key={t.id} team={t} />
-            ))}
-          </div>
-        )}
-      </section>
+          ))}
+          <Link to={PATHS.CREATE_TEAM} className="journey-card journey-card--new">
+            <PlusOutlined />
+            <h3>组建新的团队</h3>
+            <p>一起聊想法，把事情做成。</p>
+          </Link>
+          {!teams.data?.length && (
+            <Link to={PATHS.JOIN_TEAM} className="journey-card journey-card--new">
+              <TeamOutlined />
+              <h3>加入已有团队</h3>
+              <p>使用邀请，与伙伴会合。</p>
+            </Link>
+          )}
+        </div>
+      )}
     </div>
-  )
-}
-
-/** 团队卡片 */
-function TeamCard({ team }: { team: { id: string; name: string; role?: string; memberCount?: number; avatarUrl?: string } }) {
-  const letter = team.name.slice(0, 1)
-  const color = team.role === 'TEAM_OWNER' ? '#3b82f6' : '#8b5cf6'
-  const roleLabel = team.role === 'TEAM_OWNER' ? 'Owner' : 'Member'
-
-  return (
-    <article className="my-teams__card">
-      <div className="my-teams__card-top">
-        {team.avatarUrl ? (
-          <img className="my-teams__logo my-teams__logo--img" src={team.avatarUrl} alt={team.name} />
-        ) : (
-          <span className="my-teams__logo" style={{ background: color }}>
-            {letter}
-          </span>
-        )}
-        <span className="my-teams__role">{roleLabel}</span>
-      </div>
-      <h3>{team.name}</h3>
-      <p className="my-teams__meta">{team.memberCount ?? '—'} 位成员</p>
-      <Link to={PATHS.teamDetail(team.id, team.role === 'TEAM_OWNER')} className="my-teams__detail">
-        查看详情
-      </Link>
-    </article>
   )
 }

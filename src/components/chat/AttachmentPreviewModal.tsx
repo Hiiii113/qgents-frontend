@@ -13,8 +13,8 @@ import type { AttachmentPreview, AttachmentPreviewType } from '@/api/attachment'
 
 const { Text } = Typography
 
-/** 附件预览类型 → 图标 + 标签（增量契约 §2.1） */
-export function attachmentTypeMeta(type: AttachmentPreviewType | undefined): {
+/** 附件预览类型对应的图标和标签。 */
+function attachmentTypeMeta(type: AttachmentPreviewType | undefined): {
   icon: React.ReactNode
   label: string
 } {
@@ -35,18 +35,16 @@ export function attachmentTypeMeta(type: AttachmentPreviewType | undefined): {
 interface AttachmentPreviewModalProps {
   open: boolean
   projectId: string
-  /** 附件 ID（发送侧 §6 content.attachmentId，或旧消息从 url 解析） */
+  /** 消息 content 中的附件 ID。 */
   attachmentId: string
   /** 展示用文件名（消息 content.name，可能缺失） */
   fileName?: string
-  /** 消息里 §7 已回填的 previewUrl（相对路径）——有则零请求直接预览 */
-  embeddedPreviewUrl?: string
   onClose: () => void
 }
 
 /**
- * 附件内联预览弹窗（增量契约 §4/§5/§7）。
- * - IMAGE：页内放大展示（AuthedImage 处理鉴权）
+ * 附件内联预览弹窗；每次打开获取新的预览和下载链接。
+ * - IMAGE：使用签发链接在页内放大展示
  * - PDF：iframe 内联预览（previewUrl 带短期 token，后端支持 Range 分页）
  * - TEXT/CODE：拉 ?raw=1 原文，页内 <pre> 展示（支持复制）
  * - UNSUPPORTED / 无 previewUrl：显示下载按钮（downloadUrl 优先）
@@ -56,54 +54,53 @@ export function AttachmentPreviewModal({
   projectId,
   attachmentId,
   fileName,
-  embeddedPreviewUrl,
   onClose,
 }: AttachmentPreviewModalProps) {
   const [rawText, setRawText] = useState<string | null>(null)
   const [rawLoading, setRawLoading] = useState(false)
 
-  // 优先用 §7 回填的 previewUrl；没有则调 §4 preview-url 签发（TanStack Query 缓存，同附件只签一次）
+  // 弹窗关闭后不缓存短期链接，再次打开重新获取。
   const previewQuery = useQuery({
     queryKey: ['attachments', projectId, attachmentId, 'preview'],
     queryFn: () => attachmentApi.previewUrl(projectId, attachmentId),
-    enabled: Boolean(open && projectId && attachmentId && !embeddedPreviewUrl),
-    staleTime: 5 * 60 * 1000,
+    enabled: Boolean(open && projectId && attachmentId),
+    gcTime: 0,
+    staleTime: 0,
   })
   const preview: AttachmentPreview | null = previewQuery.data ?? null
 
-  const previewUrl = embeddedPreviewUrl
-    ? resolvePreviewUrl(embeddedPreviewUrl)
-    : preview?.previewUrl
-      ? resolvePreviewUrl(preview.previewUrl)
-      : null
+  const previewUrl = preview?.previewUrl
+    ? resolvePreviewUrl(preview.previewUrl)
+    : null
   const previewType = preview?.previewType
   const downloadUrl = preview?.downloadUrl ?? null
-  const previewable = preview?.previewable ?? Boolean(embeddedPreviewUrl)
+  const previewable = preview?.previewable ?? false
 
-  // TEXT/CODE：拉 ?raw=1 原文在页内展示（契约 §5.1 / §8）
+  // TEXT/CODE：读取签发链接的原文，切换附件或刷新链接时取消旧请求。
   useEffect(() => {
     if (!open || !previewUrl || (previewType !== 'TEXT' && previewType !== 'CODE')) {
       setRawText(null)
       return
     }
-    let cancelled = false
+    const controller = new AbortController()
     setRawLoading(true)
+    setRawText(null)
     const rawUrl = `${previewUrl}${previewUrl.includes('?') ? '&' : '?'}raw=1`
-    fetch(rawUrl)
+    fetch(rawUrl, { signal: controller.signal })
       .then((res) => (res.ok ? res.text() : Promise.reject(new Error(`HTTP ${res.status}`))))
       .then((text) => {
-        if (!cancelled) setRawText(text)
+        if (!controller.signal.aborted) setRawText(text)
       })
       .catch(() => {
-        if (!cancelled) setRawText(null)
+        if (!controller.signal.aborted) setRawText(null)
       })
       .finally(() => {
-        if (!cancelled) setRawLoading(false)
+        if (!controller.signal.aborted) setRawLoading(false)
       })
     return () => {
-      cancelled = true
+      controller.abort()
     }
-  }, [open, previewUrl, previewType])
+  }, [open, previewUrl, previewType, previewQuery.dataUpdatedAt])
 
   const title = fileName ?? (preview?.fileName ?? '附件预览')
   const { icon } = attachmentTypeMeta(previewType)
@@ -123,7 +120,7 @@ export function AttachmentPreviewModal({
     >
       {previewType === 'IMAGE' && previewUrl ? (
         <div style={{ textAlign: 'center', padding: '8px 0' }}>
-          {/* previewUrl 带短期 token，直接 <img> 可加载（契约 §2.2 Query 通道） */}
+          {/* 签发链接包含短期访问凭证，可直接用于图片加载。 */}
           <img
             src={previewUrl}
             alt={title}
@@ -161,7 +158,7 @@ export function AttachmentPreviewModal({
               {rawText}
             </pre>
           ) : (
-            <Empty description="无法加载文本内容" />
+            <Empty description="无法加载文本内容"><Button onClick={() => void previewQuery.refetch()}>重试</Button></Empty>
           )}
           <div style={{ marginTop: 12, textAlign: 'right' }}>
             {rawText != null ? (
@@ -175,8 +172,8 @@ export function AttachmentPreviewModal({
           </div>
         </div>
       ) : previewQuery.isError ? (
-        // 预览接口失败（后端未实现 / 报错）→ 明确提示加载失败，不要伪装成「不支持预览」
         <Empty description="预览信息加载失败">
+          <Button onClick={() => void previewQuery.refetch()}>重试</Button>
           {downloadUrl ? (
             <Button
               type="primary"
@@ -190,7 +187,6 @@ export function AttachmentPreviewModal({
           ) : null}
         </Empty>
       ) : previewUrl && previewable ? (
-        // 已知类型但当前预览分支未覆盖（如 UNSUPPORTED 但给了 previewUrl）→ 新标签打开
         <Empty description="该文件类型不支持页内预览">
           {previewUrl ? (
             <Button type="primary" href={previewUrl} target="_blank" rel="noreferrer">
@@ -213,9 +209,10 @@ export function AttachmentPreviewModal({
           ) : null}
         </Empty>
       )}
-      <Text type="secondary" style={{ display: 'block', marginTop: 12, fontSize: 12 }}>
-        提示：预览链接含短期凭证，请勿分享链接；过期后关闭重开会重新签发
-      </Text>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+        <Text type="secondary">无法加载时，可刷新预览链接后重试。</Text>
+        <Button size="small" loading={previewQuery.isFetching} onClick={() => void previewQuery.refetch()}>刷新预览</Button>
+      </div>
     </Modal>
   )
 }

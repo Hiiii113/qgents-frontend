@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   Avatar,
   Button,
@@ -19,11 +19,10 @@ import {
 import { CameraOutlined, GithubOutlined, UploadOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { teamApi } from '@/api'
-import { EmptyState } from '@/components/EmptyState'
 import { useAuth } from '@/context/AuthContext'
+import { EmptyState } from '@/components/EmptyState'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
-import { isCurrentUserTeamOwner } from '@/utils/teamOwnership'
 import type { CreateTeamPayload, Team, TeamMember, TeamInvitation, TeamRole } from '@/types'
 import type { TableProps } from 'antd'
 
@@ -52,8 +51,6 @@ function formatCreatedAt(iso?: string): string {
  */
 export default function TeamSettingsPage() {
   const { teamId = '' } = useParams<{ teamId: string }>()
-  const { user } = useAuth()
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -73,10 +70,7 @@ export default function TeamSettingsPage() {
     enabled: !!teamId,
   })
 
-  // GitHub 集成入口沿用宽松 Owner 判断（含 as=owner / 成员反查兜底）；解散团队用严格 role 判断
-  const asOwner = searchParams.get('as') === 'owner'
   const isOwner = team?.role === 'TEAM_OWNER'
-  const isTeamOwner = isCurrentUserTeamOwner(team, members, user, asOwner)
 
   const disbandTeam = useMutation({
     mutationFn: () => teamApi.disband(teamId),
@@ -125,7 +119,7 @@ export default function TeamSettingsPage() {
           团队设置
         </Title>
         <Space>
-          {isTeamOwner && (
+          {isOwner && (
             <Button icon={<GithubOutlined />} onClick={() => navigate(PATHS.githubIntegration(teamId))}>
               GitHub 集成
             </Button>
@@ -178,7 +172,7 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
     setAvatarUrl(team.avatarUrl)
   }, [team, form])
 
-  /** §28.1 团队头像：签发凭证 → 直传 OSS → 确认 → PATCH 回写（仅 Owner） */
+  /**  团队头像：签发凭证 → 直传 OSS → 确认 → PATCH 回写（仅 Owner） */
   async function handleAvatarUpload(file: File): Promise<boolean> {
     if (!isOwner || avatarUploading) return false
     setAvatarUploading(true)

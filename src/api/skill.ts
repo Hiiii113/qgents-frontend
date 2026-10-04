@@ -2,7 +2,7 @@ import { request } from './client'
 import type { CreateSkillPayload, Skill } from '@/types'
 
 /**
- * 共享 Skill API —— 对齐接口文档 v1.3.0 §8
+ * 共享 Skill API —— 当前接口
  */
 export const skillApi = {
   /** 查询 Skill（支持状态、标签过滤） */

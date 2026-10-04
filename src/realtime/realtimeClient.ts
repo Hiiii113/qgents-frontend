@@ -1,20 +1,18 @@
 import { useSyncExternalStore } from 'react'
 import { getApiBaseUrl, getStoredToken, refreshAccessToken } from '@/api/client'
-import { projectEventsEnabled } from '@/api/projectEvents'
 import { queryClient } from '@/query'
-import { invalidateProjectTaskEvent } from './queryInvalidation'
-import { PROJECT_TASK_EVENT_TYPES, type ProjectTaskEventType } from './eventParser'
+import { chatKeys } from '@/query/chatKeys'
 import type { RealtimeFrame } from '@/types'
 
 /**
  * WebSocket 实时通道（/api/v1/ws/realtime）—— 单连接 + 用户级聚合流。
  *
- * - 每个账号只开一条连接；SSE 三端点保留兼容，未移除。
+ * - 每个账号只开一条连接；断线时由 SSE 接管。
  * - 鉴权：握手 ?token=<accessToken>（浏览器 WS 升级无法带 Authorization 头）。
  * - 连接可用判定：收到 hello 帧（{"type":"hello","userId":...}）。
  * - 断线自动重连（指数退避）；握手阶段失败（token 过期）先 refresh token 再重连。
  * - 核心模型不变：REST 是真相。帧只作刷新信号 → dispatchRealtimeFrame 走
- *   与 SSE 同源的 queryInvalidation，收到后重查 REST 校准。
+ *   当前业务查询，收到后重查 REST 校准。
  */
 
 export const REALTIME_RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000] as const
@@ -66,20 +64,16 @@ function isRealtimeFrame(value: unknown): value is RealtimeFrame {
   )
 }
 
-function isProjectTaskEventType(type: string): type is ProjectTaskEventType {
-  return (PROJECT_TASK_EVENT_TYPES as readonly string[]).includes(type)
-}
-
 /**
- * 帧 → 查询失效（与 SSE queryInvalidation 同源）。
- * - scope=project：复用项目事件映射（message.created 额外校准主群聚合，覆盖不挂 SSE 的群聊工作台）
+ * 帧 → 查询失效（当前业务接口）。
+ * - scope=project：消息事件驱动增量补齐，其他事件刷新对应资源
  * - scope=team：刷新团队相关列表
  * - scope=notification：刷新通知中心 + 铃铛
  */
 export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
   const { type, scope } = frame
   if (scope === 'notification') {
-    // 帧 type 即通知 kind（PROJECT_ADDED/MR_PENDING/…），不按类型过滤：收到即刷新通知中心与铃铛
+    // 帧 type 即通知 kind（PROJECT_ADDED/MESSAGE_MENTION/…），不按类型过滤：收到即刷新通知中心与铃铛
     void queryClient.invalidateQueries({ queryKey: ['notifications'] })
     return
   }
@@ -91,17 +85,35 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
       void queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'members'] })
       void queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'activities'] })
     }
+    if (type.startsWith('project.member.')) {
+      const projectId = typeof frame.payload.projectId === 'string' ? frame.payload.projectId : frame.resourceId
+      if (projectId) {
+        void queryClient.invalidateQueries({ queryKey: ['chat', 'projects', projectId, 'members'] })
+        void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
+        void queryClient.invalidateQueries({ queryKey: chatKeys.allGroups })
+      }
+    }
     return
   }
   // scope === 'project'
   const projectId = typeof frame.projectId === 'string' && frame.projectId ? frame.projectId : null
   if (!projectId) return
-  if (type === 'message.created') {
-    void queryClient.invalidateQueries({ queryKey: ['chat', 'main-groups'] })
+  if (type === 'message.created' || type === 'message.updated') {
+    const groupId = frame.groupId || (typeof frame.payload.groupId === 'string' ? frame.payload.groupId : null)
+    void queryClient.invalidateQueries({ queryKey: chatKeys.allGroups })
+    void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
+    if (groupId && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('qgents:message-event', { detail: { ...frame.payload, projectId, groupId } }))
+    return
   }
-  if (isProjectTaskEventType(type)) {
-    invalidateProjectTaskEvent(projectId, { id: null, type, payload: { ...frame.payload, projectId } })
+  if (type.startsWith('memory.')) void queryClient.invalidateQueries({ queryKey: ['memories', projectId] })
+  if (type.startsWith('skill.')) void queryClient.invalidateQueries({ queryKey: ['skills', projectId] })
+  if (type.startsWith('repository.')) void queryClient.invalidateQueries({ queryKey: ['repositories', projectId] })
+  if (type.startsWith('group.')) {
+    void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
+    void queryClient.invalidateQueries({ queryKey: chatKeys.allGroups })
+    if (type === 'group.member.updated') void queryClient.invalidateQueries({ queryKey: ['chat', 'projects', projectId, 'members'] })
   }
+  if (type.startsWith('project.')) void queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
 }
 
 export class RealtimeClient {
@@ -132,11 +144,11 @@ export class RealtimeClient {
     return () => this.reconnectListeners.delete(listener)
   }
 
-  /** 默认断线恢复：整页级重查关键列表（§六.6，不依赖 WS 续传） */
+  /** 默认断线恢复：整页级重查关键列表（不依赖 WS 续传） */
   private handleReconnected(): void {
     void queryClient.invalidateQueries({ queryKey: ['notifications'] })
     void queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
-    void queryClient.invalidateQueries({ queryKey: ['chat', 'main-groups'] })
+    void queryClient.invalidateQueries({ queryKey: chatKeys.allGroups })
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('qgents:realtime-reconnected'))
     }
@@ -247,7 +259,7 @@ let pendingReconnectListeners = new Set<() => void>()
  * mock 模式（VITE_USE_MOCK=true）下无 WS 端点，直接跳过。
  */
 export function subscribeRealtime(): () => void {
-  if (!projectEventsEnabled()) return () => {}
+  if (import.meta.env.VITE_USE_MOCK === 'true') return () => {}
   sharedClient ??= new RealtimeClient()
   // 连接就绪后补挂之前排队等待的重连监听
   if (pendingReconnectListeners.size > 0) {
@@ -268,14 +280,14 @@ export function subscribeRealtime(): () => void {
 }
 
 /**
- * 订阅全局实时通道的「断线重连成功」回调（可靠消息同步 §1/§2）。
+ * 订阅全局实时通道的「断线重连成功」回调（可靠消息同步 ）。
  * 与 subscribeRealtime 共用同一条连接，不重复建连；返回退订函数。
  * 连接由 MainLayout 的 subscribeRealtime 持有 refCount，本函数只挂监听。
  * 子组件 effect 先于父组件执行：若连接尚未创建，先排队等 subscribeRealtime 创建后补挂。
  * 典型用途：断线重连后对当前群消息做增量补齐（reconcileMessages），比整页重拉更精准。
  */
 export function subscribeRealtimeReconnect(listener: () => void): () => void {
-  if (!projectEventsEnabled()) return () => {}
+  if (import.meta.env.VITE_USE_MOCK === 'true') return () => {}
   if (!sharedClient) {
     pendingReconnectListeners.add(listener)
     return () => {

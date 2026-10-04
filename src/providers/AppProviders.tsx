@@ -22,7 +22,7 @@ function BootstrapGate({ children }: { children: ReactNode }) {
           justifyContent: 'center',
           alignItems: 'center',
           height: '100vh',
-          background: '#0f172a',
+          background: '#f6f8f1',
         }}
       >
         <Spin size="large" />
@@ -36,7 +36,7 @@ function BootstrapGate({ children }: { children: ReactNode }) {
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ConfigProvider
-      theme={{ token: { colorPrimary: '#0d9b8a', borderRadius: 10, fontFamily: QG_FONT_FAMILY } }}
+      theme={{ token: { colorPrimary: '#4f7146', borderRadius: 10, fontFamily: QG_FONT_FAMILY } }}
       modal={{ centered: true }}
     >
       <AntdApp>

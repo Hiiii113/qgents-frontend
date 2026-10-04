@@ -2,7 +2,7 @@ import { request } from './client'
 import type { CreateMemoryPayload, GenerateMemoryDraftPayload, Memory } from '@/types'
 
 /**
- * 共享 Memory API —— 对齐接口文档 v1.1.8 §9
+ * 共享 Memory API —— 当前接口
  */
 export const memoryApi = {
   /** 查询 Memory（默认仅 APPROVED，前端按需传状态过滤） */

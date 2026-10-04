@@ -5,7 +5,6 @@ import { PATHS } from '@/routes/paths'
 
 /**
  * 需登录才能访问的路由守卫
- * TODO[后端联调]: 结合 token 过期、refresh、bootstrap()
  */
 export function RequireAuth() {
   const { isAuthenticated } = useAuth()

@@ -7,12 +7,10 @@ import type {
   RefreshResponse,
   MeResponse,
   UpdateMePayload,
-  GithubOAuthStartResponse,
-  GithubOAuthStatus,
 } from '@/types'
 
 /**
- * 认证接口 —— 对齐接口文档 v1.1.4 §4
+ * 认证接口 —— 当前接口
  *
  * RSA 公钥不再通过接口动态拉取，改为前端硬编码。
  * 见 src/utils/rsaConfig.ts
@@ -37,7 +35,7 @@ export const authApi = {
   },
 
   /**
-   * POST /auth/register/verification-codes — 注册时发送邮箱验证码（接口文档 §11.1，匿名）。
+   * POST /auth/register/verification-codes — 注册时发送邮箱验证码（匿名）。
    * 验证码 6 位数字、10 分钟有效、一次性；服务端仅存 SHA-256 哈希。
    * 错误：409 EMAIL_ALREADY_REGISTERED（邮箱已注册，不发邮件）/ 429 RATE_LIMITED（同 IP+邮箱 1 小时超 5 次）。
    */
@@ -63,17 +61,17 @@ export const authApi = {
     return request<MeResponse>('/me', { signal })
   },
 
-  /** PATCH /me — 修改昵称和头像（§4；写操作由 client 自动带 Idempotency-Key） */
+  /** PATCH /me — 修改昵称和头像（写操作由 client 自动带 Idempotency-Key） */
   updateMe(payload: UpdateMePayload) {
     return request<void>('/me', { method: 'PATCH', body: payload })
   },
 
-  /** POST /me/avatar/credential — 签发头像直传凭证（§4；OSS 未启用时 501 AVATAR_STORAGE_NOT_CONFIGURED） */
+  /** POST /me/avatar/credential — 签发头像直传凭证（OSS 未启用时 501 AVATAR_STORAGE_NOT_CONFIGURED） */
   createAvatarCredential(input: { mediaType: string; sizeBytes: number }) {
     return request<AvatarCredential>('/me/avatar/credential', { method: 'POST', body: input })
   },
 
-  /** POST /me/avatar/confirm — 确认头像上传，写入 users.avatar_url 并返回长期公共读 URL（§4） */
+  /** POST /me/avatar/confirm — 确认头像上传，写入 users.avatar_url 并返回长期公共读 URL */
   confirmAvatar(objectKey: string) {
     return request<{ avatarUrl: string }>('/me/avatar/confirm', {
       method: 'POST',
@@ -100,7 +98,7 @@ export const authApi = {
 
   /**
    * POST /auth/password-resets — 使用重置令牌设置新密码（匿名）。
-   * newPassword 必须为前端使用平台 RSA 公钥加密后的 Base64 密文（§4.1），调用方用 encryptPassword 加密。
+   * newPassword 必须为前端使用平台 RSA 公钥加密后的 Base64 密文，调用方用 encryptPassword 加密。
    * 注意：请求体字段名（token）尚未在契约中冻结，联调时以后端实际契约为准。
    */
   resetPassword(input: { email: string; token: string; newPassword: string; passwordKeyId: string }) {
@@ -111,27 +109,11 @@ export const authApi = {
     })
   },
 
-  /** POST /me/integrations/github/oauth/start — 生成个人 GitHub 授权地址（§49.2） */
-  startGithubOAuth(client: 'WEB' | 'MOBILE' = 'WEB') {
-    return request<GithubOAuthStartResponse>(
-      `/me/integrations/github/oauth/start?client=${encodeURIComponent(client)}`,
-      { method: 'POST', body: {} },
-    )
-  },
 
-  /** GET /me/integrations/github/oauth — 查询当前用户的个人 GitHub 授权状态（§49.4） */
-  getGithubOAuthStatus() {
-    return request<GithubOAuthStatus>('/me/integrations/github/oauth')
-  },
-
-  /** DELETE /me/integrations/github/oauth — 撤销当前用户的个人 GitHub 授权（§49.5） */
-  revokeGithubOAuth() {
-    return request<void>('/me/integrations/github/oauth', { method: 'DELETE' })
-  },
 }
 
 /**
- * 上传头像并返回长期公共读 URL：创建凭证 → 直传 OSS → 确认（§4，镜像 §18 附件链路）。
+ * 上传头像并返回长期公共读 URL：创建凭证 → 直传 OSS → 确认（镜像  附件链路）。
  * 失败时抛错，由调用方 toast 展示；OSS 未启用时抛 501 错误。
  */
 export async function uploadAvatar(file: File): Promise<string> {

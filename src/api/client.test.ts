@@ -26,15 +26,15 @@ describe('API client authentication recovery', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(response(401, { error: { message: 'Token expired' } }))
       .mockResolvedValueOnce(response(200, { data: { accessToken: 'new-access-token', refreshToken: 'new-refresh-token' } }))
-      .mockResolvedValueOnce(response(200, { data: { id: 'task-1' } }))
+      .mockResolvedValueOnce(response(200, { data: { id: 'group-1' } }))
 
-    await expect(request<{ id: string }>('/projects/project-1/tasks')).resolves.toEqual({ id: 'task-1' })
+    await expect(request<{ id: string }>('/projects/project-1/groups')).resolves.toEqual({ id: 'group-1' })
 
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/auth/refresh', expect.objectContaining({
       method: 'POST',
       body: JSON.stringify({ refreshToken: 'refresh-token' }),
     }))
-    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/projects/project-1/tasks', expect.objectContaining({
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/projects/project-1/groups', expect.objectContaining({
       headers: expect.objectContaining({ Authorization: 'Bearer new-access-token' }),
     }))
     expect(localStorage.getItem('qgents_access_token')).toBe('new-access-token')
@@ -49,7 +49,7 @@ describe('API client authentication recovery', () => {
       .mockResolvedValueOnce(response(401, { error: { message: 'Unauthorized' } }))
       .mockResolvedValueOnce(response(401, { error: { message: 'Refresh token expired' } }))
 
-    await expect(request('/projects/project-1/tasks')).rejects.toMatchObject({ status: 401 })
+    await expect(request('/projects/project-1/groups')).rejects.toMatchObject({ status: 401 })
 
     expect(localStorage.getItem('qgents_access_token')).toBeNull()
     expect(localStorage.getItem('qgents_refresh_token')).toBeNull()

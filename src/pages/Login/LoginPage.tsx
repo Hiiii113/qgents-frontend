@@ -10,7 +10,7 @@ import './LoginPage.css'
 type AuthTab = 'login' | 'register'
 
 /**
- * 登录 / 注册页 —— 对齐接口文档 v1.1.3 §4
+ * 登录 / 注册页 —— 当前接口
  * 左：品牌与价值主张；右：登录卡片
  */
 export function LoginPage() {
@@ -36,7 +36,7 @@ export function LoginPage() {
     }
   }, [])
 
-  /** 注册 tab：向邮箱发送验证码（60s 后可重发）。§11.1 发送前先做邮箱格式校验 */
+  /** 注册 tab：向邮箱发送验证码（60s 后可重发）。 发送前先做邮箱格式校验 */
   async function sendVerificationCode() {
     const trimmedEmail = email.trim()
     if (codeSending || codeCountdown > 0 || !trimmedEmail) return
@@ -48,7 +48,7 @@ export function LoginPage() {
     setCodeSending(true)
     try {
       const result = await authApi.sendRegisterCode(trimmedEmail)
-      // §11.1 响应 202：data.message 为「验证码已发送到邮箱，10 分钟内有效」
+      //  响应 202：data.message 为「验证码已发送到邮箱，10 分钟内有效」
       message.success(result?.message || '验证码已发送到邮箱，10 分钟内有效')
       setCodeCountdown(60)
       if (codeTimerRef.current !== null) window.clearInterval(codeTimerRef.current)
@@ -73,7 +73,7 @@ export function LoginPage() {
     e.preventDefault()
     setError(null)
 
-    // §11.2 注册必须携带 6 位数字邮箱验证码（「过了才能通过」）
+    //  注册必须携带 6 位数字邮箱验证码（「过了才能通过」）
     if (tab === 'register' && !/^\d{6}$/.test(verificationCode.trim())) {
       setError('请输入 6 位数字邮箱验证码')
       return
@@ -121,8 +121,8 @@ export function LoginPage() {
               <ChatIcon />
             </span>
             <div>
-              <strong>项目群聊驱动任务</strong>
-              <p>讨论在项目群，@Agent 发起任务，进度实时透明</p>
+              <strong>从项目聊天开始</strong>
+              <p>成员共同讨论，@Agent 协助分析与执行</p>
             </div>
           </li>
           <li>
@@ -130,8 +130,8 @@ export function LoginPage() {
               <BotIcon />
             </span>
             <div>
-              <strong>多 Agent 协同执行</strong>
-              <p>多 Agent 协作分工，高效完成复杂任务</p>
+              <strong>按需使用 Agent</strong>
+              <p>自主选择协作伙伴，保留上下文与成果</p>
             </div>
           </li>
           <li>
@@ -139,8 +139,8 @@ export function LoginPage() {
               <CodeIcon />
             </span>
             <div>
-              <strong>Diff 与 MR 可审查交付</strong>
-              <p>以 Diff 形式交付，支持 MR 审查，变更可追溯</p>
+              <strong>知识与代码在同一处</strong>
+              <p>共享项目知识，可选接入 GitHub 处理代码</p>
             </div>
           </li>
         </ul>
@@ -435,4 +435,3 @@ function EyeIcon() {
     </svg>
   )
 }
-

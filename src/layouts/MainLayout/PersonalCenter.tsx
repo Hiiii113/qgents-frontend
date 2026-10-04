@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import {
   App,
   Drawer,
@@ -11,28 +11,21 @@ import {
   Divider,
   Input,
   Upload,
-  theme,
 } from 'antd'
 import {
   TeamOutlined,
-  FileAddOutlined,
-  FolderAddOutlined,
   LogoutOutlined,
   CameraOutlined,
-  GithubOutlined,
 } from '@ant-design/icons'
 import { useAuth } from '@/context/AuthContext'
 import { usePersonalCenter } from '@/context/PersonalCenterContext'
-import { useCurrentTeamId } from '@/store/appUiStore'
-import { CreateProjectModal } from '@/components/CreateProjectModal'
-import { ApiError, authApi, teamApi, projectApi, uploadAvatar } from '@/api'
+import { ApiError, authApi, uploadAvatar } from '@/api'
 import { formatApiError } from '@/utils/formatApiError'
 import { PATHS } from '@/routes/paths'
-import type { Team } from '@/types'
 
 const { Title, Text } = Typography
 
-/** 头像图片限制：§4 要求 image/*、大小 ≤ 5MB */
+/** 头像图片限制： 要求 image/*、大小 ≤ 5MB */
 const AVATAR_MAX_BYTES = 5 * 1024 * 1024
 
 /**
@@ -44,16 +37,8 @@ export function PersonalCenter() {
   const { message } = App.useApp()
   const { user, logout, updateUser } = useAuth()
   const { open, closePersonalCenter } = usePersonalCenter()
-  const currentTeamId = useCurrentTeamId()
-  const [createOpen, setCreateOpen] = useState(false)
   const [nickname, setNickname] = useState(user?.displayName ?? '')
   const [avatarUploading, setAvatarUploading] = useState(false)
-
-  // 真实团队列表（替换原 DEMO_TEAM_TREE 假数据）
-  const { data: teams = [] } = useQuery({
-    queryKey: ['teams', 'mine'],
-    queryFn: teamApi.listMine,
-  })
 
   const name = user?.displayName ?? '用户'
   const email = user?.email ?? '—'
@@ -91,7 +76,7 @@ export function PersonalCenter() {
       const avatarUrl = await uploadAvatar(file)
       if (user) {
         updateUser({ ...user, avatarUrl })
-        // 头像 URL 持久化到后端（PATCH /me 兼容任意 http(s) URL，§4）；静默调用，成功提示由下方「头像已更新」统一给出
+        // 头像 URL 持久化到后端（PATCH /me 兼容任意 http(s) URL，）；静默调用，成功提示由下方「头像已更新」统一给出
         await authApi.updateMe({ avatarUrl })
       }
       message.success('头像已更新')
@@ -113,21 +98,6 @@ export function PersonalCenter() {
     navigate(PATHS.LOGIN, { replace: true })
   }
 
-  function handleNav(to: string) {
-    closePersonalCenter()
-    navigate(to)
-  }
-
-  function handleCreateProject() {
-    // 未进入任何团队时，先回到团队列表选团队
-    if (!currentTeamId) {
-      closePersonalCenter()
-      navigate(PATHS.MY_TEAMS)
-      return
-    }
-    setCreateOpen(true)
-  }
-
   return (
     <Drawer
       title="个人中心"
@@ -138,7 +108,7 @@ export function PersonalCenter() {
       styles={{ body: { paddingTop: 8 } }}
     >
       <Space align="start" size={12} style={{ marginBottom: 16 }}>
-        <Avatar size={48} src={user?.avatarUrl} style={{ background: '#f97316' }}>
+        <Avatar size={48} src={user?.avatarUrl} style={{ background: '#dfe8d3', color: '#456339' }}>
           {avatarChar}
         </Avatar>
         <div>
@@ -149,7 +119,7 @@ export function PersonalCenter() {
         </div>
       </Space>
 
-      {/* 编辑资料：改昵称 + 上传头像（§4；OSS 未启用时后端 501，前端提示暂不可用） */}
+      {/* 编辑资料：改昵称 + 上传头像（OSS 未启用时后端 501，前端提示暂不可用） */}
       <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }} size={8}>
         <Space.Compact style={{ width: '100%' }}>
           <Input
@@ -176,101 +146,15 @@ export function PersonalCenter() {
 
       <Divider style={{ margin: '16px 0' }} />
 
-      <Title level={5} style={{ marginBottom: 12 }}>
-        切换团队或项目
-      </Title>
-
-      <div style={{ maxHeight: 280, overflow: 'auto', marginBottom: 16 }}>
-        {teams.length === 0 ? (
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            暂无团队
-          </Text>
-        ) : (
-          teams.map((team) => <TeamProjectGroup key={team.id} team={team} onNav={handleNav} />)
-        )}
-      </div>
-
-      <Divider style={{ margin: '16px 0' }} />
-
       <Space orientation="vertical" style={{ width: '100%' }} size={8}>
-        <Link to={PATHS.CREATE_TEAM} onClick={closePersonalCenter}>
-          <Button block icon={<FileAddOutlined />}>
-            创建团队
-          </Button>
-        </Link>
-        <Button block icon={<FolderAddOutlined />} onClick={handleCreateProject}>
-          创建项目
-        </Button>
-        <Link to={PATHS.GITHUB_OAUTH} onClick={closePersonalCenter}>
-          <Button block icon={<GithubOutlined />}>
-            个人 GitHub 授权
-          </Button>
+        <Link to={PATHS.MY_TEAMS} onClick={closePersonalCenter}>
+          <Button block icon={<TeamOutlined />}>切换团队</Button>
         </Link>
         <Button block danger icon={<LogoutOutlined />} onClick={handleLogout}>
           退出登录
         </Button>
       </Space>
 
-      {currentTeamId && (
-        <CreateProjectModal
-          teamId={currentTeamId}
-          open={createOpen}
-          onClose={() => setCreateOpen(false)}
-        />
-      )}
     </Drawer>
-  )
-}
-
-/** 团队 + 其下项目列表（真实接口，替换假数据） */
-function TeamProjectGroup({
-  team,
-  onNav,
-}: {
-  team: Team
-  onNav: (to: string) => void
-}) {
-  const { token } = theme.useToken()
-  const { data: projects = [] } = useQuery({
-    queryKey: ['teams', team.id, 'projects'],
-    queryFn: () => projectApi.listByTeam(team.id),
-    enabled: !!team.id,
-  })
-
-  return (
-    <div style={{ marginBottom: 12 }}>
-      <Button
-        type="link"
-        style={{ padding: 0, height: 'auto', marginBottom: 6 }}
-        onClick={() => onNav(PATHS.teamDetail(team.id, team.role === 'TEAM_OWNER'))}
-      >
-        <Space size={6}>
-          <TeamOutlined style={{ color: token.colorTextSecondary }} />
-          <Text strong>{team.name}</Text>
-        </Space>
-      </Button>
-      {projects.length > 0 ? (
-        projects.map((p) => (
-          <div key={p.id} style={{ padding: '4px 0 4px 20px' }}>
-            <Button
-              type="link"
-              style={{ padding: 0, height: 'auto' }}
-              onClick={() => onNav(PATHS.projectDetail(p.id))}
-            >
-              <Space>
-                <span>{p.name}</span>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {p.role === 'PROJECT_ADMIN' ? 'Maintainer' : 'Developer'}
-                </Text>
-              </Space>
-            </Button>
-          </div>
-        ))
-      ) : (
-        <Text type="secondary" style={{ fontSize: 12, paddingLeft: 20, display: 'block' }}>
-          暂无项目
-        </Text>
-      )}
-    </div>
   )
 }

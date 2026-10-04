@@ -1,122 +1,48 @@
-import { useNavigate } from 'react-router-dom'
-import { Typography, Row, Col, Card, Button, Space } from 'antd'
-import { PlusOutlined, LoginOutlined } from '@ant-design/icons'
+import { Link } from 'react-router-dom'
+import { ArrowRightOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons'
 import { PATHS } from '@/routes/paths'
+import '@/styles/Journey.css'
 
-const { Title, Paragraph } = Typography
-
-/**
- * 登录后引导页 —— 需在 MainLayout 外单独铺深色背景
- */
 export default function WelcomePage() {
-  const navigate = useNavigate()
-
   return (
-    <div className="qg-page-dark qg-page-welcome">
-      <div style={{ maxWidth: 880, margin: '0 auto', padding: '48px 24px' }}>
-        <header style={{ textAlign: 'center', marginBottom: 40 }}>
-          {/* clamp(min, ideal, max)：ideal 用正斜率 vw，大屏取大值、小屏取小值，区间内平滑插值 */}
-          <Title
-            level={2}
-            style={{
-              color: '#f3f4f6',
-              marginTop: 0,
-              fontSize: 'clamp(22px, 1vw + 14px, 30px)',
-              lineHeight: 1.3,
-            }}
-          >
-            欢迎来到 Qgents
-          </Title>
-          <Paragraph
-            style={{
-              color: '#9aa3b5',
-              marginBottom: 0,
-              fontSize: 'clamp(13px, 0.4vw + 12px, 15px)',
-            }}
-          >
-            你还未加入任何团队，请选择创建或加入团队
-          </Paragraph>
+    <div className="welcome-space">
+      <Link className="welcome-space__brand" to={PATHS.MY_TEAMS}>
+        Qgents
+      </Link>
+      <div className="journey-page">
+        <div className="journey-steps">
+          <span className="is-current">01 创建或加入团队</span>
+          <span>02 选择项目</span>
+          <span>03 开始聊天</span>
+        </div>
+        <header className="journey-hero">
+          <div>
+            <span className="journey-eyebrow">LET’S GET TOGETHER</span>
+            <h1>好想法，从一起聊开始。</h1>
+            <p>先找一个团队空间，再与伙伴和 Agent 一起开展工作。</p>
+          </div>
         </header>
-
-        <Row gutter={[24, 24]}>
-          <Col xs={24} md={12}>
-            <Card hoverable style={{ height: '100%', textAlign: 'center' }} styles={{ body: { padding: 32 } }}>
-              <Space orientation="vertical" size={16} style={{ width: '100%' }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
-                    background: '#3b82f6',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontSize: 20,
-                  }}
-                >
-                  <PlusOutlined />
-                </div>
-                <Title
-                  level={4}
-                  style={{ margin: 0, fontSize: 'clamp(16px, 0.5vw + 12px, 20px)' }}
-                >
-                  创建团队
-                </Title>
-                <Paragraph
-                  type="secondary"
-                  style={{ fontSize: 'clamp(13px, 0.3vw + 12px, 14px)' }}
-                >
-                  自建工作室，生成邀请码，通过 Github 邮箱邀请成员协作
-                </Paragraph>
-                <Button type="primary" size="large" onClick={() => navigate(PATHS.CREATE_TEAM)}>
-                  立即创建
-                </Button>
-              </Space>
-            </Card>
-          </Col>
-
-          <Col xs={24} md={12}>
-            <Card hoverable style={{ height: '100%', textAlign: 'center' }} styles={{ body: { padding: 32 } }}>
-              <Space orientation="vertical" size={16} style={{ width: '100%' }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 12,
-                    background: '#22c55e',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontSize: 20,
-                  }}
-                >
-                  <LoginOutlined />
-                </div>
-                <Title
-                  level={4}
-                  style={{ margin: 0, fontSize: 'clamp(16px, 0.5vw + 12px, 20px)' }}
-                >
-                  加入已有团队
-                </Title>
-                <Paragraph
-                  type="secondary"
-                  style={{ fontSize: 'clamp(13px, 0.3vw + 12px, 14px)' }}
-                >
-                  填写邀请码加入，或处理别人发送给你的团队邀请
-                </Paragraph>
-                <Button
-                  size="large"
-                  style={{ background: '#22c55e', borderColor: '#22c55e', color: '#fff' }}
-                  onClick={() => navigate(PATHS.JOIN_TEAM)}
-                >
-                  加入团队
-                </Button>
-              </Space>
-            </Card>
-          </Col>
-        </Row>
+        <div className="welcome-space__choices">
+          <Link to={PATHS.CREATE_TEAM} className="journey-card">
+            <PlusOutlined className="welcome-space__icon" />
+            <h2>创建一个团队</h2>
+            <p>为你的伙伴建一个空间，创建项目，开始讨论。</p>
+            <div className="journey-card__bottom">
+              <span>创建团队</span>
+              <ArrowRightOutlined />
+            </div>
+          </Link>
+          <Link to={PATHS.JOIN_TEAM} className="journey-card">
+            <TeamOutlined className="welcome-space__icon" />
+            <h2>加入已有团队</h2>
+            <p>接受团队邀请，与伙伴在同一个项目中会合。</p>
+            <div className="journey-card__bottom">
+              <span>加入团队</span>
+              <ArrowRightOutlined />
+            </div>
+          </Link>
+        </div>
+        <p className="welcome-space__footnote">聊天记录想法，Agent 帮你把它往前推进。</p>
       </div>
     </div>
   )

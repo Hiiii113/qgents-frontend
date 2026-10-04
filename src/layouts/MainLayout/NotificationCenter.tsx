@@ -4,11 +4,6 @@ import { Drawer, Badge, Button, Typography, Space, Empty, theme } from 'antd'
 import {
   BellOutlined,
   CheckOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  QuestionCircleOutlined,
-  InboxOutlined,
-  BranchesOutlined,
   UserAddOutlined,
   MessageOutlined,
 } from '@ant-design/icons'
@@ -23,13 +18,9 @@ const { Text } = Typography
 
 /** 每种通知类型的图标与配色 */
 const KIND_META: Record<NotificationKind, { icon: ReactNode; color: string }> = {
-  TASK_COMPLETED: { icon: <CheckCircleOutlined />, color: '#22c55e' },
-  TASK_FAILED: { icon: <CloseCircleOutlined />, color: '#ef4444' },
-  TASK_AWAITING_CONFIRMATION: { icon: <InboxOutlined />, color: '#3b82f6' },
-  AGENT_INPUT_REQUIRED: { icon: <QuestionCircleOutlined />, color: '#f59e0b' },
-  DELIVERABLE_PENDING: { icon: <InboxOutlined />, color: '#3b82f6' },
-  MR_PENDING: { icon: <BranchesOutlined />, color: '#a855f7' },
-  INVITED: { icon: <UserAddOutlined />, color: '#3b82f6' },
+  INVITED: { icon: <UserAddOutlined />, color: '#4f7146' },
+  TEAM_JOINED: { icon: <UserAddOutlined />, color: '#4f7146' },
+  PROJECT_ADDED: { icon: <MessageOutlined />, color: '#4f7146' },
   MESSAGE_MENTION: { icon: <MessageOutlined />, color: '#f59e0b' },
 }
 
@@ -52,7 +43,7 @@ function formatRelativeTime(iso: string): string {
 
 /**
  * 通知中心 —— 顶部铃铛 + 右侧抽屉
- * 本轮由前端 Mock 实现（接口文档 §1：持久通知中心不在本轮范围）
+ * 通知列表与已读状态来自后端通知接口
  */
 export function NotificationCenter() {
   const navigate = useNavigate()
