@@ -1,5 +1,10 @@
 import '@testing-library/jest-dom/vitest'
 
+// jsdom 不提供滚动定位；候选菜单的实际滚动行为在浏览器中验证。
+if (typeof HTMLElement.prototype.scrollIntoView !== 'function') {
+  HTMLElement.prototype.scrollIntoView = () => undefined
+}
+
 if (typeof window.matchMedia !== 'function') {
   window.matchMedia = (query: string): MediaQueryList => ({
     matches: false,

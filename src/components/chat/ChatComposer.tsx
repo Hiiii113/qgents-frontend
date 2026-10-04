@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Alert, App, Button, Input, Select, Tag, Upload } from 'antd'
+import { Alert, App, Avatar, Button, Mentions, Select, Tag, Upload } from 'antd'
 import { CloseOutlined, PaperClipOutlined, SendOutlined } from '@ant-design/icons'
-import type { TextAreaRef } from 'antd/es/input/TextArea'
+import type { MentionsRef } from 'antd/es/mentions'
 import { attachmentApi, uploadAttachment } from '@/api/attachment'
 import { formatApiError } from '@/utils/formatApiError'
 import { chatMessageText, type ChatMember, type ChatMention, type ChatMessage, type SendChatMessage } from '@/types/chat'
 
 type Attachment = { id: string; file: File; attachmentId?: string }
+function containsMention(text: string, name: string) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(?:^|[\\s，。！？、,!?;；:：])@${escaped}(?=$|[\\s，。！？、,!?;；:：])`).test(text)
+}
 interface Props {
   projectId: string
   reply: ChatMessage | null
@@ -40,7 +44,7 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string[]>(savedDraft.selected)
   const messageId = useRef(crypto.randomUUID())
-  const inputRef = useRef<TextAreaRef>(null)
+  const inputRef = useRef<MentionsRef>(null)
   const sending = useRef(false)
   const previousReplyId = useRef(reply?.id)
   useEffect(() => {
@@ -48,7 +52,7 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
       messageId.current = crypto.randomUUID()
       previousReplyId.current = reply?.id
     }
-    if (reply && !busy) inputRef.current?.focus({ preventScroll: true })
+    if (reply && !busy) inputRef.current?.nativeElement.querySelector('textarea')?.focus({ preventScroll: true })
   }, [reply, busy])
   // 按用户和群聊保存文字与提及，切换会话后继续编辑；附件需重新选择。
   useEffect(() => {
@@ -59,11 +63,12 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
     } catch { /* 存储不可用时仍可正常聊天。 */ }
   }, [draftKey, draft, selected])
   useEffect(() => {
-    if (!busy && !disabled) inputRef.current?.focus({ preventScroll: true })
+    if (!busy && !disabled) inputRef.current?.nativeElement.querySelector('textarea')?.focus({ preventScroll: true })
   }, [busy, disabled])
 
   function edit(value: string) {
     setDraft(value)
+    setSelected(current => current.filter(key => recipients.some(item => `${item.memberType}:${item.id}` === key && containsMention(value, item.displayName))))
     messageId.current = crypto.randomUUID()
     setError(null)
   }
@@ -86,7 +91,7 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
       }
       if (draft.trim()) {
         const mentions: ChatMention[] = recipients
-          .filter(item => selected.includes(`${item.memberType}:${item.id}`) && draft.includes(`@${item.displayName}`))
+          .filter(item => selected.includes(`${item.memberType}:${item.id}`) && containsMention(draft, item.displayName))
           .map(item => ({ type: item.memberType, id: item.id }))
         await onSend({ type: 'TEXT', content: { text: draft.trim() }, mentions, replyToId: reply?.id, clientMessageId: messageId.current })
       }
@@ -106,17 +111,32 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
     {attachments.length > 0 && <div className="chat-composer__files">{attachments.map(item =>
       <Tag key={item.id} closable={!busy} onClose={() => setAttachments(current => current.filter(file => file.id !== item.id))}>{item.file.name}</Tag>
     )}</div>}
-    <Input.TextArea
+    <Mentions
       ref={inputRef}
-      aria-label="消息内容" placeholder="写下想法，或选择 @Agent 一起完成工作…"
-      value={draft} onChange={event => edit(event.target.value)} autoSize={{ minRows: 2, maxRows: 7 }}
+      aria-label="消息内容" placeholder="写下想法，输入 @ 选择 Agent 或成员…"
+      value={draft} onChange={edit} autoSize={{ minRows: 2, maxRows: 7 }}
+      placement="top" notFoundContent="没有匹配的 Agent 或成员"
+      validateSearch={text => !/\s/.test(text)}
+      options={recipients.map(item => ({
+        key: `${item.memberType}:${item.id}`, memberKey: `${item.memberType}:${item.id}`, value: item.displayName,
+        label: <span className="chat-mention-option"><Avatar size={28} src={item.avatarUrl}>{item.displayName.slice(0, 1)}</Avatar><span>{item.displayName}<small>{item.memberType === 'AGENT' ? 'Agent' : item.email || '成员'}</small></span></span>,
+      }))}
+      onSelect={option => {
+        // 昵称可重复，选项单独携带成员 ID，发送时不靠昵称推断对象。
+        const memberKey: unknown = Reflect.get(option, 'memberKey')
+        if (typeof memberKey === 'string') setSelected(current => [...new Set([...current, memberKey])])
+      }}
+      onKeyDownCapture={event => {
+        // 换行与输入法确认交给浏览器，避免被候选菜单当成选择操作。
+        if (event.key === 'Enter' && (event.shiftKey || event.nativeEvent.isComposing)) event.stopPropagation()
+      }}
       disabled={busy || disabled} onPaste={event => {
         const files = Array.from(event.clipboardData.files)
         if (!files.length || busy || disabled) return
         event.preventDefault()
         if (attachments.length + files.length > 10) { void message.info('每次最多添加 10 个附件'); return }
         setAttachments(current => [...current, ...files.map(file => ({ id: crypto.randomUUID(), file }))])
-      }} onKeyDown={event => {
+      }} onPressEnter={event => {
         if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
           event.preventDefault(); void send()
         }
@@ -137,7 +157,7 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
             setSelected(values)
             const added = values.filter(value => !selected.includes(value))
             const names = recipients.filter(item => added.includes(`${item.memberType}:${item.id}`)).map(item => `@${item.displayName} `)
-            edit(draft + names.join(''))
+            edit(draft + (draft && !/\s$/.test(draft) ? ' ' : '') + names.join(''))
           }}
         />
       </div>
