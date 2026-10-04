@@ -7,17 +7,13 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom'
-import { Alert, Avatar, Badge, Button, Dropdown, Empty, Input, Spin } from 'antd'
+import { Alert, Avatar, Badge, Button, Empty, Input, Spin } from 'antd'
 import {
   ArrowLeftOutlined,
-  BookOutlined,
-  CodeOutlined,
   MessageOutlined,
   PlusOutlined,
-  RobotOutlined,
   SearchOutlined,
   SettingOutlined,
-  ThunderboltOutlined,
 } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
@@ -30,15 +26,7 @@ import { useAppUiStore } from '@/store/appUiStore'
 import { PageLoader } from '@/components/PageLoader'
 import './ProjectDetailLayout.scss'
 
-const TOOLS = [
-  { key: 'agents', label: 'Agent', icon: <RobotOutlined /> },
-  { key: 'skills', label: 'Skill', icon: <ThunderboltOutlined /> },
-  { key: 'memory', label: '共享知识', icon: <BookOutlined /> },
-  { key: 'code', label: '项目仓库', icon: <CodeOutlined /> },
-  { key: 'settings', label: '项目设置', icon: <SettingOutlined /> },
-]
-
-/** 项目以群聊为主界面，配置能力收在辅助菜单中。 */
+/** 项目以群聊为主界面，配置能力从项目设置进入。 */
 export default function ProjectDetailLayout() {
   const { projectId = '' } = useParams<{ projectId: string }>()
   const [params] = useSearchParams()
@@ -158,23 +146,13 @@ export default function ProjectDetailLayout() {
         >
           创建新群聊
         </Button>
-        <div className="project-sidebar__footer">
-          <Dropdown
-            trigger={['click']}
-            menu={{
-              items: TOOLS,
-              onClick: ({ key }) => navigate(`/app/projects/${projectId}/${key}`),
-            }}
-          >
-            <Button block type="text" icon={<SettingOutlined />}>
-              项目工具
-            </Button>
-          </Dropdown>
-        </div>
+        <NavLink className="project-sidebar__settings" to={PATHS.projectSettings(projectId)}>
+          <SettingOutlined /> 项目设置
+        </NavLink>
       </aside>
       <main className="project-workspace__main">
         {!inChat && (
-          <div className="project-tools__back">
+          <nav className="project-tools__nav" aria-label="项目导航">
             <NavLink
               to={
                 PATHS.projectChat(projectId) +
@@ -183,11 +161,13 @@ export default function ProjectDetailLayout() {
             >
               <ArrowLeftOutlined /> 返回聊天
             </NavLink>
-          </div>
+          </nav>
         )}
-        <Suspense fallback={<PageLoader />}>
-          <Outlet />
-        </Suspense>
+        <div className="project-workspace__content">
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
+        </div>
       </main>
       {createOpen && (
         <GroupMembersModal

@@ -6,7 +6,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
 import { repositoriesApi } from '@/api/repositories'
 import type { AvailableRepository } from '@/api/repositories'
-import { WorkspacePage } from '@/components/WorkspacePage'
 import { formatApiError } from '@/utils/formatApiError'
 import { PATHS } from '@/routes/paths'
 
@@ -34,10 +33,13 @@ export function CodePage() {
     onSuccess: () => void client.invalidateQueries({ queryKey: ['repositories', projectId] }),
     onError: error => void message.error(formatApiError(error)),
   })
-  return <WorkspacePage title="项目仓库" description="把项目需要的 GitHub 仓库导入这里。Agent 在聊天中按需选择仓库、修改代码并返回成果。"
-    action={canManage && <Button type="primary" icon={<PlusOutlined />} onClick={() => setImportOpen(true)}>导入仓库</Button>}>
+  return <>
     <div className="workspace-page__toolbar"><Input prefix={<SearchOutlined />} placeholder="搜索仓库" value={search} onChange={event => setSearch(event.target.value)} style={{ maxWidth: 320 }} allowClear />
-      <Link to={PATHS.githubIntegration(teamId)}><Button icon={<GithubOutlined />}>GitHub 连接</Button></Link></div>
+      <div className="workspace-card__actions" style={{ margin: 0, padding: 0, border: 0 }}>
+        <Link to={PATHS.githubIntegration(teamId)}><Button icon={<GithubOutlined />}>GitHub 连接</Button></Link>
+        {canManage && <Button type="primary" icon={<PlusOutlined />} onClick={() => setImportOpen(true)}>导入仓库</Button>}
+      </div>
+    </div>
     {imported.isError && <Alert type="error" showIcon message={formatApiError(imported.error)} action={<Button onClick={() => void imported.refetch()}>重试</Button>} />}
     {imported.isPending ? <Spin delay={180} /> : !(imported.data ?? []).length ? <Empty description="项目还没有导入仓库。你也可以直接在聊天中讨论和使用 Agent。" />
       : <div className="workspace-page__grid">{(imported.data ?? []).filter(repo => repo.fullName.toLowerCase().includes(search.toLowerCase())).map(repo => <article className="workspace-card" key={repo.id}>
@@ -55,5 +57,5 @@ export function CodePage() {
         options={options.map(repo => ({ value: `${repo.installationId}:${repo.repositoryId}`, label: repo.fullName }))} />}
       {!available.isPending && !options.length && <p>没有可导入的仓库。<Link to={PATHS.githubIntegration(teamId)}>管理 GitHub 连接与授权</Link></p>}
     </Modal>
-  </WorkspacePage>
+  </>
 }

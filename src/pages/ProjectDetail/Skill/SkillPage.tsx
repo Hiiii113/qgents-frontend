@@ -89,22 +89,8 @@ export function SkillPage() {
   const editTarget = skills.find((s) => s.id === editId) ?? null
 
 
-  if (isLoading) {
-    return (
-      <div className="skill-page">
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-          <Spin delay={180} size="large" />
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="skill-page">
-      <header className="skill-page__header">
-        <h1 className="skill-page__title">共享 Skill</h1>
-        <p className="skill-page__desc">沉淀可复用能力片段（规范、提示词、操作指引）；在详情中编辑、提交或审核共享内容</p>
-      </header>
+    <>
 
       <div className="skill-page__toolbar">
         <Segmented
@@ -126,7 +112,7 @@ export function SkillPage() {
         </Space>
       </div>
 
-      {isError ? (
+      {isLoading ? <Spin delay={180} size="large" /> : isError ? (
         <EmptyState
           icon="⚠️"
           title="Skill 加载失败"
@@ -173,7 +159,7 @@ export function SkillPage() {
           setEditId(null)
         }}
       />
-    </div>
+    </>
   )
 }
 

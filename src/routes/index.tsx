@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { PageLoader } from '@/components/PageLoader'
 import { MainLayout } from '@/layouts/MainLayout'
+import { ProjectSettingsLayout } from '@/pages/ProjectDetail/Settings/ProjectSettingsLayout'
 import { PATHS } from './paths'
 import { RedirectIfAuthed, RequireAuth, RequireTeam } from './guards'
 import { LoginPage } from '@/pages/Login/LoginPage'
@@ -47,11 +48,13 @@ export function AppRouter() {
           <Route path="projects/:projectId" element={<ProjectDetailLayout />}>
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<ProjectChatPage />} />
-            <Route path="agents" element={<AgentTeamPage />} />
-            <Route path="skills" element={<SkillPage />} />
-            <Route path="memory" element={<MemoryPage />} />
-            <Route path="code" element={<CodePage />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route element={<ProjectSettingsLayout />}>
+              <Route path="agents" element={<AgentTeamPage />} />
+              <Route path="skills" element={<SkillPage />} />
+              <Route path="memory" element={<MemoryPage />} />
+              <Route path="code" element={<CodePage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>

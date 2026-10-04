@@ -87,22 +87,8 @@ export function MemoryPage() {
   const editTarget = memories.find((m) => m.id === editId) ?? null
 
 
-  if (isLoading) {
-    return (
-      <div className="memory-page">
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-          <Spin delay={180} size="large" />
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="memory-page">
-      <header className="memory-page__header">
-        <h1 className="memory-page__title">共享 Memory</h1>
-        <p className="memory-page__desc">将共同确认的事实与经验沉淀为项目知识</p>
-      </header>
+    <>
 
       <div className="memory-page__toolbar">
         <Select<FilterKey>
@@ -128,7 +114,7 @@ export function MemoryPage() {
         </Space>
       </div>
 
-      {isError ? (
+      {isLoading ? <Spin delay={180} size="large" /> : isError ? (
         <EmptyState
           icon="⚠️"
           title="Memory 加载失败"
@@ -196,7 +182,7 @@ export function MemoryPage() {
           setEditId(null)
         }}
       />
-    </div>
+    </>
   )
 }
 

@@ -8,7 +8,6 @@ import { projectApi } from '@/api/project'
 import { teamApi } from '@/api/team'
 import { useAgents } from '@/hooks/agents'
 import { useAuth } from '@/context/AuthContext'
-import { WorkspacePage } from '@/components/WorkspacePage'
 import { formatApiError } from '@/utils/formatApiError'
 import { queryKeys } from '@/query/queryKeys'
 import { PATHS } from '@/routes/paths'
@@ -78,9 +77,13 @@ export default function AgentTeamPage() {
     modal.confirm({ title: '拒绝共享这个 Agent？', content: <Input.TextArea placeholder="说明需要调整的地方（可选）" onChange={event => { reason = event.target.value }} />,
       onOk: () => action.mutateAsync({ id: agent.id, kind: 'reject', reason }) })
   }
-  return <WorkspacePage title="Agent 伙伴" description="选择与你协作的 Agent。在聊天中 @它，讨论、分析或执行工作；不需要预先安排固定流程。"
-    action={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setOpen(true) }}>创建 Agent</Button>}>
-    <div className="workspace-page__toolbar"><Select aria-label="Agent 状态" value={visibility} onChange={setVisibility} style={{ width: 160 }} options={[{ value: 'ACTIVE', label: '可用 Agent' }, { value: 'ARCHIVED', label: '已归档' }]} /><Link to={PATHS.projectChat(projectId)}><Button>回到聊天</Button></Link></div>
+  return <>
+    <div className="workspace-page__toolbar"><Select aria-label="Agent 状态" value={visibility} onChange={setVisibility} style={{ width: 160 }} options={[{ value: 'ACTIVE', label: '可用 Agent' }, { value: 'ARCHIVED', label: '已归档' }]} />
+      <div style={{ display: 'flex', gap: 12 }}>
+        <Link to={PATHS.projectChat(projectId)}><Button>回到聊天</Button></Link>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setOpen(true) }}>创建 Agent</Button>
+      </div>
+    </div>
     {list.isError && <Alert type="error" showIcon message={formatApiError(list.error)} action={<Button onClick={() => void list.refetch()}>重试</Button>} />}
     {list.isPending ? <Spin delay={180} /> : !visibleAgents.length ? <Empty description="暂无 Agent" /> : <div className="workspace-page__grid">{visibleAgents.map(agent => {
       const creator = agent.createdBy === user?.id
@@ -119,5 +122,5 @@ export default function AgentTeamPage() {
         </>}
       </Form>
     </Modal>
-  </WorkspacePage>
+  </>
 }

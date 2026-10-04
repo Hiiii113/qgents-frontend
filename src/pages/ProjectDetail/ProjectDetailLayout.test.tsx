@@ -5,7 +5,7 @@ import { chatKeys } from '@/components/chat/useChatMessages'
 import ProjectDetailLayout from './ProjectDetailLayout'
 afterEach(cleanup)
 describe('project navigation', () => {
-  it('selects the requested group and keeps project capabilities in a menu', async () => {
+  it('selects the requested group and opens project settings without a tools dropdown', () => {
     renderWorkspace(
       <ProjectDetailLayout />,
       '/app/projects/p1/chat?groupId=g2',
@@ -30,10 +30,9 @@ describe('project navigation', () => {
     )
     expect(screen.queryByRole('link', { name: /仓库/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /返回项目列表/ })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /项目工具/ }))
-    expect(await screen.findByRole('menuitem', { name: /项目仓库/ })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: /项目设置/ })).toBeInTheDocument()
-    expect(screen.queryByRole('menuitem', { name: /项目成员/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /项目设置/ })).toHaveAttribute('href', '/app/projects/p1/settings')
+    expect(screen.queryByRole('button', { name: /项目工具/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: '项目导航' })).not.toBeInTheDocument()
     fireEvent.change(screen.getByRole('textbox', { name: '搜索群聊' }), {
       target: { value: '产品' },
     })

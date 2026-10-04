@@ -1,8 +1,9 @@
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
-import { useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import { renderWorkspace } from '@/test/renderWorkspace'
 import { SettingsPage } from './SettingsPage'
+import { ProjectSettingsLayout } from './ProjectSettingsLayout'
 
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }))
 afterEach(cleanup)
@@ -13,7 +14,9 @@ function CurrentAddress() {
 }
 
 it('opens project members inside settings and keeps the selected tab in the URL', async () => {
-  renderWorkspace(<><SettingsPage /><CurrentAddress /></>, '/app/projects/p1/settings?tab=members', '/app/projects/:projectId/settings', client => {
+  renderWorkspace(<Routes><Route element={<ProjectSettingsLayout />}>
+    <Route path="settings" element={<><SettingsPage /><CurrentAddress /></>} />
+  </Route></Routes>, '/app/projects/p1/settings?tab=members', '/app/projects/:projectId/*', client => {
     client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目', role: 'PROJECT_ADMIN' })
     client.setQueryData(['projects', 'p1', 'members'], [{ userId: 'u1', displayName: '项目创建者', role: 'PROJECT_ADMIN' }])
     client.setQueryData(['teams', 't1', 'members'], [])
