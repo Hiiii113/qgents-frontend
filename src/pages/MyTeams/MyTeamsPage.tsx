@@ -40,7 +40,7 @@ export default function MyTeamsPage() {
       </div>
       {teams.isPending ? (
         <div className="journey-loading">
-          <Spin />
+          <Spin delay={180} />
         </div>
       ) : teams.isError ? (
         <Alert

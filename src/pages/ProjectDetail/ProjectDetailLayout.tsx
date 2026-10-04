@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import {
   NavLink,
   Outlet,
@@ -27,6 +27,7 @@ import { GroupMembersModal } from '@/components/chat/GroupMembersModal'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
 import { useAppUiStore } from '@/store/appUiStore'
+import { PageLoader } from '@/components/PageLoader'
 import './ProjectDetailLayout.scss'
 
 const TOOLS = [
@@ -62,7 +63,7 @@ export default function ProjectDetailLayout() {
   if (project.isPending)
     return (
       <div className="project-loading">
-        <Spin />
+        <Spin delay={180} />
       </div>
     )
   if (project.isError)
@@ -123,7 +124,7 @@ export default function ProjectDetailLayout() {
         </div>
         <nav className="project-sidebar__groups">
           {groups.isPending ? (
-            <Spin />
+            <Spin delay={180} />
           ) : groups.isError ? (
             <Button onClick={() => void groups.refetch()}>重新加载群聊</Button>
           ) : visible.length === 0 ? (
@@ -187,7 +188,9 @@ export default function ProjectDetailLayout() {
             </NavLink>
           </div>
         )}
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </main>
       {createOpen && (
         <GroupMembersModal

@@ -112,7 +112,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
         props.onReadingLatestChange?.(!away)
       }
     }}>
-      {props.loading ? <div className="chat-timeline__empty"><Spin /></div> : !messages.length
+      {props.loading ? <div className="chat-timeline__empty"><Spin delay={180} /></div> : !messages.length
         ? <div className="chat-timeline__empty"><Empty description="从一个想法开始讨论" /><p>与成员交流，或 @Agent 帮你分析和完成工作。</p></div>
         : <div className="chat-timeline__virtual" style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
           {virtualizer.getVirtualItems().map(row => {

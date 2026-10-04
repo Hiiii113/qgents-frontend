@@ -64,7 +64,7 @@ export default function TeamActivitiesPage() {
 
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-            <Spin size="large" />
+            <Spin delay={180} size="large" />
           </div>
         ) : activities.length === 0 ? (
           <EmptyState icon="📭" title="暂无团队动态" description="创建项目或产生协作后，这里会显示团队的动态" />

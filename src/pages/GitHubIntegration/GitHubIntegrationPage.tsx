@@ -36,7 +36,7 @@ export function GitHubIntegrationPage() {
   })
   return <WorkspacePage title="GitHub 连接" description="团队通过 GitHub App 授权仓库。项目按需导入，Agent 可在聊天中使用这些能力。"
     action={owner && <Button type="primary" icon={<GithubOutlined />} loading={connect.isPending} onClick={() => connect.mutate()}>连接 GitHub App</Button>}>
-    {!teamId ? <Alert type="info" message="请先从团队或项目进入 GitHub 连接。" /> : connections.isPending ? <Spin />
+    {!teamId ? <Alert type="info" message="请先从团队或项目进入 GitHub 连接。" /> : connections.isPending ? <Spin delay={180} />
       : connections.isError ? <Alert type="error" showIcon message={formatApiError(connections.error)} action={<Button onClick={() => void connections.refetch()}>重试</Button>} />
         : !connections.data.length ? <Empty description={owner ? '连接 GitHub App，授权团队需要使用的仓库。' : '团队尚未连接 GitHub，请联系团队所有者。'} />
           : <div className="workspace-page__grid">{connections.data.map(connection => <article className="workspace-card" key={connection.id}>

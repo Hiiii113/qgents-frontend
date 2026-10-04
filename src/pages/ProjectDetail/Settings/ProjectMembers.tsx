@@ -186,7 +186,7 @@ export function ProjectMembers() {
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-        <Spin size="large" />
+        <Spin delay={180} size="large" />
       </div>
     )
   }

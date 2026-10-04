@@ -1,4 +1,5 @@
-import { App as AntdApp, ConfigProvider, Spin } from 'antd'
+import { App as AntdApp, ConfigProvider } from 'antd'
+import { LoadingOutlined } from '@ant-design/icons'
 import type { ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
@@ -6,6 +7,7 @@ import { AuthProvider } from '@/context/AuthProvider'
 import { PersonalCenterProvider } from '@/context/PersonalCenterProvider'
 import { queryClient } from '@/query'
 import { QG_FONT_FAMILY } from '@/theme/antdTheme'
+import { PageLoader } from '@/components/PageLoader'
 
 /**
  * 启动加载门控。
@@ -15,19 +17,7 @@ function BootstrapGate({ children }: { children: ReactNode }) {
   const { isBootstrapping } = useAuth()
 
   if (isBootstrapping) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          background: '#f6f8f1',
-        }}
-      >
-        <Spin size="large" />
-      </div>
-    )
+    return <PageLoader fullscreen />
   }
 
   return <>{children}</>
@@ -37,6 +27,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ConfigProvider
       theme={{ token: { colorPrimary: '#4f7146', borderRadius: 10, fontFamily: QG_FONT_FAMILY } }}
+      spin={{ indicator: <LoadingOutlined spin /> }}
       modal={{ centered: true }}
     >
       <AntdApp>

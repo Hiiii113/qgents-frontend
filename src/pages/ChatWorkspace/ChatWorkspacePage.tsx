@@ -58,7 +58,7 @@ export default function ChatWorkspacePage() {
       if (projects.isError) void projects.refetch()
       if (groups.isError) void groups.refetch()
     }}>重试</Button>} /> : loading
-      ? <div className="project-loading"><Spin /></div> : selected
+      ? <div className="project-loading"><Spin delay={180} /></div> : selected
         ? <ChatPanel key={selected.id} projectId={selected.projectId} groupId={selected.id} />
         : <div className="project-loading"><Empty description={search ? '没有匹配的项目' : '创建或加入项目后，在这里开始聊天'} /></div>}</main>
   </div>

@@ -5,6 +5,8 @@ import { PersonalCenter } from './PersonalCenter'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { PATHS } from '@/routes/paths'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
+import { Suspense } from 'react'
+import { PageLoader } from '@/components/PageLoader'
 
 const { Content } = Layout
 
@@ -34,7 +36,9 @@ export function MainLayout() {
       >
         {/* 页面级错误边界：切路由自动复位，Banner/导航不受影响 */}
         <ErrorBoundary resetKey={location.pathname}>
-          <Outlet />
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
         </ErrorBoundary>
       </Content>
       <PersonalCenter />

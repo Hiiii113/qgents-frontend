@@ -137,7 +137,7 @@ export function AttachmentPreviewModal({
         <div style={{ position: 'relative' }}>
           {rawLoading ? (
             <div style={{ textAlign: 'center', padding: 40 }}>
-              <Spin />
+              <Spin delay={180} />
             </div>
           ) : rawText != null ? (
             <pre

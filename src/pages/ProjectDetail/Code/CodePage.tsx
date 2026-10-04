@@ -39,7 +39,7 @@ export function CodePage() {
     <div className="workspace-page__toolbar"><Input prefix={<SearchOutlined />} placeholder="搜索仓库" value={search} onChange={event => setSearch(event.target.value)} style={{ maxWidth: 320 }} allowClear />
       <Link to={PATHS.githubIntegration(teamId)}><Button icon={<GithubOutlined />}>GitHub 连接</Button></Link></div>
     {imported.isError && <Alert type="error" showIcon message={formatApiError(imported.error)} action={<Button onClick={() => void imported.refetch()}>重试</Button>} />}
-    {imported.isPending ? <Spin /> : !(imported.data ?? []).length ? <Empty description="项目还没有导入仓库。你也可以直接在聊天中讨论和使用 Agent。" />
+    {imported.isPending ? <Spin delay={180} /> : !(imported.data ?? []).length ? <Empty description="项目还没有导入仓库。你也可以直接在聊天中讨论和使用 Agent。" />
       : <div className="workspace-page__grid">{(imported.data ?? []).filter(repo => repo.fullName.toLowerCase().includes(search.toLowerCase())).map(repo => <article className="workspace-card" key={repo.id}>
         <h2><GithubOutlined /> {repo.fullName}</h2><Tag bordered={false}>{repo.privateRepository ? '私有仓库' : '公开仓库'}</Tag>
         <p>默认分支 · {repo.defaultBranch || '尚未设置'}</p>

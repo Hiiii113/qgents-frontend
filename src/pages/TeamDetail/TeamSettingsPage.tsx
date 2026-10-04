@@ -98,7 +98,7 @@ export default function TeamSettingsPage() {
   if (isLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
-        <Spin size="large" />
+        <Spin delay={180} size="large" />
       </div>
     )
   }

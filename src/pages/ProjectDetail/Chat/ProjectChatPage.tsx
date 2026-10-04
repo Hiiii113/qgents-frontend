@@ -17,7 +17,7 @@ export default function ProjectChatPage() {
   if (groups.isPending)
     return (
       <div className="project-loading">
-        <Spin />
+        <Spin delay={180} />
       </div>
     )
   if (groups.isError)

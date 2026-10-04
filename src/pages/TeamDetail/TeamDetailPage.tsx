@@ -40,7 +40,7 @@ export default function TeamDetailPage() {
   if (team.isPending)
     return (
       <div className="journey-loading">
-        <Spin />
+        <Spin delay={180} />
       </div>
     )
   if (team.isError)
@@ -110,7 +110,7 @@ export default function TeamDetailPage() {
           </div>
           {projects.isPending ? (
             <div className="journey-loading">
-              <Spin />
+              <Spin delay={180} />
             </div>
           ) : projects.isError ? (
             <Alert

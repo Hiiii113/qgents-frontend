@@ -59,7 +59,7 @@ export default function AgentTeamPage() {
     action={<Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setOpen(true) }}>创建 Agent</Button>}>
     <div className="workspace-page__toolbar"><Select aria-label="Agent 状态" value={visibility} onChange={setVisibility} style={{ width: 160 }} options={[{ value: 'ACTIVE', label: '可用 Agent' }, { value: 'ARCHIVED', label: '已归档' }]} /><Link to={PATHS.projectChat(projectId)}><Button>回到聊天</Button></Link></div>
     {list.isError && <Alert type="error" showIcon message={formatApiError(list.error)} action={<Button onClick={() => void list.refetch()}>重试</Button>} />}
-    {list.isPending ? <Spin /> : !visibleAgents.length ? <Empty description="暂无 Agent" /> : <div className="workspace-page__grid">{visibleAgents.map(agent => {
+    {list.isPending ? <Spin delay={180} /> : !visibleAgents.length ? <Empty description="暂无 Agent" /> : <div className="workspace-page__grid">{visibleAgents.map(agent => {
       const creator = agent.createdBy === user?.id
       const canEdit = creator && !agent.isDefault && agent.status === 'ACTIVE'
       return <article className="workspace-card" key={agent.id}>

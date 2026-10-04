@@ -93,7 +93,7 @@ export function SkillPage() {
     return (
       <div className="skill-page">
         <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-          <Spin size="large" />
+          <Spin delay={180} size="large" />
         </div>
       </div>
     )

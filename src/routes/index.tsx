@@ -28,7 +28,7 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'))
 
 export function AppRouter() {
-  return <BrowserRouter><Suspense fallback={<PageLoader />}><Routes>
+  return <BrowserRouter><Suspense fallback={<PageLoader fullscreen />}><Routes>
     <Route path={PATHS.LOGIN} element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
     <Route path={PATHS.FORGOT_PASSWORD} element={<RedirectIfAuthed><ForgotPasswordPage /></RedirectIfAuthed>} />
     <Route element={<RequireAuth />}>
