@@ -19,6 +19,8 @@ it('opens project members inside settings and keeps the selected tab in the URL'
     client.setQueryData(['teams', 't1', 'members'], [])
   })
   expect(await screen.findByText('项目创建者')).toBeInTheDocument()
+  expect(screen.getByText('管理员')).toBeInTheDocument()
+  expect(screen.queryByText('Admin')).not.toBeInTheDocument()
   expect(screen.getByRole('tab', { name: '成员管理' })).toHaveAttribute('aria-selected', 'true')
   fireEvent.click(screen.getByRole('tab', { name: '基本信息' }))
   expect(await screen.findByRole('button', { name: '保存资料' })).toBeInTheDocument()

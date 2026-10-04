@@ -133,7 +133,7 @@ export function ProjectMembers() {
       width: 120,
       render: (role: ProjectMember['role']) => (
         <Tag color={role === 'PROJECT_ADMIN' ? 'gold' : 'default'}>
-          {role === 'PROJECT_ADMIN' ? 'Admin' : 'Member'}
+          {role === 'PROJECT_ADMIN' ? '管理员' : '成员'}
         </Tag>
       ),
     },

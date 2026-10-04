@@ -30,11 +30,11 @@ const { Title, Text } = Typography
 
 const ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
   // Owner 只能在创建团队时产生，邀请接口目前仅支持 TEAM_MEMBER。
-  { value: 'TEAM_MEMBER', label: 'Member' },
+  { value: 'TEAM_MEMBER', label: '成员' },
 ]
 
 function getRoleLabel(role: TeamRole): string {
-  return role === 'TEAM_OWNER' ? 'Owner' : 'Member'
+  return role === 'TEAM_OWNER' ? '管理员' : '成员'
 }
 
 function formatCreatedAt(iso?: string): string {
@@ -316,14 +316,7 @@ function MembersTab({ teamId, members, isOwner }: { teamId: string; members: Tea
       key: 'role',
       width: 160,
       render: (_, m) => (
-        <Space size={4}>
-          <Tag color={m.role === 'TEAM_OWNER' ? 'gold' : 'default'}>{getRoleLabel(m.role)}</Tag>
-          {m.role === 'TEAM_OWNER' ? (
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              （不可降级）
-            </Text>
-          ) : null}
-        </Space>
+        <Tag color={m.role === 'TEAM_OWNER' ? 'gold' : 'default'}>{getRoleLabel(m.role)}</Tag>
       ),
     },
     ...(isOwner

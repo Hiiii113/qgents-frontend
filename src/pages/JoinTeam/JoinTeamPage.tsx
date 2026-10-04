@@ -116,7 +116,7 @@ export default function JoinTeamPage() {
                     <div className="join-team__invite-title">
                       <strong>{inv.teamName}</strong>
                       <Tag color={inv.role === 'TEAM_OWNER' ? 'gold' : 'default'}>
-                        {inv.role === 'TEAM_OWNER' ? 'Owner' : 'Member'}
+                        {inv.role === 'TEAM_OWNER' ? '管理员' : '成员'}
                       </Tag>
                     </div>
                     <div className="join-team__invite-meta">
