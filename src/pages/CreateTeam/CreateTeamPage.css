@@ -73,10 +73,10 @@
 }
 
 .create-team__avatar-preview {
-  /* 图片放在圆形的内接正方形中，保留四角和原始比例。 */
-  width: 70%;
-  height: 70%;
-  object-fit: contain;
+  /* 等比铺满头像区域，超出的边缘由父级圆形遮罩隐藏。 */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   flex-shrink: 0;
 }
 
