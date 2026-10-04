@@ -25,10 +25,10 @@ export default function MyTeamsPage() {
         </div>
         <div className="journey-actions">
           <Link to={PATHS.JOIN_TEAM}>
-            <Button size="large">加入团队</Button>
+            <Button>加入团队</Button>
           </Link>
           <Link to={PATHS.CREATE_TEAM}>
-            <Button size="large" type="primary" icon={<PlusOutlined />}>
+            <Button type="primary" icon={<PlusOutlined />}>
               创建团队
             </Button>
           </Link>
