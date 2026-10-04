@@ -51,7 +51,9 @@
 .chat-composer__toolbar { justify-content: space-between; margin-top: 8px; }
 .chat-composer__tools .ant-select { min-width: 160px; max-width: 240px; }
 .chat-composer__send > span { font-size: 10px; color: #99a59c; }
-.chat-composer__send .ant-btn-primary { background: #365c47; border-radius: 9px; }
+.chat-composer__send .ant-btn-primary { border-radius: 9px; }
+.chat-composer__send .ant-btn-primary:not(:disabled) { background: #365c47; color: #fff; }
+.chat-composer__send .ant-btn-primary:disabled { background: #eef2eb; color: #687663; border-color: #dce4d6; }
 .chat-composer__hint { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid #f0f2ed; font-size: 10px; color: #a2aba4; }
 .chat-members__hint { font-size: 12px; color: #829187; }
 @media (max-width: 800px) {
