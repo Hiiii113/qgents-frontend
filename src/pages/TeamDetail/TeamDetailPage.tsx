@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import {
-  ArrowLeftOutlined,
   ArrowRightOutlined,
   MessageOutlined,
   PlusOutlined,
@@ -67,9 +66,6 @@ export default function TeamDetailPage() {
   const settings = location.pathname.endsWith('/settings')
   return (
     <div className="journey-page">
-      <Link to={PATHS.MY_TEAMS} className="journey-back">
-        <ArrowLeftOutlined /> 切换团队
-      </Link>
       <div className="journey-steps">
         <span>01 选择团队</span>
         <span className="is-current">02 选择项目</span>
