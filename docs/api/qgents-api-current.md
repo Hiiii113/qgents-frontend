@@ -27,7 +27,7 @@
 
 ## Agent 与知识
 
-Agent 在团队层管理：`GET/POST /teams/{teamId}/agents`、`GET/PATCH .../{agentId}` 及 `publish/approve/reject/archive`。列表返回 `data: AgentResponse[]`。支持名称、头像、角色标签、说明、prompt、githubEnabled；默认 Agent 不能编辑、共享或归档。创建者可编辑自己的 Agent，团队所有者审批共享。
+Agent 在团队层管理：`GET/POST /teams/{teamId}/agents`、`GET/PATCH .../{agentId}` 及 `publish/approve/reject/archive`。列表返回 `data: AgentResponse[]`。支持昵称（`name`）、头像（`avatar`）、用途标签、说明、prompt、githubEnabled；默认 Agent 仅允许团队管理员（TEAM_OWNER）修改 `name` 与 `avatar`，不能共享或归档。创建者可编辑自己的 Agent，团队所有者审批共享。头像使用 `POST /teams/{teamId}/agents/avatar/credential` → 直传 → `POST .../avatar/confirm` 返回 URL，再随创建或编辑请求保存 `avatar`。
 
 Skill 与 Memory 在项目层维护。详情中提供编辑、提交审核、批准、拒绝和归档，不依赖交付中心。Skill 创建者或管理员可编辑未归档内容，发布内容修改立即生效；Memory 仅草稿及审核中可编辑，已发布知识归档需要管理员。AI 从当前项目聊天生成 Memory 草稿，审核后共享。
 

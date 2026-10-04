@@ -10,6 +10,16 @@ async function json(path: string, body?: unknown) {
   return await response.json() as { data: { id: string; cancelledRuns?: number }; page?: { hasMore: boolean } }
 }
 describe('current Mock chat protocol', () => {
+  it('uploads an Agent avatar and preserves its image media type', async () => {
+    const avatarBase = window.location.origin + '/api/teams/team-owned-001/agents/avatar'
+    const credential = await fetch(`${avatarBase}/credential`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mediaType: 'image/jpeg', sizeBytes: 3 }) }).then(response => response.json()) as { data: { uploadUrl: string; objectKey: string; headers: Record<string, string> } }
+    const uploaded = await fetch(credential.data.uploadUrl, { method: 'PUT', headers: credential.data.headers, body: new Uint8Array([1, 2, 3]) })
+    expect(uploaded.ok).toBe(true)
+    const confirmed = await fetch(`${avatarBase}/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ objectKey: credential.data.objectKey }) }).then(response => response.json()) as { data: { avatarUrl: string } }
+    const image = await fetch(confirmed.data.avatarUrl)
+    expect(image.headers.get('Content-Type')).toBe('image/jpeg')
+    expect(new Uint8Array(await image.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]))
+  })
   it('keeps newly created teams accessible and creates a default project group', async () => {
     const team = await json(window.location.origin + '/api/teams', { name: '入口验证团队' })
     const detail = await json(window.location.origin + `/api/teams/${team.data.id}`)

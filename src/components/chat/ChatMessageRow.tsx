@@ -2,10 +2,11 @@ import { memo } from 'react'
 import { Avatar, Button, Tag, Tooltip } from 'antd'
 import { FileOutlined, RobotOutlined, StopOutlined } from '@ant-design/icons'
 import { AuthedImage } from '@/components/AuthedImage'
-import { chatMessageText, messageField, type ChatMessage } from '@/types/chat'
+import { chatMessageText, messageField, type ChatMember, type ChatMessage } from '@/types/chat'
 
 interface Props {
   item: ChatMessage
+  sender?: ChatMember
   reply?: ChatMessage
   currentUserId?: string
   canStop: boolean
@@ -21,16 +22,16 @@ function LinkedText({ text }: { text: string }) {
     ? <a href={part} key={index} target="_blank" rel="noreferrer">{part}</a> : part)}</>
 }
 
-export const ChatMessageRow = memo(function ChatMessageRow({ item, reply, currentUserId, canStop, stopping, onReply, onStop, onPreview, onLocate }: Props) {
+export const ChatMessageRow = memo(function ChatMessageRow({ item, sender, reply, currentUserId, canStop, stopping, onReply, onStop, onPreview, onLocate }: Props) {
   if (item.senderType === 'SYSTEM') return <div className="chat-system-message">{chatMessageText(item)}</div>
   const agent = item.senderType === 'AGENT'
   const own = item.senderId === currentUserId
-  const name = item.senderName || (agent ? 'Agent' : '成员')
+  const name = sender?.displayName || item.senderName || (agent ? 'Agent' : '成员')
   const timestamp = new Date(item.createdAt)
   const time = Number.isNaN(timestamp.getTime()) ? '' : timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   const attachmentId = messageField(item, 'attachmentId')
   return <article className={`chat-message${agent ? ' chat-message--agent' : ''}${own ? ' chat-message--own' : ''}`} aria-label={`${name}的消息`}>
-    <Avatar className="chat-message__avatar" icon={agent ? <RobotOutlined /> : undefined}>{agent ? undefined : name.slice(0, 1)}</Avatar>
+    <Avatar className="chat-message__avatar" src={sender?.avatarUrl} icon={agent ? <RobotOutlined /> : undefined}>{agent ? undefined : name.slice(0, 1)}</Avatar>
     <div className="chat-message__main">
       <div className="chat-message__meta"><strong>{name}</strong>{agent && <Tag bordered={false}>Agent</Tag>}<time dateTime={item.createdAt} title={Number.isNaN(timestamp.getTime()) ? '' : timestamp.toLocaleString('zh-CN')}>{time}</time></div>
       {item.replyToId && <button className="chat-message__reply" onClick={() => onLocate(item.replyToId ?? '')}>

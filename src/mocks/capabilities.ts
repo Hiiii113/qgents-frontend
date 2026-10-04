@@ -11,9 +11,27 @@ const available: AvailableRepository[] = [{ installationId: 'installation-demo',
 const imported = new Map<string, ImportedRepository[]>()
 const notFound = () => HttpResponse.json({ error: { code: 'NOT_FOUND', message: '资源不存在' } }, { status: 404 })
 const agentPath = '/api/teams/:teamId/agents'
+const agentAvatars = new Map<string, { bytes: ArrayBuffer; mediaType: string }>()
 const skillPath = '/api/projects/:projectId/skills'
 const githubPath = '/api/teams/:teamId/integrations/github'
 export const capabilityHandlers = [
+  http.post(`${agentPath}/avatar/credential`, async ({ params, request }) => {
+    const body = await request.json() as { mediaType: string }
+    const objectKey = `agents/${params.teamId}/${crypto.randomUUID()}.png`
+    return HttpResponse.json({ data: { objectKey, uploadUrl: `${new URL(request.url).origin}/api/mock-agent-avatars/${encodeURIComponent(objectKey)}`, method: 'PUT', headers: { 'Content-Type': body.mediaType }, expiresAt: new Date(Date.now() + 300000).toISOString() } })
+  }),
+  http.put('/api/mock-agent-avatars/:objectKey', async ({ params, request }) => {
+    agentAvatars.set(String(params.objectKey), { bytes: await request.arrayBuffer(), mediaType: request.headers.get('Content-Type') || 'image/png' })
+    return new HttpResponse(null, { status: 200 })
+  }),
+  http.get('/api/mock-agent-avatars/:objectKey', ({ params }) => {
+    const avatar = agentAvatars.get(String(params.objectKey))
+    return avatar ? new HttpResponse(avatar.bytes, { headers: { 'Content-Type': avatar.mediaType } }) : notFound()
+  }),
+  http.post(`${agentPath}/avatar/confirm`, async ({ request }) => {
+    const { objectKey } = await request.json() as { objectKey: string }
+    return agentAvatars.has(objectKey) ? HttpResponse.json({ data: { avatarUrl: `${new URL(request.url).origin}/api/mock-agent-avatars/${encodeURIComponent(objectKey)}` } }) : notFound()
+  }),
   http.get(agentPath, () => HttpResponse.json({ data: mockAgents })),
   http.get(`${agentPath}/:agentId`, ({ params }) => { const agent = mockAgents.find(item => item.id === params.agentId); return agent ? HttpResponse.json({ data: agent }) : notFound() }),
   http.post(agentPath, async ({ request }) => {
@@ -23,7 +41,9 @@ export const capabilityHandlers = [
   }),
   http.patch(`${agentPath}/:agentId`, async ({ params, request }) => {
     const agent = mockAgents.find(item => item.id === params.agentId); if (!agent) return notFound()
-    Object.assign(agent, await request.json()); return HttpResponse.json({ data: agent })
+    const body = await request.json() as Partial<CreateAgentPayload>
+    if (agent.isDefault && Object.keys(body).some(key => key !== 'name' && key !== 'avatar')) return HttpResponse.json({ error: { code: 'AGENT_INVALID_REQUEST', message: '默认 Agent 仅支持修改昵称与头像' } }, { status: 422 })
+    Object.assign(agent, body); return HttpResponse.json({ data: agent })
   }),
   http.put(`${agentPath}/:agentId/github-capability`, async ({ params, request }) => {
     const agent = mockAgents.find(item => item.id === params.agentId); if (!agent) return notFound()

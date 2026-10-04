@@ -3,10 +3,11 @@ import { Button, Empty, Spin } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { ChatMessageRow } from './ChatMessageRow'
-import type { ChatMessage } from '@/types/chat'
+import type { ChatMember, ChatMessage } from '@/types/chat'
 
 interface Props {
   messages: ChatMessage[]
+  participants?: ChatMember[]
   loading: boolean
   hasMore: boolean
   loadingOlder: boolean
@@ -32,6 +33,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
   const [awayFromBottom, setAwayFromBottom] = useState(false)
   const [seenSequence, setSeenSequence] = useState(0)
   const byId = useMemo(() => new Map(messages.map(item => [item.id, item])), [messages])
+  const senders = useMemo(() => new Map(props.participants?.map(member => [`${member.memberType}:${member.id}`, member])), [props.participants])
   const replies = useMemo(() => {
     const completed = new Map<string, Set<string>>()
     for (const item of messages) {
@@ -129,6 +131,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
               style={{ position: 'absolute', width: '100%', top: 0, left: 0, transform: `translateY(${row.start}px)` }}>
               {showDate && <div className="chat-timeline__date">{date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</div>}
               <ChatMessageRow item={item} reply={item.replyToId ? byId.get(item.replyToId) : undefined}
+                sender={senders.get(`${item.senderType}:${item.senderId}`)}
                 currentUserId={props.currentUserId} canStop={canStop} stopping={props.stoppingId === item.id}
                 onReply={props.onReply} onStop={props.onStop} onPreview={props.onPreview} onLocate={props.onLocate} />
             </div>
