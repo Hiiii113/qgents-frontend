@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
+import { App } from 'antd'
 import { PATHS } from '@/routes/paths'
 import { useAuth } from '@/context/AuthContext'
 import { teamApi } from '@/api'
@@ -15,6 +16,7 @@ import './CreateTeamPage.css'
  * 邀请成员是后续操作（POST /teams/{teamId}/invitations），创建后跳团队详情再操作
  */
 export default function CreateTeamPage() {
+  const { message } = App.useApp()
   const navigate = useNavigate()
   const client = useQueryClient()
   const { setHasTeam } = useAuth()
@@ -64,9 +66,9 @@ export default function CreateTeamPage() {
           if (!putRes.ok) throw new Error(`头像上传失败（${putRes.status}）`)
           const result = await teamApi.avatarConfirm(team.id, credential.objectKey)
           await teamApi.update(team.id, { avatarUrl: result.avatarUrl })
-        } catch (avatarError) {
-          // 头像上传失败不阻断创建：提示但继续跳转
-          setError(avatarError instanceof Error ? `团队已创建，但头像上传失败：${avatarError.message}` : '团队已创建，但头像上传失败')
+        } catch {
+          // 消息提示由应用层显示，跳转到团队后仍可看到上传失败。
+          void message.warning('团队已创建，但头像未能上传。请在团队设置中重新上传。')
         } finally {
           setAvatarUploading(false)
         }
