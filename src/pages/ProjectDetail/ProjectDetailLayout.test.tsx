@@ -31,6 +31,8 @@ describe('project navigation', () => {
     expect(screen.queryByRole('link', { name: /仓库/ })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /项目工具/ }))
     expect(await screen.findByRole('menuitem', { name: /项目仓库/ })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: /项目设置/ })).toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: /项目成员/ })).not.toBeInTheDocument()
     fireEvent.change(screen.getByRole('textbox', { name: '搜索群聊' }), {
       target: { value: '产品' },
     })

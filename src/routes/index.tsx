@@ -23,7 +23,6 @@ const AgentTeamPage = lazy(() => import('@/pages/ProjectDetail/AgentTeam/AgentTe
 const CodePage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Code/CodePage')).CodePage }))
 const SkillPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Skill/SkillPage')).SkillPage }))
 const MemoryPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Memory/MemoryPage')).MemoryPage }))
-const MembersPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Members/MembersPage')).MembersPage }))
 const SettingsPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Settings/SettingsPage')).SettingsPage }))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'))
@@ -52,7 +51,6 @@ export function AppRouter() {
             <Route path="skills" element={<SkillPage />} />
             <Route path="memory" element={<MemoryPage />} />
             <Route path="code" element={<CodePage />} />
-            <Route path="members" element={<MembersPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

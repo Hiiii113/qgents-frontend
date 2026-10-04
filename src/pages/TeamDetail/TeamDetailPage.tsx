@@ -5,9 +5,8 @@ import {
   PlusOutlined,
   SearchOutlined,
   SettingOutlined,
-  TeamOutlined,
 } from '@ant-design/icons'
-import { Alert, Avatar, Button, Drawer, Empty, Input, List, Spin } from 'antd'
+import { Alert, Avatar, Button, Empty, Input, Spin } from 'antd'
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { PATHS } from '@/routes/paths'
@@ -17,13 +16,12 @@ import { useAppUiStore } from '@/store/appUiStore'
 import { useTeamEvents } from '@/realtime/useTeamEvents'
 import '@/styles/Journey.css'
 
-/** 进入团队先选择项目，成员与设置保留为辅助入口。 */
+/** 进入团队先选择项目，成员管理统一放在团队设置。 */
 export default function TeamDetailPage() {
   const { teamId = '' } = useParams<{ teamId: string }>()
   const location = useLocation()
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
-  const [membersOpen, setMembersOpen] = useState(false)
   const setCurrentTeam = useAppUiStore((state) => state.setCurrentTeam)
   useTeamEvents(teamId || undefined)
   const team = useQuery({
@@ -35,11 +33,6 @@ export default function TeamDetailPage() {
     queryKey: ['teams', teamId, 'projects'],
     queryFn: () => projectApi.listByTeam(teamId),
     enabled: Boolean(teamId),
-  })
-  const members = useQuery({
-    queryKey: ['teams', teamId, 'members'],
-    queryFn: () => teamApi.listMembers(teamId),
-    enabled: membersOpen,
   })
   useEffect(() => {
     if (team.data) setCurrentTeam(team.data.id)
@@ -83,9 +76,6 @@ export default function TeamDetailPage() {
           </div>
         </div>
         <div className="journey-actions">
-          <Button icon={<TeamOutlined />} onClick={() => setMembersOpen(true)}>
-            成员
-          </Button>
           <Link to={settings ? PATHS.teamDetail(teamId) : PATHS.teamSettings(teamId)}>
             <Button icon={<SettingOutlined />}>{settings ? '返回项目' : '团队设置'}</Button>
           </Link>
@@ -160,29 +150,6 @@ export default function TeamDetailPage() {
           )}
         </>
       )}
-      <Drawer title="团队成员" open={membersOpen} onClose={() => setMembersOpen(false)}>
-        {members.isPending ? (
-          <Spin />
-        ) : members.isError ? (
-          <Alert
-            message="成员加载失败"
-            action={<Button onClick={() => void members.refetch()}>重试</Button>}
-          />
-        ) : (
-          <List
-            dataSource={members.data}
-            renderItem={(member) => (
-              <List.Item>
-                <List.Item.Meta
-                  avatar={<Avatar src={member.avatarUrl}>{member.displayName?.slice(0, 1)}</Avatar>}
-                  title={member.displayName}
-                  description={member.role === 'TEAM_OWNER' ? '团队管理员' : member.email}
-                />
-              </List.Item>
-            )}
-          />
-        )}
-      </Drawer>
       <CreateProjectModal teamId={teamId} open={createOpen} onClose={() => setCreateOpen(false)} />
     </div>
   )

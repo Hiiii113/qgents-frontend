@@ -17,7 +17,6 @@ export const PATHS = {
   projectSkills: (id: string) => `/app/projects/${encodeURIComponent(id)}/skills`,
   projectMemory: (id: string) => `/app/projects/${encodeURIComponent(id)}/memory`,
   projectCode: (id: string) => `/app/projects/${encodeURIComponent(id)}/code`,
-  projectMembers: (id: string) => `/app/projects/${encodeURIComponent(id)}/members`,
   projectSettings: (id: string) => `/app/projects/${encodeURIComponent(id)}/settings`,
   GITHUB_INTEGRATION: '/app/integrations/github',
   githubIntegration: (teamId: string) => `/app/integrations/github?teamId=${encodeURIComponent(teamId)}`,

@@ -17,7 +17,6 @@ import {
   RobotOutlined,
   SearchOutlined,
   SettingOutlined,
-  TeamOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
@@ -35,7 +34,6 @@ const TOOLS = [
   { key: 'skills', label: 'Skill', icon: <ThunderboltOutlined /> },
   { key: 'memory', label: '共享知识', icon: <BookOutlined /> },
   { key: 'code', label: '项目仓库', icon: <CodeOutlined /> },
-  { key: 'members', label: '项目成员', icon: <TeamOutlined /> },
   { key: 'settings', label: '项目设置', icon: <SettingOutlined /> },
 ]
 

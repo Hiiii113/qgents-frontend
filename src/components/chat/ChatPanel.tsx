@@ -110,7 +110,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
       <List dataSource={members.data ?? []} renderItem={member => <List.Item><List.Item.Meta
         avatar={<Avatar src={member.avatarUrl} icon={member.memberType === 'AGENT' ? <RobotOutlined /> : undefined}>{member.displayName.slice(0, 1)}</Avatar>}
         title={<>{member.displayName} {member.memberType === 'AGENT' && <Tag>Agent</Tag>}</>} description={member.email || undefined} /></List.Item>} />
-      <Link to={PATHS.projectMembers(projectId)}><Button block>查看项目成员</Button></Link>
+      <Link to={PATHS.projectSettings(projectId)}><Button block>项目设置</Button></Link>
     </Drawer>
     {inviteOpen && group && project.data && <GroupMembersModal projectId={projectId} teamId={project.data.teamId} group={group} onClose={() => setInviteOpen(false)} />}
     {preview && <AttachmentPreviewModal open projectId={projectId} attachmentId={messageField(preview, 'attachmentId')} fileName={messageField(preview, 'name') || undefined} onClose={() => setPreview(null)} />}

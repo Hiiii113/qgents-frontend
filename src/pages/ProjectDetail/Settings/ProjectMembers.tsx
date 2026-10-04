@@ -1,4 +1,3 @@
-import { WorkspacePage } from '@/components/WorkspacePage'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -24,7 +23,7 @@ import type { TableProps } from 'antd'
 const { Text } = Typography
 
 /** 项目成员与角色由项目接口管理；群聊成员随项目同步。 */
-export function MembersPage() {
+export function ProjectMembers() {
   const { projectId = '' } = useParams<{ projectId: string }>()
   const { user } = useAuth()
   const { message } = App.useApp()
@@ -193,7 +192,7 @@ export function MembersPage() {
   }
 
   return (
-    <WorkspacePage title="项目成员" description="成员共同参与项目聊天，管理员维护加入与角色。">
+    <div>
       <div
         style={{
           display: 'flex',
@@ -252,6 +251,6 @@ export function MembersPage() {
           optionFilterProp="label"
         />
       </Modal>
-    </WorkspacePage>
+    </div>
   )
 }
