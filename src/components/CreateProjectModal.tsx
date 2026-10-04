@@ -7,9 +7,11 @@ import { teamApi } from '@/api/team'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
 import type { CreateProjectPayload } from '@/types/project'
+import { useAuth } from '@/context/AuthContext'
 
 export function CreateProjectModal({ teamId, open, onClose }: { teamId: string; open: boolean; onClose: () => void }) {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const client = useQueryClient()
   const [form] = Form.useForm<Omit<CreateProjectPayload, 'teamId'>>()
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +31,7 @@ export function CreateProjectModal({ teamId, open, onClose }: { teamId: string; 
     <Form form={form} layout="vertical" onFinish={values => create.mutate(values)} disabled={create.isPending}>
       <Form.Item name="name" label="项目名称" rules={[{ required: true, whitespace: true, message: '请输入项目名称' }, { max: 255 }]}><Input maxLength={255} /></Form.Item>
       <Form.Item name="description" label="项目描述"><Input.TextArea maxLength={16000} rows={3} /></Form.Item>
-      <Form.Item name="memberIds" label="邀请团队成员"><Select mode="multiple" loading={members.isPending} optionFilterProp="label" options={members.data?.map(member => ({ value: member.userId, label: member.displayName || member.email || member.userId }))} /></Form.Item>
+      <Form.Item name="memberIds" label="邀请团队成员"><Select mode="multiple" loading={members.isPending} optionFilterProp="label" options={members.data?.filter(member => member.userId !== user?.id).map(member => ({ value: member.userId, label: member.displayName || member.email || member.userId }))} /></Form.Item>
       {members.isError && <Alert type="warning" message="团队成员加载失败，可创建后再添加成员" />}
     </Form>
   </Modal>
