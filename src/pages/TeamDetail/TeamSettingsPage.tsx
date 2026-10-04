@@ -44,8 +44,8 @@ function formatCreatedAt(iso?: string): string {
 }
 
 /**
- * 团队设置页 —— 深色主题（与 Banner / 团队侧边栏一致）
- * 顶部：返回团队 + 标题 + GitHub 集成 / 解散团队按钮
+ * 团队设置沿用团队详情的浅色背景。
+ * 顶部：标题 + GitHub 集成 / 解散团队按钮
  * 下方 Tab：基本信息 / 成员管理
  * 路由：/app/teams/:teamId/settings
  */
@@ -112,8 +112,8 @@ export default function TeamSettingsPage() {
   }
 
   return (
-    <div style={{ padding: '24px 32px 40px', maxWidth: 720, margin: '0 auto', minHeight: '100%' }}>
-      {/* 顶部：标题 + 右侧操作（作为团队详情路由层子视图，返回由侧栏负责） */}
+    <div style={{ paddingBottom: 40, minHeight: '100%' }}>
+      {/* 返回项目列表由团队详情的操作入口提供。 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <Title level={3} style={{ margin: 0 }}>
           团队设置
