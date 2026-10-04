@@ -17,6 +17,9 @@ dist-ssr
 !.env.test
 .agents/
 
+# Ad-hoc test run logs
+.test-*.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
