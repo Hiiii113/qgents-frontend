@@ -29,6 +29,7 @@ describe('project navigation', () => {
       '/app/projects/p1/chat?groupId=g1',
     )
     expect(screen.queryByRole('link', { name: /仓库/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /返回项目列表/ })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /项目工具/ }))
     expect(await screen.findByRole('menuitem', { name: /项目仓库/ })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: /项目设置/ })).toBeInTheDocument()

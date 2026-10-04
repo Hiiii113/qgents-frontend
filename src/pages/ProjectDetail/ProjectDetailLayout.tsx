@@ -90,9 +90,6 @@ export default function ProjectDetailLayout() {
   return (
     <div className="project-workspace">
       <aside className="project-sidebar" aria-label="群聊导航">
-        <NavLink className="project-sidebar__back" to={PATHS.teamDetail(project.data.teamId)}>
-          <ArrowLeftOutlined /> 返回项目列表
-        </NavLink>
         <div className="project-sidebar__identity">
           <Avatar size={42} src={project.data.avatarUrl}>
             {project.data.name.slice(0, 1)}
