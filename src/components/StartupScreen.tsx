@@ -16,7 +16,7 @@ export function StartupScreen({ state, onRetry }: { state: StartupState; onRetry
             type="button"
             style={{
               ...startupStyles.button,
-              background: hover ? '#0aa18e' : '#0d9b8a',
+              background: hover ? '#3d5a35' : '#4f7146',
               transition: 'background 0.15s ease',
             }}
             onMouseEnter={() => setHover(true)}
@@ -47,24 +47,24 @@ const startupStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    background: '#0b1424',
-    color: '#f3f4f6',
+    background: '#f5f7f2',
+    color: '#253d32',
   },
   card: {
     width: 'min(100%, 480px)',
     padding: 32,
-    border: '1px solid #2a3548',
+    border: '1px solid #dfe7d8',
     borderRadius: 12,
-    background: '#111c2e',
+    background: '#ffffff',
     textAlign: 'center' as const,
   },
   title: { margin: '0 0 12px', fontSize: 22 },
-  message: { margin: '0 0 20px', color: '#9aa3b5' },
+  message: { margin: '0 0 20px', color: '#63745f' },
   button: {
     border: 0,
     borderRadius: 8,
     padding: '10px 16px',
-    background: '#0d9b8a',
+    background: '#4f7146',
     color: '#fff',
     cursor: 'pointer',
   },
