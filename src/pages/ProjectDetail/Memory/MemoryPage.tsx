@@ -1,5 +1,4 @@
 import { KnowledgeActions } from '@/components/KnowledgeActions'
-import { chatKeys } from '@/query/chatKeys'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -23,7 +22,7 @@ import {
   MessageOutlined,
   CloseOutlined,
 } from '@ant-design/icons'
-import { chatApi, memoryApi } from '@/api'
+import { memoryApi } from '@/api'
 import { EmptyState } from '@/components/EmptyState'
 import type { CreateMemoryPayload, Memory, MemoryStatus } from '@/types'
 import './MemoryPage.css'
@@ -50,8 +49,8 @@ const STATUS_META: Record<MemoryStatus, { color: string; label: string }> = {
 }
 
 /**
- * 共享 Memory —— 对齐（A 负责）
- * 列表 / 状态筛选 / 详情 / 手动创建 / 从群消息生成草稿 / 归档
+ * 项目共享 Memory：列表、详情、创建、编辑与审核。
+ * 列表 / 状态筛选 / 详情 / 手动创建 / 归档
  * 审核操作在知识详情中完成
  */
 export function MemoryPage() {
@@ -63,7 +62,6 @@ export function MemoryPage() {
   const [detailId, setDetailId] = useState<string | null>(null)
   const [editId, setEditId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
-  const [aiOpen, setAiOpen] = useState(false)
 
   const { data: memories = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['memories', projectId],
@@ -105,9 +103,6 @@ export function MemoryPage() {
             placeholder="搜索标题、内容或标签"
             style={{ width: 240 }}
           />
-          <Button icon={<MessageOutlined />} onClick={() => setAiOpen(true)}>
-            AI 沉淀
-          </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
             新建 Memory
           </Button>
@@ -157,16 +152,6 @@ export function MemoryPage() {
         />
       </div>}
 
-      {/* AI 沉淀：根据项目聊天，自动检索其最近聊天生成草稿 */}
-      <AiDraftModal
-        projectId={projectId}
-        open={aiOpen}
-        onClose={() => setAiOpen(false)}
-        onCreated={() => {
-          invalidate()
-          setAiOpen(false)
-        }}
-      />
       {/* 新建 / 编辑弹窗 */}
       <CreateMemoryModal
         projectId={projectId}
@@ -218,11 +203,6 @@ function MemoryCard({ memory, selected, onClick }: { memory: Memory; selected: b
             {t}
           </Tag>
         ))}
-        {memory.source === 'MESSAGE' && (
-          <span className="memory-card__source">
-            <MessageOutlined /> 来自群消息
-          </span>
-        )}
       </div>
     </Card>
   )
@@ -280,11 +260,6 @@ function MemoryDetail({
             <div>
               <UserOutlined /> 审核者：{memory.reviewer.displayName}
               {memory.reviewedAt ? ` · ${formatDate(memory.reviewedAt)}` : ''}
-            </div>
-          )}
-          {memory.source === 'MESSAGE' && (memory.sources ?? []).length > 0 && (
-            <div>
-              <MessageOutlined /> 来源：{(memory.sources ?? []).length} 条群消息
             </div>
           )}
         </div>
@@ -412,61 +387,4 @@ function splitTags(value: unknown): string[] {
 function formatDate(iso: string): string {
   const d = new Date(iso)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-/** AI 沉淀弹窗：根据项目聊天，后端自动检索其最近聊天生成草稿（投给用户/Admin 审核确认） */
-function AiDraftModal({
-  projectId,
-  open,
-  onClose,
-  onCreated,
-}: {
-  projectId: string
-  open: boolean
-  onClose: () => void
-  onCreated: () => void
-}) {
-  const { message } = App.useApp()
-
-  const { data: groups = [], isLoading: groupsLoading } = useQuery({
-    queryKey: chatKeys.groups(projectId),
-    queryFn: () => chatApi.groups(projectId),
-    enabled: open && !!projectId,
-  })
-
-  const generate = useMutation({
-    mutationFn: () => {
-      const selected = groups[0]
-      if (!selected?.latestMessage) throw new Error('该项目聊天暂无消息，无需沉淀')
-      return memoryApi.generateDraft(projectId, { groupId: selected.id })
-    },
-    onSuccess: () => {
-      message.success('AI 已根据该群最近聊天生成 Memory 草稿')
-      onCreated()
-    },
-    onError: (error) => {
-      message.error(error instanceof Error ? error.message : 'Memory 生成失败，请重试')
-    },
-  })
-
-  return (
-    <Modal
-      title="AI 沉淀 Memory"
-      open={open}
-      onCancel={() => {
-          onClose()
-      }}
-      onOk={() => generate.mutate()}
-      okText="生成草稿"
-      cancelText="取消"
-      confirmLoading={generate.isPending} okButtonProps={{ disabled: groupsLoading || !groups[0]?.latestMessage }}
-      destroyOnClose
-    >
-      <div style={{ marginBottom: 12, color: 'var(--qg-text-secondary)', fontSize: 13 }}>
-        AI 将读取当前项目的最近聊天记录，甄别值得沉淀的内容并生成一份草稿。
-        生成的内容先保存为草稿，确认后再共享。
-      </div>
-<p>来源：{groupsLoading ? '正在加载项目聊天…' : groups[0]?.title || '暂时没有聊天记录'}</p>
-    </Modal>
-  )
 }

@@ -1,24 +1,17 @@
 import { request } from './client'
-import type { CreateMemoryPayload, GenerateMemoryDraftPayload, Memory } from '@/types'
+import type { CreateMemoryPayload, Memory } from '@/types'
 
 /**
  * 共享 Memory API —— 当前接口
  */
 export const memoryApi = {
-  /** 查询 Memory（默认仅 APPROVED，前端按需传状态过滤） */
+  /** 查询当前用户可见的 Memory。 */
   list(projectId: string) {
     return request<Memory[]>(`/projects/${projectId}/memories`)
   },
-  /** 手动创建草稿 */
+  /** 创建 Memory；管理员直接发布，普通成员保存草稿。 */
   create(projectId: string, payload: CreateMemoryPayload) {
     return request<Memory>(`/projects/${projectId}/memories`, {
-      method: 'POST',
-      body: payload,
-    })
-  },
-  /** 依据当前群的最近聊天自动生成 AI 草稿（后端自动检索，客户端不再勾选消息） */
-  generateDraft(projectId: string, payload: GenerateMemoryDraftPayload) {
-    return request<Memory>(`/projects/${projectId}/memories/drafts`, {
       method: 'POST',
       body: payload,
     })

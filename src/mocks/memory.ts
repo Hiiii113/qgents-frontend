@@ -12,8 +12,6 @@ const MOCK_MEMORIES: Record<string, Memory[]> = {
       category: 'ENGINEERING_DECISION',
       tags: ['auth', 'security'],
       status: 'APPROVED',
-      source: 'MESSAGE',
-      sources: [{ groupId: 'group-login-proj-001', messageId: 'msg-login-004' }],
       creator: { id: 'user-001', displayName: '陈同学' },
       reviewer: { id: 'user-002', displayName: '张工' },
       reviewedAt: '2026-08-12T11:00:00Z',
@@ -28,8 +26,6 @@ const MOCK_MEMORIES: Record<string, Memory[]> = {
       category: 'ENGINEERING_DECISION',
       tags: ['api', 'convention'],
       status: 'APPROVED',
-      source: 'MANUAL',
-      sources: [],
       creator: { id: 'user-001', displayName: '陈同学' },
       reviewer: { id: 'user-002', displayName: '张工' },
       reviewedAt: '2026-08-11T15:00:00Z',
@@ -44,8 +40,6 @@ const MOCK_MEMORIES: Record<string, Memory[]> = {
       category: 'ENGINEERING_DECISION',
       tags: ['pay', 'idempotency'],
       status: 'PENDING_REVIEW',
-      source: 'MESSAGE',
-      sources: [{ groupId: 'group-pay-proj-001', messageId: 'msg-pay-001' }],
       creator: { id: 'user-002', displayName: '张工' },
       reviewer: null,
       reviewedAt: null,
@@ -60,8 +54,6 @@ const MOCK_MEMORIES: Record<string, Memory[]> = {
       category: 'ENGINEERING_DECISION',
       tags: ['auth'],
       status: 'DRAFT',
-      source: 'MANUAL',
-      sources: [],
       creator: { id: 'user-001', displayName: '陈同学' },
       reviewer: null,
       reviewedAt: null,
@@ -76,8 +68,6 @@ const MOCK_MEMORIES: Record<string, Memory[]> = {
       category: 'DEPRECATED',
       tags: ['auth'],
       status: 'REJECTED',
-      source: 'MANUAL',
-      sources: [],
       creator: { id: 'user-003', displayName: '李设计' },
       reviewer: { id: 'user-002', displayName: '张工' },
       reviewedAt: '2026-08-10T10:00:00Z',
@@ -92,8 +82,6 @@ const MOCK_MEMORIES: Record<string, Memory[]> = {
       category: 'PROCESS',
       tags: ['deploy'],
       status: 'ARCHIVED',
-      source: 'MANUAL',
-      sources: [],
       creator: { id: 'user-001', displayName: '陈同学' },
       reviewer: { id: 'user-002', displayName: '张工' },
       reviewedAt: '2026-07-20T12:00:00Z',
@@ -130,35 +118,6 @@ export const memoryHandlers = [
       category: body.category || 'GENERAL',
       tags: body.tags ?? [],
       status: Object.values(MOCK_PROJECTS).flat().find(project => project.id === projectId)?.role === 'PROJECT_ADMIN' ? 'APPROVED' : 'DRAFT',
-      source: 'MANUAL',
-      sources: [],
-      creator: { id: 'user-001', displayName: '陈同学' },
-      reviewer: null,
-      reviewedAt: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-      ; (MOCK_MEMORIES[projectId] ??= []).push(memory)
-    return HttpResponse.json({ data: memory }, { status: 201 })
-  }),
-
-  http.post('/api/projects/:projectId/memories/drafts', async ({ params, request }) => {
-    const projectId = params.projectId as string
-    const body = (await request.json()) as {
-      sourceMessages?: { groupId: string; messageId: string }[]
-      instruction?: string
-    }
-    const src = body.sourceMessages ?? []
-    const memory: Memory = {
-      id: 'mem-' + nextMemoryId++,
-      projectId,
-      title: '群聊生成草稿' + (body.instruction ? `：${body.instruction}` : ''),
-      content: `根据 ${src.length} 条群消息自动生成的草稿，待人工确认。`,
-      category: 'GENERAL',
-      tags: [],
-      status: 'DRAFT',
-      source: 'MESSAGE',
-      sources: src,
       creator: { id: 'user-001', displayName: '陈同学' },
       reviewer: null,
       reviewedAt: null,
