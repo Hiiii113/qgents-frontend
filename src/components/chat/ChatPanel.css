@@ -53,7 +53,6 @@
 .chat-composer__files { margin-bottom: 8px; }
 .chat-composer__toolbar, .chat-composer__tools, .chat-composer__send { display: flex; gap: 8px; align-items: center; }
 .chat-composer__toolbar { justify-content: space-between; margin-top: 8px; }
-.chat-composer__tools .ant-select { min-width: 160px; max-width: 240px; }
 .chat-composer__send > span { font-size: 10px; color: #99a59c; }
 .chat-composer__send .ant-btn-primary { border-radius: 9px; }
 .chat-composer__send .ant-btn-primary:not(:disabled) { background: #365c47; color: #fff; }
@@ -66,7 +65,6 @@
   .chat-timeline__row { padding: 0 16px; }
   .chat-composer { margin: 8px 14px 14px; }
   .chat-composer__send > span { display: none; }
-  .chat-composer__tools .ant-select { min-width: 130px; max-width: 180px; }
   .chat-message__actions { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .chat-message__actions { transition: none; } }

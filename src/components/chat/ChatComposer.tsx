@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Alert, App, Avatar, Button, Mentions, Select, Tag, Upload } from 'antd'
+import { Alert, App, Avatar, Button, Mentions, Tag, Upload } from 'antd'
 import { CloseOutlined, PaperClipOutlined, SendOutlined } from '@ant-design/icons'
 import type { MentionsRef } from 'antd/es/mentions'
 import { attachmentApi, uploadAttachment } from '@/api/attachment'
@@ -149,17 +149,6 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
           setAttachments(current => [...current, { id: crypto.randomUUID(), file }])
           return false
         }}><Button type="text" aria-label="添加附件" icon={<PaperClipOutlined />} disabled={busy || disabled} /></Upload>
-        <Select
-          mode="multiple" aria-label="提及 Agent 或成员" placeholder="@ Agent / 成员" variant="borderless"
-          value={selected} disabled={busy || disabled} maxTagCount={1} optionFilterProp="label"
-          options={recipients.map(item => ({ value: `${item.memberType}:${item.id}`, label: `${item.displayName}${item.memberType === 'AGENT' ? ' · Agent' : ''}` }))}
-          onChange={values => {
-            setSelected(values)
-            const added = values.filter(value => !selected.includes(value))
-            const names = recipients.filter(item => added.includes(`${item.memberType}:${item.id}`)).map(item => `@${item.displayName} `)
-            edit(draft + (draft && !/\s$/.test(draft) ? ' ' : '') + names.join(''))
-          }}
-        />
       </div>
       <div className="chat-composer__send"><span>Enter 发送 · Shift + Enter 换行</span>
         <Button type="primary" icon={<SendOutlined />} loading={busy} disabled={disabled || (!draft.trim() && !attachments.length)} onClick={() => void send()}>发送</Button>
