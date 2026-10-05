@@ -6,7 +6,6 @@ import type {
   TeamMember,
   TeamInvitation,
   AcceptInvitationResponse,
-  Activity,
   MyTeamInvitation,
 } from '@/types'
 
@@ -14,11 +13,6 @@ export const teamApi = {
   /** GET /teams — 当前用户加入的团队列表 */
   listMine() {
     return request<Team[]>('/teams')
-  },
-
-  /** GET /teams/{teamId}/activities — 团队最近动态（分页，见后端1对接文档） */
-  activities(teamId: string) {
-    return requestPage<Activity>(`/teams/${teamId}/activities`)
   },
 
   /** POST /teams — 创建团队，创建者成为 TEAM_OWNER */

@@ -1,4 +1,4 @@
-import type { MyTeamInvitation, Project, Activity, Team } from '@/types'
+import type { MyTeamInvitation, Project, Team } from '@/types'
 import { MOCK_CURRENT_USER } from './currentUser'
 export const MOCK_USER: { id: string; email: string; displayName: string; avatarChar: string; avatarUrl?: string } = {
   ...MOCK_CURRENT_USER,
@@ -84,7 +84,6 @@ export const MOCK_PROJECT_MEMBERS: Record<string, MockProjectMember[]> = {
 
 // 每个群参与的 Agent（按群隔离：不同需求触发不同 Agent 回群）
 
-export const MOCK_ACTIVITIES: Activity[] = []
 
 
 

@@ -1,6 +1,6 @@
 # 前端目录与实现现状
 
-更新于 2026-10-03。产品支持默认群聊及成员创建的群聊，Agent 按显式提及协作，GitHub 为可选能力。
+更新于 2026-10-05。产品支持默认群聊及成员创建的群聊，Agent 按显式提及协作，GitHub 为可选能力。
 
 ```text
 src/
@@ -13,8 +13,6 @@ src/
 ├── pages/
 │   ├── Login/ ForgotPassword/ Welcome/
 │   ├── CreateTeam/ JoinTeam/ Home/ TeamDetail/
-│   ├── CreateProject/
-│   ├── ChatWorkspace/      按团队查看项目会话
 │   ├── GitHubIntegration/  团队 GitHub App 连接
 │   └── ProjectDetail/
 │       ├── Chat/           项目聊天、建群与邀请
@@ -47,3 +45,5 @@ src/
 首页路由 /app 自动进入服务端选定团队的项目页；旧 /app/teams 列表页已删除。团队切换只在个人中心的团队子菜单中，带团队头像和当前选择标记，保存成功后进入所选团队项目页；主菜单保留创建、加入团队。
 
 当前团队项目首页以“昵称，欢迎回来”为标题，保留项目搜索、创建项目和团队设置入口，项目列表按当前团队请求，不再以团队名称和头像作为页面主标题。
+
+全量清理删除无入口的团队动态页、重复的跨项目会话页和独立创建项目页，连同旧深色页面主题、专用 API / 缓存键 / Mock、无引用图片与图标资源、历史 API 档案和 Task Mock 说明。当前接口以 qgents-api-current.md 为唯一对接说明。

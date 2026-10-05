@@ -3,9 +3,6 @@ export const PATHS = {
   CREATE_TEAM: '/app/teams/create', JOIN_TEAM: '/app/teams/join',
   teamDetail: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}`,
   teamSettings: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}/settings`,
-  teamActivities: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}/activities`,
-  createProject: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}/projects/create`,
-  CHAT: '/app/chat', chat: (teamId: string) => `/app/chat?teamId=${encodeURIComponent(teamId)}`,
   projectDetail: (projectId: string) => `/app/projects/${encodeURIComponent(projectId)}`,
   projectChat: (projectId: string, messageId?: string, groupId?: string) => {
     const params = new URLSearchParams()

@@ -83,14 +83,12 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
     if (teamId) {
       void queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'projects'] })
       void queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'members'] })
-      void queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'activities'] })
     }
     if (type.startsWith('project.member.')) {
       const projectId = typeof frame.payload.projectId === 'string' ? frame.payload.projectId : frame.resourceId
       if (projectId) {
         void queryClient.invalidateQueries({ queryKey: ['chat', 'projects', projectId, 'members'] })
         void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
-        void queryClient.invalidateQueries({ queryKey: chatKeys.allGroups })
       }
     }
     return
@@ -100,7 +98,6 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
   if (!projectId) return
   if (type === 'message.created' || type === 'message.updated') {
     const groupId = frame.groupId || (typeof frame.payload.groupId === 'string' ? frame.payload.groupId : null)
-    void queryClient.invalidateQueries({ queryKey: chatKeys.allGroups })
     void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
     if (groupId && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('qgents:message-event', { detail: { ...frame.payload, projectId, groupId } }))
     return
@@ -110,7 +107,6 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
   if (type.startsWith('repository.')) void queryClient.invalidateQueries({ queryKey: ['repositories', projectId] })
   if (type.startsWith('group.')) {
     void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
-    void queryClient.invalidateQueries({ queryKey: chatKeys.allGroups })
     if (type === 'group.member.updated') void queryClient.invalidateQueries({ queryKey: ['chat', 'projects', projectId, 'members'] })
   }
   if (type.startsWith('project.')) void queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
@@ -148,7 +144,6 @@ export class RealtimeClient {
   private handleReconnected(): void {
     void queryClient.invalidateQueries({ queryKey: ['notifications'] })
     void queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
-    void queryClient.invalidateQueries({ queryKey: chatKeys.allGroups })
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('qgents:realtime-reconnected'))
     }

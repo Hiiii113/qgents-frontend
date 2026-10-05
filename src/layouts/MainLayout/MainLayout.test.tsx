@@ -5,7 +5,6 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { MainLayout } from './index'
 
 vi.mock('./Banner', () => ({ Banner: () => <nav>团队导航</nav> }))
-vi.mock('./PersonalCenter', () => ({ PersonalCenter: () => null }))
 vi.mock('@/realtime/useRealtimeEvents', () => ({ useRealtimeEvents: () => undefined }))
 
 afterEach(cleanup)

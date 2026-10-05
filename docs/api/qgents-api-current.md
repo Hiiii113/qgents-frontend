@@ -1,6 +1,6 @@
 # 当前前端接口对接
 
-依据 `../qgents/src/main/java/qg/qgent` 当前 Controller、DTO 和 Service 核对，更新时间：2026-10-03。产品方向见后端 `docs/target.md`。本文件只记录前端正在使用的接口；接口字段以当前后端实现为准。
+依据 `../qgents/src/main/java/qg/qgent` 当前 Controller、DTO 和 Service 核对，更新时间：2026-10-05。产品方向见后端 `docs/target.md`。本文件只记录前端正在使用的接口；接口字段以当前后端实现为准。
 
 ## 项目与聊天
 
@@ -11,7 +11,6 @@
 | 项目群聊 | `GET /projects/{projectId}/groups` |
 | 创建群聊 | `POST /projects/{projectId}/groups` |
 | 邀请群成员 | `POST /projects/{projectId}/groups/{groupId}/members` |
-| 跨项目会话 | `GET /chat/groups` |
 | 群聊成员 | `GET /projects/{projectId}/groups/{groupId}/members` |
 | 历史消息 | `GET .../messages?cursor=&limit=30`，倒序返回 |
 | 增量消息 | `GET .../messages/incremental?afterSequence=&limit=100`，序号升序返回 |
@@ -43,8 +42,10 @@ Agent 使用 `githubEnabled` 布尔开关，默认关闭；开启后使用团队
 
 ## 保留的通用能力
 
-登录、注册、验证码、密码重置、个人资料、团队与邀请、项目成员、通知及头像保留现有请求链。通知类型为 `MESSAGE_MENTION/INVITED/TEAM_JOINED/PROJECT_ADDED`；提及通知打开项目聊天并定位 `resourceId` 对应消息。最近动态当前以 `GROUP_CREATED` 表示项目创建事件，目标为项目。
+登录、注册、验证码、密码重置、个人资料、团队与邀请、项目成员、通知及头像保留现有请求链。通知类型为 `MESSAGE_MENTION/INVITED/TEAM_JOINED/PROJECT_ADDED`；提及通知打开项目聊天并定位 `resourceId` 对应消息。
 
 附件按配置使用本地磁盘或 OSS，走签发上传凭证、上传、确认、预览/下载链路。IMAGE/FILE 消息必须携带 `attachmentId`，媒体类型使用 `mediaType`，不从 URL 推断附件 ID。团队当前成员身份统一使用 `role`。Mock 是演示数据，不能证明生产环境已接通外部存储、GitHub 或 Agent。
 
 登录后调用 GET /me，返回 user、带头像的 teams、projects 与 currentTeamId；服务端恢复最近团队，失去权限时回退到首个可用团队，无团队时返回 null。PUT /me/current-team 请求 { teamId } 保存最近选择并校验成员权限。退出登录清除当前团队和账户查询缓存。
+
+已删除无入口的团队动态和重复的跨项目聊天页、独立创建项目页及对应专用查询。当前通过首页项目列表进入项目群聊，创建项目统一使用首页弹窗；不使用团队或项目按活跃时间排序的旧接口。

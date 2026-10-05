@@ -19,9 +19,9 @@ export interface Team {
 
 export interface TeamMember {
   userId: string
-  // 显示名（后端成员接口暂未返回，联调后补）
+  // 成员显示名
   displayName?: string
-  // 邮箱（后端成员接口暂未返回，联调后补）
+  // 成员邮箱
   email?: string
   role: TeamRole
   avatarUrl?: string
@@ -62,7 +62,6 @@ export interface AcceptInvitationResponse {
 
 /**
  * 当前用户收到的待处理团队邀请（GET /team-invitations，收件人视角）
- * 对齐「前端对接文档_团队邀请收件人视角与最近动态_后端1.md」：
  * - 不返回 token（后端只存哈希），接受用 id
  * - role 恒为 TEAM_MEMBER
  * - status 含 EXPIRED（PENDING 但已过期按 EXPIRED 展示）

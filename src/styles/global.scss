@@ -2,11 +2,9 @@
   --qg-teal: #4f7146; --qg-teal-dark: #3d5a35; --qg-teal-bright: #14b8a6; --qg-mint: #2dd4a8;
   --qg-bg-light: #f7f8f2; --qg-card: #ffffff; --qg-border-light: #e5e7eb;
   --qg-text-primary: #111827; --qg-text-secondary: #6b7280; --qg-text-muted: #9ca3af;
-  --qg-navy: #253d32; --qg-navy-2: #304739; --qg-navy-3: #3a5141; --qg-navy-card: #334c3f;
-  --qg-border-dark: #2a3548; --qg-text-on-dark: #f3f4f6; --qg-text-on-dark-secondary: #9aa3b5;
-  --qg-blue: #3b82f6; --qg-blue-hover: #2563eb; --qg-green: #22c55e; --qg-green-hover: #16a34a;
-  --qg-danger: #ef4444; --qg-avatar-orange: #f97316;
-  --qg-banner-h: 56px; --qg-radius: 10px; --qg-radius-sm: 8px;
+  --qg-text-on-dark: #f3f4f6;
+  --qg-danger: #ef4444;
+  --qg-radius-sm: 8px;
   --qg-font: 'Plus Jakarta Sans', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
   --qg-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -91,10 +89,6 @@ img {
   display: block;
 }
 
-.qg-dark-page-content {
-  font-family: var(--qg-font);
-}
-
 .qg-full-height {
   height: 100%;
 }
@@ -124,26 +118,6 @@ img {
 
 ::-webkit-scrollbar-button {
   display: none;
-}
-
-/* 深色背景容器（navy 侧栏 / 深色页）用半透明白滑块，避免浅色条突兀 */
-.qg-banner,
-.pd-nav,
-.ant-layout-sider,
-.qg-dark-page-content {
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-}
-
-.qg-banner ::-webkit-scrollbar-thumb,
-.pd-nav ::-webkit-scrollbar-thumb,
-.ant-layout-sider ::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
-}
-
-.qg-banner ::-webkit-scrollbar-thumb:hover,
-.pd-nav ::-webkit-scrollbar-thumb:hover,
-.ant-layout-sider ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.5);
 }
 
 /* 屏幕阅读器专用文本，视觉上隐藏 */

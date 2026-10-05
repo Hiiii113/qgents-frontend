@@ -12,12 +12,9 @@ const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPassword/ForgotPassw
 const WelcomePage = lazy(() => import('@/pages/Welcome/WelcomePage'))
 const CreateTeamPage = lazy(() => import('@/pages/CreateTeam/CreateTeamPage'))
 const JoinTeamPage = lazy(() => import('@/pages/JoinTeam/JoinTeamPage'))
-const ChatWorkspacePage = lazy(() => import('@/pages/ChatWorkspace/ChatWorkspacePage'))
 const GitHubIntegrationPage = lazy(() => import('@/pages/GitHubIntegration/GitHubIntegrationPage'))
 const TeamDetailPage = lazy(() => import('@/pages/TeamDetail/TeamDetailPage'))
 const TeamSettingsPage = lazy(() => import('@/pages/TeamDetail/TeamSettingsPage'))
-const TeamActivitiesPage = lazy(() => import('@/pages/TeamDetail/TeamActivitiesPage'))
-const CreateProjectPage = lazy(() => import('@/pages/CreateProject/CreateProjectPage'))
 const ProjectDetailLayout = lazy(() => import('@/pages/ProjectDetail/ProjectDetailLayout'))
 const ProjectChatPage = lazy(() => import('@/pages/ProjectDetail/Chat/ProjectChatPage'))
 const AgentTeamPage = lazy(() => import('@/pages/ProjectDetail/AgentTeam/AgentTeamPage'))
@@ -40,9 +37,6 @@ export function AppRouter() {
         <Route path="teams/join" element={<JoinTeamPage />} />
         <Route element={<RequireTeam />}>
           <Route path="teams/:teamId" element={<TeamDetailPage />}><Route path="settings" element={<TeamSettingsPage />} /></Route>
-          <Route path="teams/:teamId/activities" element={<TeamActivitiesPage />} />
-          <Route path="teams/:teamId/projects/create" element={<CreateProjectPage />} />
-          <Route path="chat" element={<ChatWorkspacePage />} />
           <Route path="integrations/github" element={<GitHubIntegrationPage />} />
           <Route path="projects/:projectId" element={<ProjectDetailLayout />}>
             <Route index element={<Navigate to="chat" replace />} />

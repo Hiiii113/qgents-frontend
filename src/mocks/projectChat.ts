@@ -76,7 +76,6 @@ export const projectChatHandlers = [
     return HttpResponse.json({ data: null })
   }),
   http.get('/api/projects/:projectId/groups', ({ params }) => { const project = findProject(params.projectId); return project ? HttpResponse.json({ data: (groupFor(project), [...groups.values()].filter(group => group.projectId === project.id)) }) : notFound() }),
-  http.get('/api/chat/groups', () => HttpResponse.json({ data: (projects().forEach(groupFor), [...groups.values()]) })),
   http.post('/api/projects/:projectId/groups', async ({ params, request }) => {
     const project = findProject(params.projectId); if (!project) return notFound()
     const body = await request.json() as { title: string; description?: string; userIds: string[]; agentIds: string[] }

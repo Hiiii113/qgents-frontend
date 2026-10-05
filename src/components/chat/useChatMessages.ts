@@ -103,13 +103,11 @@ export function useChatMessages(projectId: string, groupId: string, readingLates
     mutationFn: (body: SendChatMessage) => chatApi.send(projectId, groupId, body),
     onSuccess: result => {
       client.setQueryData<MessagePages>(key, data => mergeChatMessages(data, [result]))
-      void client.invalidateQueries({ queryKey: chatKeys.allGroups })
       void client.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
     },
   })
   const markRead = useCallback(async () => {
     await chatApi.read(projectId, groupId)
-    void client.invalidateQueries({ queryKey: chatKeys.allGroups })
     void client.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
   }, [client, projectId, groupId])
   useEffect(() => {

@@ -64,7 +64,6 @@ export function GroupMembersModal({
     },
     onSuccess: (result) => {
       void client.invalidateQueries({ queryKey: chatKeys.groups(projectId) })
-      void client.invalidateQueries({ queryKey: chatKeys.allGroups })
       if (group) void client.invalidateQueries({ queryKey: chatKeys.members(projectId, group.id) })
       else {
         const created = result as ChatGroup

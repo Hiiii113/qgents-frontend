@@ -40,7 +40,6 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
     mutationFn: () => chatApi.pin(projectId, groupId, !group?.pinned),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
-      void client.invalidateQueries({ queryKey: chatKeys.allGroups })
     },
     onError: error => void message.error(formatApiError(error)),
   })

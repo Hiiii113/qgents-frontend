@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { MOCK_USER, MOCK_TEAMS, MOCK_TEAM_MEMBERS, MOCK_PROJECTS, MOCK_MY_INVITATIONS, MOCK_ACTIVITIES } from './state'
+import { MOCK_USER, MOCK_TEAMS, MOCK_TEAM_MEMBERS, MOCK_PROJECTS, MOCK_MY_INVITATIONS } from './state'
 const registerCodeByEmail = new Map<string, string>()
 let nextTeamId = 10
 let currentTeamId: string | null = MOCK_TEAMS[0]?.id ?? null
@@ -250,10 +250,7 @@ export const identityHandlers = [
     return HttpResponse.json({ data: team })
   }),
 
-  // GET /teams/:teamId/activities —— 团队最近动态（演示样例，分页包装）
-  http.get('/api/teams/:teamId/activities', () =>
-    HttpResponse.json({ data: MOCK_ACTIVITIES, page: { nextCursor: null, hasMore: false } }),
-  ),
+
 
   http.patch('/api/teams/:teamId', async ({ params, request }) => {
     const body = (await request.json()) as { name?: string; description?: string; avatarUrl?: string }

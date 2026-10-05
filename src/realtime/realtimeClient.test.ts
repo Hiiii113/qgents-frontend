@@ -22,7 +22,6 @@ describe('dispatchRealtimeFrame', () => {
     const spy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
     dispatchRealtimeFrame({ type: 'group.member.updated', scope: 'project', projectId: 'p1', groupId: 'g1', payload: {} })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'p1', 'members'] })
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'groups'] })
     expect(spy).not.toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'p1', 'groups', 'g1', 'messages'] })
   })
   it('refreshes chat membership when project members change', () => {
@@ -42,7 +41,7 @@ describe('dispatchRealtimeFrame', () => {
     expect(spy).toHaveBeenCalledWith({ queryKey: ['notifications'] })
   })
 
-  it('invalidates group list, messages and main-group aggregation for project message.created', () => {
+  it('refreshes the project group list without refetching message history for message.created', () => {
     const spy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
     const frame: RealtimeFrame = {
       type: 'message.created',
@@ -55,7 +54,6 @@ describe('dispatchRealtimeFrame', () => {
     dispatchRealtimeFrame(frame)
     expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'project-1', 'groups'], exact: true })
     expect(spy).not.toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'project-1', 'groups', 'group-1', 'messages'] })
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'groups'] })
   })
 
   it('ignores removed task event types', () => {
@@ -66,7 +64,6 @@ describe('dispatchRealtimeFrame', () => {
       projectId: 'project-1',
       payload: { projectId: 'project-1', taskId: 'task-1' },
     })
-    expect(spy).not.toHaveBeenCalled()
     expect(spy).not.toHaveBeenCalled()
   })
 
@@ -81,7 +78,6 @@ describe('dispatchRealtimeFrame', () => {
     expect(spy).toHaveBeenCalledWith({ queryKey: ['teams', 'mine'] })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['teams', 'team-1', 'projects'] })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['teams', 'team-1', 'members'] })
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['teams', 'team-1', 'activities'] })
   })
 
   it('ignores a project frame without a project id', () => {

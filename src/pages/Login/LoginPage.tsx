@@ -284,11 +284,6 @@ export function LoginPage() {
 
             {tab === 'login' && (
               <div className="login-card__meta">
-                {/* 保持登录 checkbox 保存在 UI 里，但接口文档没有此字段 */}
-                <label className="login-card__remember">
-                  <input type="checkbox" defaultChecked />
-                  保持登录
-                </label>
                 {/* 忘记密码：跳独立找回页（输入邮箱获取验证码 → 设置新密码） */}
                 <Link to={PATHS.FORGOT_PASSWORD} className="login-card__link">
                   忘记密码
