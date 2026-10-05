@@ -26,7 +26,6 @@ export function GroupMembersModal({
 }) {
   const [form] = Form.useForm<{
     title: string
-    description?: string
     userIds: string[]
     agentIds: string[]
   }>()
@@ -153,9 +152,6 @@ export function GroupMembersModal({
               rules={[{ required: true, whitespace: true, message: '请输入群聊名称' }]}
             >
               <Input maxLength={255} placeholder="例如：产品想法、前端协作" autoFocus />
-            </Form.Item>
-            <Form.Item name="description" label="简介（选填）">
-              <Input.TextArea rows={2} maxLength={2000} placeholder="这次想聊些什么？" />
             </Form.Item>
           </>
         )}

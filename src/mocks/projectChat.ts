@@ -78,8 +78,8 @@ export const projectChatHandlers = [
   http.get('/api/projects/:projectId/groups', ({ params }) => { const project = findProject(params.projectId); return project ? HttpResponse.json({ data: (groupFor(project), [...groups.values()].filter(group => group.projectId === project.id)) }) : notFound() }),
   http.post('/api/projects/:projectId/groups', async ({ params, request }) => {
     const project = findProject(params.projectId); if (!project) return notFound()
-    const body = await request.json() as { title: string; description?: string; userIds: string[]; agentIds: string[] }
-    const group: ChatGroup = { id: crypto.randomUUID(), projectId: project.id, title: body.title.trim(), description: body.description, defaultGroup: false, createdBy: MOCK_USER.id, createdAt: new Date().toISOString(), unreadCount: 0 }
+    const body = await request.json() as { title: string; userIds: string[]; agentIds: string[] }
+    const group: ChatGroup = { id: crypto.randomUUID(), projectId: project.id, title: body.title.trim(), defaultGroup: false, createdBy: MOCK_USER.id, createdAt: new Date().toISOString(), unreadCount: 0 }
     groups.set(group.id, group); messages.set(group.id, [])
     groupMembers.set(group.id, inviteMembers(project.id, [MOCK_USER.id, ...body.userIds], body.agentIds))
     group.memberCount = groupMembers.get(group.id)?.length

@@ -6,7 +6,6 @@ export interface ChatGroup {
   createdAt?: string
   createdBy?: string
   lastMessageAt?: string | null
-  description?: string | null
   memberCount?: number
   unreadCount?: number
   mentionedUnread?: number

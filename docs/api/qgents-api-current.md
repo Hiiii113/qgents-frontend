@@ -4,12 +4,12 @@
 
 ## 项目与聊天
 
-每个项目自动拥有一个默认群聊，项目成员可创建新群并邀请项目成员及当前团队可用 Agent。默认群对项目成员开放，新群仅向群成员开放。创建项目只传 `name`、`description`、可选 `memberIds`，仓库随后按需导入。项目读写、成员增删和角色调整、头像、归档与恢复使用 `ProjectController` 接口；不存在项目 `/settings` 配置接口，也不再通过退出群聊退出项目。
+每个项目自动拥有一个默认群聊，项目成员可创建新群并邀请项目成员及当前团队可用 Agent。默认群对项目成员开放，新群仅向群成员开放。群聊无独立简介字段，创建、修改、群响应和 Agent 上下文均不携带简介；群名通过 `title` 修改。创建项目只传 `name`、`description`、可选 `memberIds`，仓库随后按需导入。项目读写、成员增删和角色调整、头像、归档与恢复使用 `ProjectController` 接口；不存在项目 `/settings` 配置接口，也不再通过退出群聊退出项目。
 
 | 操作 | 接口 |
 | --- | --- |
 | 项目群聊 | `GET /projects/{projectId}/groups` |
-| 创建群聊 | `POST /projects/{projectId}/groups` |
+| 创建群聊 | `POST /projects/{projectId}/groups`，只传 `title`、`userIds`、`agentIds` |
 | 邀请群成员 | `POST /projects/{projectId}/groups/{groupId}/members` |
 | 群聊成员 | `GET /projects/{projectId}/groups/{groupId}/members` |
 | 历史消息 | `GET .../messages?cursor=&limit=30`，倒序返回 |

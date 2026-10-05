@@ -90,7 +90,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   return <section className="chat-panel">
     <header className="chat-panel__header">
       <div className="chat-panel__identity"><span className="chat-panel__project-icon"><TeamOutlined /></span><div>
-        <h1>{group?.title || project.data?.name || '项目聊天'}</h1><p>{group?.description || (group?.defaultGroup ? '默认群 · 全体项目成员' : '一起讨论，与 Agent 协作')}</p>
+        <h1>{group?.title || project.data?.name || '项目聊天'}</h1><p>{group?.defaultGroup ? '默认群 · 全体项目成员' : '一起讨论，与 Agent 协作'}</p>
       </div></div>
       <div className="chat-panel__header-actions">
         <Tooltip title={group?.pinned ? '取消置顶' : '置顶聊天'}><Button type="text" icon={<PushpinOutlined />} aria-label={group?.pinned ? '取消置顶' : '置顶聊天'} loading={pin.isPending} onClick={() => pin.mutate()} /></Tooltip>

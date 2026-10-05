@@ -127,7 +127,7 @@ export default function ProjectDetailLayout() {
                   <span>
                     {group.defaultGroup
                       ? '默认群 · 全体项目成员'
-                      : group.latestMessage?.text || group.description || '开始新的讨论'}
+                      : group.latestMessage?.text || '开始新的讨论'}
                   </span>
                 </div>
                 <Badge count={group.unreadCount} size="small" overflowCount={99} />

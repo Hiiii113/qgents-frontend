@@ -6,7 +6,7 @@ const groupPath = (projectId: string, groupId: string) =>
 
 export const chatApi = {
   groups: (projectId: string) => request<ChatGroup[]>(`/projects/${encodeURIComponent(projectId)}/groups`),
-  createGroup: (projectId: string, body: { title: string; description?: string; userIds: string[]; agentIds: string[] }) =>
+  createGroup: (projectId: string, body: { title: string; userIds: string[]; agentIds: string[] }) =>
     request<ChatGroup>(`/projects/${encodeURIComponent(projectId)}/groups`, { method: 'POST', body }),
   invite: (projectId: string, groupId: string, body: { userIds: string[]; agentIds: string[] }) =>
     request<ChatMember[]>(`${groupPath(projectId, groupId)}/members`, { method: 'POST', body }),
