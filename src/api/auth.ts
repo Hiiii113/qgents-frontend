@@ -67,6 +67,11 @@ export const authApi = {
     return request<User>('/me', { method: 'PATCH', body: payload })
   },
 
+  /** PUT /me/current-team — 保存最近选择的团队，服务端校验成员权限。 */
+  selectTeam(teamId: string) {
+    return request<void>('/me/current-team', { method: 'PUT', body: { teamId } })
+  },
+
   /** POST /me/avatar/credential — 签发头像直传凭证（OSS 未启用时 501 AVATAR_STORAGE_NOT_CONFIGURED） */
   createAvatarCredential(input: { mediaType: string; sizeBytes: number }) {
     return request<AvatarCredential>('/me/avatar/credential', { method: 'POST', body: input })

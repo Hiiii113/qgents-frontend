@@ -7,7 +7,9 @@ import {
   type ReactNode,
 } from 'react'
 import type { User } from '@/types'
-import { authApi, teamApi } from '@/api'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAppUiStore } from '@/store/appUiStore'
+import { authApi } from '@/api'
 import { AUTH_EXPIRED_EVENT } from '@/api/client'
 import { RSA_KEY_ID, encryptPassword } from '@/utils/rsaConfig'
 
@@ -16,6 +18,7 @@ const ACCESS_TOKEN_KEY = 'qgents_access_token'
 const REFRESH_TOKEN_KEY = 'qgents_refresh_token'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient()
   const [user, setUser] = useState<User | null>(null)
   const [hasTeam, setHasTeam] = useState(false)
   const [isBootstrapping, setIsBootstrapping] = useState(true)
@@ -43,14 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const user = me.user
         if (!user?.id) throw new Error('GET /me 未返回用户')
         setUser(user)
-        // /me 已返回 teams 聚合，直接取用；为空时兜底再查一次
-        if (me.teams && me.teams.length > 0) {
-          setHasTeam(true)
-        } else {
-          const teams = await teamApi.listMine()
-          if (cancelled) return
-          setHasTeam(teams.length > 0)
-        }
+        setHasTeam(me.teams.length > 0)
+        queryClient.setQueryData(['teams', 'mine'], me.teams)
+        useAppUiStore.getState().setCurrentTeam(me.currentTeamId)
       } catch {
         // token 过期或无效 → 清掉
         if (!cancelled) {
@@ -68,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true
       controller.abort()
     }
-  }, [])
+  }, [queryClient])
 
   // ──── 监听登录态失效（client.ts 在 refresh 也失败时派发）────
   // user 置 null 后，RequireAuth 守卫会自动跳回登录页
@@ -76,10 +74,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     function handleAuthExpired() {
       setUser(null)
       setHasTeam(false)
+      useAppUiStore.getState().clearContext()
+      queryClient.clear()
     }
     window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired)
     return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired)
-  }, [])
+  }, [queryClient])
 
   // ──── 登录：只调接口 + 存 token，返回会话；state 由 completeAuth 统一写入 ────
   const login = useCallback(async (email: string, password: string): Promise<AuthSession> => {
@@ -99,18 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(ACCESS_TOKEN_KEY, result.accessToken)
     localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken)
 
-    // 查清团队归属（这里不 setState，避免在 LoginPage 的 navigate 之前先触发一次
-    // 渲染，让 RedirectIfAuthed 用残留的 location.state.from 抢跳）
-    let haveTeam = false
-    try {
-      const teams = await teamApi.listMine()
-      haveTeam = teams.length > 0
-    } catch {
-      haveTeam = false
-    }
-
-    return { user: result.user, hasTeam: haveTeam }
-  }, [])
+    // 账户聚合校验最近团队并补齐其可用团队，页面无需再让用户选择。
+    const me = await authApi.me()
+    queryClient.setQueryData(['teams', 'mine'], me.teams)
+    return { user: me.user, hasTeam: me.teams.length > 0, currentTeamId: me.currentTeamId }
+  }, [queryClient])
 
   // ──── 注册：只调接口 + 存 token，返回会话（新用户没有团队）────
   const register = useCallback(
@@ -145,12 +138,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setHasTeam(false)
     localStorage.removeItem(ACCESS_TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
-  }, [])
+    useAppUiStore.getState().clearContext()
+    queryClient.clear()
+  }, [queryClient])
 
   // ──── 把登录/注册结果一次性写入 state，供 LoginPage 在 navigate 的同一同步块内调用 ────
   const completeAuth = useCallback((session: AuthSession) => {
     setUser(session.user)
     setHasTeam(session.hasTeam)
+    useAppUiStore.getState().setCurrentTeam(session.currentTeamId ?? null)
   }, [])
 
   // ──── 更新当前用户资料（PATCH /me 成功后同步本地 user）────

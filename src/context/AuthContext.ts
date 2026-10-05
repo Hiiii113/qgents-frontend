@@ -29,6 +29,7 @@ export interface AuthContextValue {
 export interface AuthSession {
   user: User
   hasTeam: boolean
+  currentTeamId?: string | null
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

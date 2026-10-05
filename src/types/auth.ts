@@ -1,3 +1,5 @@
+import type { Team } from './team'
+
 /**
  * 认证相关类型 —— 当前接口、
  */
@@ -75,6 +77,7 @@ export interface UpdateMePayload {
 
 export interface MeResponse {
   user: User
-  teams: Array<{ id: string; name: string; role: string }>
+  teams: Team[]
+  currentTeamId: string | null
   projects: Array<{ id: string; teamId: string; name: string; role: string }>
 }

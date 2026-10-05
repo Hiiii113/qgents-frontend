@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   ArrowRightOutlined,
   MessageOutlined,
@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { PATHS } from '@/routes/paths'
 import { projectApi, teamApi } from '@/api'
 import { CreateProjectModal } from '@/components/CreateProjectModal'
-import { useAppUiStore } from '@/store/appUiStore'
+import { useRememberTeam } from '@/hooks/useRememberTeam'
 import { useTeamEvents } from '@/realtime/useTeamEvents'
 import '@/styles/Journey.css'
 
@@ -22,7 +22,6 @@ export default function TeamDetailPage() {
   const location = useLocation()
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
-  const setCurrentTeam = useAppUiStore((state) => state.setCurrentTeam)
   useTeamEvents(teamId || undefined)
   const team = useQuery({
     queryKey: ['teams', teamId],
@@ -34,9 +33,7 @@ export default function TeamDetailPage() {
     queryFn: () => projectApi.listByTeam(teamId),
     enabled: Boolean(teamId),
   })
-  useEffect(() => {
-    if (team.data) setCurrentTeam(team.data.id)
-  }, [team.data, setCurrentTeam])
+  useRememberTeam(team.data?.id)
   if (team.isPending)
     return (
       <div className="journey-loading">

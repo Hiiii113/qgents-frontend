@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useState } from 'react'
 import {
   NavLink,
   Outlet,
@@ -22,7 +22,7 @@ import { chatKeys } from '@/components/chat/useChatMessages'
 import { GroupMembersModal } from '@/components/chat/GroupMembersModal'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
-import { useAppUiStore } from '@/store/appUiStore'
+import { useRememberTeam } from '@/hooks/useRememberTeam'
 import { PageLoader } from '@/components/PageLoader'
 import './ProjectDetailLayout.scss'
 
@@ -44,10 +44,7 @@ export default function ProjectDetailLayout() {
     queryFn: () => chatApi.groups(projectId),
     enabled: Boolean(projectId),
   })
-  const setCurrentTeam = useAppUiStore((state) => state.setCurrentTeam)
-  useEffect(() => {
-    if (project.data?.teamId) setCurrentTeam(project.data.teamId)
-  }, [project.data?.teamId, setCurrentTeam])
+  useRememberTeam(project.data?.teamId)
   if (project.isPending)
     return (
       <div className="project-loading">

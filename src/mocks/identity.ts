@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { MOCK_USER, MOCK_TEAMS, MOCK_TEAM_MEMBERS, MOCK_PROJECTS, MOCK_MY_INVITATIONS, MOCK_ACTIVITIES } from './state'
 const registerCodeByEmail = new Map<string, string>()
 let nextTeamId = 10
+let currentTeamId: string | null = MOCK_TEAMS[0]?.id ?? null
 export const identityHandlers = [
   http.get('/api/health', () => HttpResponse.json({ status: 'ok', source: 'msw' })),
 
@@ -114,13 +115,23 @@ export const identityHandlers = [
     HttpResponse.json({
       data: {
         user: MOCK_USER,
-        teams: MOCK_TEAMS.map((t) => ({ id: t.id, name: t.name, role: t.role ?? 'TEAM_MEMBER' })),
+        teams: MOCK_TEAMS,
+        currentTeamId: MOCK_TEAMS.some(team => team.id === currentTeamId) ? currentTeamId : MOCK_TEAMS[0]?.id ?? null,
         projects: Object.values(MOCK_PROJECTS)
           .flat()
           .map((p) => ({ id: p.id, teamId: p.teamId, name: p.name, role: p.role })),
       },
     }),
   ),
+
+  http.put('/api/me/current-team', async ({ request }) => {
+    const body = await request.json() as { teamId: string }
+    if (!MOCK_TEAMS.some(team => team.id === body.teamId)) {
+      return HttpResponse.json({ error: { code: 'TEAM_ACCESS_DENIED', message: '暂无团队访问权限' } }, { status: 403 })
+    }
+    currentTeamId = body.teamId
+    return HttpResponse.json({ data: {} })
+  }),
 
   http.patch('/api/me', async ({ request }) => {
     const body = (await request.json()) as { displayName?: string; avatarUrl?: string }
