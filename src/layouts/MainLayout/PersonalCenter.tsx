@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Alert, App, Avatar, Button, Grid, Input, Popover, Spin, Upload } from 'antd'
-import { CameraOutlined, CheckOutlined, EditOutlined, LogoutOutlined, PlusOutlined, RightOutlined, TeamOutlined } from '@ant-design/icons'
+import { CameraOutlined, CheckOutlined, EditOutlined, LogoutOutlined, PlusOutlined, RightOutlined, SettingOutlined, TeamOutlined } from '@ant-design/icons'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, teamApi, uploadAvatar } from '@/api'
 import { useAppUiStore, useCurrentTeamId } from '@/store/appUiStore'
@@ -115,6 +115,9 @@ export function PersonalCenter() {
           <TeamOutlined /><span>切换团队</span><RightOutlined className="personal-menu__arrow" />
         </button>
       </Popover>
+      {teamId && <button type="button" className="personal-menu__item" onClick={() => { setOpen(false); navigate(PATHS.teamSettings(teamId)) }}>
+        <SettingOutlined /><span>团队设置</span>
+      </button>}
       <button type="button" className="personal-menu__item" onClick={() => { setOpen(false); navigate(PATHS.CREATE_TEAM) }}>
         <PlusOutlined /><span>创建团队</span>
       </button>

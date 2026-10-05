@@ -23,6 +23,7 @@ it('welcomes the user and requests projects only for the selected team', async (
   expect(screen.queryByText(/01|02|03/)).not.toBeInTheDocument()
   expect(await screen.findByRole('link', { name: /设计讨论/ })).toHaveAttribute('href', '/app/projects/p1/chat')
   expect(list).toHaveBeenCalledWith('t2')
+  expect(screen.queryByRole('button', { name: /团队设置/ })).not.toBeInTheDocument()
   fireEvent.change(screen.getByRole('textbox', { name: '搜索项目' }), { target: { value: '研发' } })
   expect(screen.queryByRole('link', { name: /设计讨论/ })).not.toBeInTheDocument()
   expect(screen.getByRole('link', { name: /研发协作/ })).toBeInTheDocument()

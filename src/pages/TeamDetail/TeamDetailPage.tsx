@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import {
+  ArrowLeftOutlined,
   ArrowRightOutlined,
   MessageOutlined,
   PlusOutlined,
   SearchOutlined,
-  SettingOutlined,
 } from '@ant-design/icons'
 import { Alert, Avatar, Button, Empty, Input, Spin } from 'antd'
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
@@ -63,11 +63,11 @@ export default function TeamDetailPage() {
           <h1>{user?.displayName || '用户'}，欢迎回来</h1>
           <p>从一个项目开始今天的讨论。</p>
         </div>
-        <div className="journey-actions">
-          <Link to={settings ? PATHS.teamDetail(teamId) : PATHS.teamSettings(teamId)}>
-            <Button icon={<SettingOutlined />}>{settings ? '返回项目' : '团队设置'}</Button>
+        {settings && <div className="journey-actions">
+          <Link to={PATHS.teamDetail(teamId)}>
+            <Button icon={<ArrowLeftOutlined />}>返回项目</Button>
           </Link>
-        </div>
+        </div>}
       </header>
       {settings ? (
         <div className="journey-settings">

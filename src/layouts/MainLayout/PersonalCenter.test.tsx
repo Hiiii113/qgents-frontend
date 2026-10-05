@@ -12,7 +12,7 @@ const { updateUser, logout, user } = vi.hoisted(() => ({
   user: { id: 'u1', displayName: '小林', email: 'lin@example.test' },
 }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user, updateUser, logout }) }))
-afterEach(() => { cleanup(); vi.restoreAllMocks(); updateUser.mockReset() })
+afterEach(() => { cleanup(); vi.restoreAllMocks(); updateUser.mockReset(); useAppUiStore.getState().clearContext() })
 
 function openMenu() {
   const view = renderWorkspace(<PersonalCenter />, '/app', '/app', client => {
@@ -75,4 +75,20 @@ it('leaves the previous avatar intact if upload credentials fail', async () => {
   fireEvent.change(input!, { target: { files: [new File(['image'], 'avatar.png', { type: 'image/png' })] } })
   expect(await screen.findByText('上传失败')).toBeInTheDocument()
   expect(updateUser).not.toHaveBeenCalled()
+})
+
+it('opens settings for the current team from the personal menu', async () => {
+  useAppUiStore.getState().setCurrentTeam('t2')
+  renderWorkspace(<Routes><Route index element={<PersonalCenter />} /><Route path="teams/:teamId/settings" element={<div>当前团队设置页</div>} /></Routes>, '/app', '/app/*', client => {
+    client.setQueryData(['teams', 'mine'], [{ id: 't2', name: '团队二' }])
+  })
+  fireEvent.click(screen.getByRole('button', { name: '打开个人中心' }))
+  fireEvent.click(await screen.findByRole('button', { name: /团队设置/ }))
+  expect(await screen.findByText('当前团队设置页')).toBeInTheDocument()
+})
+
+it('hides team settings when no team is selected', async () => {
+  openMenu()
+  await screen.findByRole('region', { name: '个人中心' })
+  expect(screen.queryByRole('button', { name: /团队设置/ })).not.toBeInTheDocument()
 })
