@@ -1,7 +1,4 @@
 .journey-page { max-width: 1192px; margin: auto; padding: 38px 44px 64px; color: #263d31; }
-.journey-steps { display: flex; flex-wrap: wrap; gap: 28px; color: #829086; font-size: 11px; letter-spacing: .4px; margin-bottom: 38px; }
-.journey-steps span { padding: 9px 0; border-bottom: 2px solid transparent; }
-.journey-steps .is-current { color: #325d43; border-color: #688b55; font-weight: 650; }
 .journey-hero { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 44px; padding-bottom: 34px; border-bottom: 1px solid #dfe6da; }
 .journey-eyebrow { font-size: 10px; letter-spacing: 2px; font-weight: 600; color: #728561; }
 .journey-hero h1 { margin: 12px 0; font-size: clamp(25px, 3vw, 38px); font-weight: 650; letter-spacing: -1.2px; line-height: 1.3; }
@@ -41,7 +38,6 @@
 .welcome-space__footnote { text-align: center; color: #93a08d; margin-top: 42px; font-size: 12px; }
 @media (max-width: 700px) {
  .journey-page { padding: 24px 20px 40px; }
- .journey-steps { gap: 15px; margin-bottom: 26px; font-size: 10px; }
  .journey-hero { align-items: flex-start; flex-direction: column; margin-bottom: 28px; padding-bottom: 24px; }
  .journey-section-title { align-items: flex-start; flex-direction: column; }
  .journey-actions .ant-input-affix-wrapper { width: 185px; }

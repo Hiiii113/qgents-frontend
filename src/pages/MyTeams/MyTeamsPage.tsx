@@ -12,11 +12,6 @@ export default function MyTeamsPage() {
   const teams = useQuery({ queryKey: ['teams', 'mine'], queryFn: teamApi.listMine })
   return (
     <div className="journey-page">
-      <div className="journey-steps" aria-label="进入聊天的步骤">
-        <span className="is-current">01 选择团队</span>
-        <span>02 选择项目</span>
-        <span>03 开始聊天</span>
-      </div>
       <header className="journey-hero">
         <div>
           <span className="journey-eyebrow">YOUR TEAM SPACE</span>

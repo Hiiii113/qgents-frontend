@@ -10,11 +10,6 @@ export default function WelcomePage() {
         Qgents
       </Link>
       <div className="journey-page">
-        <div className="journey-steps">
-          <span className="is-current">01 创建或加入团队</span>
-          <span>02 选择项目</span>
-          <span>03 开始聊天</span>
-        </div>
         <header className="journey-hero">
           <div>
             <span className="journey-eyebrow">LET’S GET TOGETHER</span>

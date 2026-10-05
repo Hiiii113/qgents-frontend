@@ -59,11 +59,6 @@ export default function TeamDetailPage() {
   const settings = location.pathname.endsWith('/settings')
   return (
     <div className="journey-page">
-      <div className="journey-steps">
-        <span>01 选择团队</span>
-        <span className="is-current">02 选择项目</span>
-        <span>03 开始聊天</span>
-      </div>
       <header className="journey-hero">
         <div className="journey-team-heading">
           <Avatar size={60} shape="square" src={team.data.avatarUrl}>
