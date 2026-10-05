@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import {
   App,
@@ -13,7 +13,6 @@ import {
   Upload,
 } from 'antd'
 import {
-  TeamOutlined,
   LogoutOutlined,
   CameraOutlined,
 } from '@ant-design/icons'
@@ -147,9 +146,6 @@ export function PersonalCenter() {
       <Divider style={{ margin: '16px 0' }} />
 
       <Space orientation="vertical" style={{ width: '100%' }} size={8}>
-        <Link to={PATHS.MY_TEAMS} onClick={closePersonalCenter}>
-          <Button block icon={<TeamOutlined />}>切换团队</Button>
-        </Link>
         <Button block danger icon={<LogoutOutlined />} onClick={handleLogout}>
           退出登录
         </Button>
