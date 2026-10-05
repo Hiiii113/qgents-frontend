@@ -1,6 +1,6 @@
 .qg-banner { flex: 0 0 56px; height: 56px; display: flex; align-items: center; gap: 38px; padding: 0 24px; background: #253d32; color: #f2f5ec; border-bottom: 1px solid #344c3f; }
-.qg-banner__brand { display: flex; align-items: center; gap: 6px; font-size: 19px; letter-spacing: -.7px; flex-shrink: 0; }
-.qg-banner__brand > span { width: 29px; height: 29px; display: grid; place-items: center; background: #e6ecdf; color: #2e4836; border-radius: 10px; font-weight: 700; }
+.qg-banner__brand { display: inline-flex; align-items: center; color: #f2f5ec; font-size: 22px; font-weight: 700; letter-spacing: -.7px; flex-shrink: 0; }
+.qg-banner__brand:hover { color: #fff; }
 .qg-banner nav { display: flex; gap: 6px; min-width: 0; }
 .qg-banner nav a { display: flex; align-items: center; gap: 8px; padding: 8px 14px; color: #d4ddce; font-size: 13px; border-radius: 8px; white-space: nowrap; }
 .qg-banner nav a.active, .qg-banner nav a:hover { color: #fff; background: #405746; }
@@ -8,4 +8,4 @@
 .qg-banner__account .ant-btn { color: #eef2e7; }
 .qg-banner__account .ant-btn:hover { color: #fff !important; background: #405746 !important; }
 .qg-banner__account .ant-btn > span { display: inline-flex; align-items: center; gap: 10px; }
-@media (max-width: 700px) { .qg-banner { gap: 14px; padding: 0 14px; } .qg-banner nav a { padding: 8px; } .qg-banner__brand strong, .qg-banner__account .ant-btn > .qg-banner__user-name { display: none; } .qg-banner__account { gap: 3px; flex-shrink: 0; } }
+@media (max-width: 700px) { .qg-banner { gap: 14px; padding: 0 14px; } .qg-banner nav a { padding: 8px; } .qg-banner__account .ant-btn > .qg-banner__user-name { display: none; } .qg-banner__account { gap: 3px; flex-shrink: 0; } }

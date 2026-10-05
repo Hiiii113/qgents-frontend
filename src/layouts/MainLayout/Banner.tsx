@@ -13,7 +13,7 @@ export function Banner() {
   const { openPersonalCenter } = usePersonalCenter()
   const teamId = useCurrentTeamId()
   return <header className="qg-banner">
-    <NavLink className="qg-banner__brand" to={PATHS.MY_TEAMS} aria-label="Qgents 首页"><span>Q</span><strong>gents</strong></NavLink>
+    <NavLink className="qg-banner__brand" to={teamId ? PATHS.teamDetail(teamId) : PATHS.APP} aria-label="Qgents 首页">Qgents</NavLink>
     <nav aria-label="主导航">
       <NavLink to={PATHS.MY_TEAMS}><HomeOutlined /><span>团队</span></NavLink>
       {teamId && <NavLink to={PATHS.teamDetail(teamId)}><ApartmentOutlined /><span>团队项目</span></NavLink>}
