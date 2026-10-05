@@ -101,9 +101,9 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
     if (messages.length) virtualizer.scrollToIndex(messages.length - 1, { align: 'end' })
   }
   return <div className="chat-timeline">
-    <div className="chat-timeline__history">{props.hasMore
-      ? <Button type="text" loading={props.loadingOlder} onClick={() => void loadOlder()}>加载更早消息</Button>
-      : <span>讨论、上下文和成果，都留在这里</span>}</div>
+    {props.hasMore && <div className="chat-timeline__history">
+      <Button type="text" loading={props.loadingOlder} onClick={() => void loadOlder()}>加载更早消息</Button>
+    </div>}
     <div className="chat-timeline__scroll" ref={scrollRef} aria-label="聊天消息" role="log" aria-live="polite" onScroll={event => {
       const element = event.currentTarget
       const away = element.scrollHeight - element.scrollTop - element.clientHeight > 100
@@ -115,7 +115,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
       }
     }}>
       {props.loading ? <div className="chat-timeline__empty"><Spin delay={180} /></div> : !messages.length
-        ? <div className="chat-timeline__empty"><Empty description="从一个想法开始讨论" /><p>与成员交流，或 @Agent 帮你分析和完成工作。</p></div>
+        ? <div className="chat-timeline__empty"><Empty description="从一个想法开始讨论" /></div>
         : <div className="chat-timeline__virtual" style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
           {virtualizer.getVirtualItems().map(row => {
             const item = messages[row.index]
