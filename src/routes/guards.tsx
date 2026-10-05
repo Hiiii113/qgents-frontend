@@ -29,7 +29,7 @@ export function RedirectIfAuthed({ children }: { children: ReactNode }) {
   const teamId = useCurrentTeamId()
 
   if (isAuthenticated) {
-    return <Navigate to={teamId ? PATHS.teamDetail(teamId) : hasTeam ? PATHS.MY_TEAMS : PATHS.WELCOME} replace />
+    return <Navigate to={teamId ? PATHS.teamDetail(teamId) : hasTeam ? PATHS.APP : PATHS.WELCOME} replace />
   }
   return children
 }

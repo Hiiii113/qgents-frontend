@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
-import { App, Avatar, Button, Input, Popover, Spin, Upload } from 'antd'
-import { CameraOutlined, CheckOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Alert, App, Avatar, Button, Input, Popover, Spin, Upload } from 'antd'
+import { CameraOutlined, CheckOutlined, EditOutlined, LogoutOutlined, PlusOutlined, RightOutlined, TeamOutlined } from '@ant-design/icons'
 import { useAuth } from '@/context/AuthContext'
-import { authApi, uploadAvatar } from '@/api'
+import { authApi, teamApi, uploadAvatar } from '@/api'
+import { useAppUiStore, useCurrentTeamId } from '@/store/appUiStore'
 import { formatApiError } from '@/utils/formatApiError'
 import { PATHS } from '@/routes/paths'
 import './PersonalCenter.css'
@@ -19,6 +20,17 @@ export function PersonalCenter() {
   const [nickname, setNickname] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const name = user?.displayName || '用户'
+  const teamId = useCurrentTeamId()
+  const teams = useQuery({ queryKey: ['teams', 'mine'], queryFn: teamApi.listMine, enabled: open })
+  const selectTeam = useMutation({
+    mutationFn: (id: string) => authApi.selectTeam(id),
+    onSuccess: (_data, id) => {
+      useAppUiStore.getState().setCurrentTeam(id)
+      setOpen(false)
+      navigate(PATHS.teamDetail(id))
+    },
+    onError: error => message.error(formatApiError(error)),
+  })
 
   const updateProfile = useMutation({
     mutationFn: (displayName: string) => authApi.updateMe({ displayName }),
@@ -59,6 +71,18 @@ export function PersonalCenter() {
     updateProfile.mutate(displayName)
   }
 
+  const teamMenu = <section className="personal-menu__teams" aria-label="选择团队">
+    {teams.isPending ? <div className="personal-menu__team-status"><Spin delay={180} /></div>
+      : teams.isError ? <Alert type="error" title="团队加载失败" action={<Button onClick={() => void teams.refetch()}>重试</Button>} />
+      : teams.data?.length ? teams.data.map(team => <button type="button" key={team.id}
+        className={`personal-menu__team${team.id === teamId ? ' is-current' : ''}`}
+        aria-label={`进入团队 ${team.name}`} aria-current={team.id === teamId ? 'true' : undefined}
+        disabled={selectTeam.isPending} onClick={() => selectTeam.mutate(team.id)}>
+        <Avatar size={36} src={team.avatarUrl}>{team.name.slice(0, 1)}</Avatar>
+        <span>{team.name}</span>{team.id === teamId && <CheckOutlined />}
+      </button>) : <p className="personal-menu__team-status">还没有团队</p>}
+  </section>
+
   const content = <section className="personal-menu" aria-label="个人中心">
     <div className="personal-menu__profile">
       <Upload accept="image/*" showUploadList={false} beforeUpload={handleAvatarUpload} disabled={avatarUploading}>
@@ -84,6 +108,18 @@ export function PersonalCenter() {
       </div>
     </div>
     <div className="personal-menu__actions">
+      <Popover placement="leftTop" trigger={['hover', 'click']} content={teamMenu} arrow={false}
+        styles={{ container: { padding: 8 } }}>
+        <button type="button" className="personal-menu__item" aria-label="切换团队">
+          <TeamOutlined /><span>切换团队</span><RightOutlined className="personal-menu__arrow" />
+        </button>
+      </Popover>
+      <button type="button" className="personal-menu__item" onClick={() => { setOpen(false); navigate(PATHS.CREATE_TEAM) }}>
+        <PlusOutlined /><span>创建团队</span>
+      </button>
+      <button type="button" className="personal-menu__item" onClick={() => { setOpen(false); navigate(PATHS.JOIN_TEAM) }}>
+        <TeamOutlined /><span>加入团队</span>
+      </button>
       <button type="button" className="personal-menu__item personal-menu__item--logout" onClick={async () => {
         await logout(); setOpen(false); navigate(PATHS.LOGIN, { replace: true })
       }}><LogoutOutlined /><span>退出登录</span></button>

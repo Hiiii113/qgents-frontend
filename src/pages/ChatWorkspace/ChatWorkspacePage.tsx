@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Alert, Avatar, Badge, Button, Empty, Input, Select, Spin, Tag } from 'antd'
+import { Alert, Avatar, Badge, Button, Empty, Input, Spin, Tag } from 'antd'
 import { PushpinOutlined, SearchOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import { chatApi } from '@/api/chat'
 import { projectApi } from '@/api/project'
-import { teamApi } from '@/api/team'
 import { ChatPanel } from '@/components/chat/ChatPanel'
 import { chatKeys } from '@/components/chat/useChatMessages'
 import { useAppUiStore, useCurrentTeamId } from '@/store/appUiStore'
@@ -17,8 +16,8 @@ export default function ChatWorkspacePage() {
   const [search, setSearch] = useState('')
   const currentTeam = useCurrentTeamId()
   const setTeam = useAppUiStore(state => state.setCurrentTeam)
-  const teams = useQuery({ queryKey: ['teams', 'mine'], queryFn: teamApi.listMine })
-  const teamId = params.get('teamId') || currentTeam || teams.data?.[0]?.id || ''
+
+  const teamId = currentTeam || ''
   const projects = useQuery({ queryKey: ['teams', teamId, 'projects'], queryFn: () => projectApi.listByTeam(teamId), enabled: Boolean(teamId) })
   const groups = useQuery({ queryKey: chatKeys.allGroups, queryFn: chatApi.allGroups, enabled: Boolean(teamId) })
   const projectById = useMemo(() => new Map((projects.data ?? []).map(project => [project.id, project])), [projects.data])
@@ -35,13 +34,11 @@ export default function ChatWorkspacePage() {
     if (selected && !params.get('projectId')) next.set('projectId', selected.projectId)
     if (next.toString() !== params.toString()) setParams(next, { replace: true })
   }, [teamId, selected, setTeam, params, setParams])
-  const loading = teams.isPending || (Boolean(teamId) && (projects.isPending || groups.isPending))
-  const error = teams.error || projects.error || groups.error
+  const loading = (Boolean(teamId) && (projects.isPending || groups.isPending))
+  const error = projects.error || groups.error
   return <div className="chat-workspace">
     <aside className="chat-workspace__sidebar">
       <div className="chat-workspace__heading"><span>CONVERSATIONS</span><h1>项目聊天</h1></div>
-      <Select aria-label="当前团队" value={teamId || undefined} options={(teams.data ?? []).map(team => ({ value: team.id, label: team.name }))}
-        onChange={id => { setParams({ teamId: id }); setTeam(id) }} />
       <Input aria-label="搜索项目聊天" prefix={<SearchOutlined />} placeholder="搜索项目…" value={search} onChange={event => setSearch(event.target.value)} allowClear />
       <div className="chat-workspace__sessions">{visibleSessions.map(group => {
         const project = projectById.get(group.projectId)
@@ -54,7 +51,6 @@ export default function ChatWorkspacePage() {
       <p className="chat-workspace__note">一个项目，一段持续的对话。</p>
     </aside>
     <main className="chat-workspace__main">{error ? <Alert type="error" showIcon message={formatApiError(error)} action={<Button onClick={() => {
-      if (teams.isError) void teams.refetch()
       if (projects.isError) void projects.refetch()
       if (groups.isError) void groups.refetch()
     }}>重试</Button>} /> : loading

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { PageLoader } from '@/components/PageLoader'
+import { HomeRedirect } from '@/pages/Home/HomeRedirect'
 import { MainLayout } from '@/layouts/MainLayout'
 import { ProjectSettingsLayout } from '@/pages/ProjectDetail/Settings/ProjectSettingsLayout'
 import { PATHS } from './paths'
@@ -11,7 +12,6 @@ const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPassword/ForgotPassw
 const WelcomePage = lazy(() => import('@/pages/Welcome/WelcomePage'))
 const CreateTeamPage = lazy(() => import('@/pages/CreateTeam/CreateTeamPage'))
 const JoinTeamPage = lazy(() => import('@/pages/JoinTeam/JoinTeamPage'))
-const MyTeamsPage = lazy(() => import('@/pages/MyTeams/MyTeamsPage'))
 const ChatWorkspacePage = lazy(() => import('@/pages/ChatWorkspace/ChatWorkspacePage'))
 const GitHubIntegrationPage = lazy(() => import('@/pages/GitHubIntegration/GitHubIntegrationPage'))
 const TeamDetailPage = lazy(() => import('@/pages/TeamDetail/TeamDetailPage'))
@@ -35,8 +35,7 @@ export function AppRouter() {
     <Route element={<RequireAuth />}>
       <Route path={PATHS.WELCOME} element={<WelcomePage />} />
       <Route path={PATHS.APP} element={<MainLayout />}>
-        <Route index element={<Navigate to={PATHS.MY_TEAMS} replace />} />
-        <Route path="teams" element={<MyTeamsPage />} />
+        <Route index element={<HomeRedirect />} />
         <Route path="teams/create" element={<CreateTeamPage />} />
         <Route path="teams/join" element={<JoinTeamPage />} />
         <Route element={<RequireTeam />}>

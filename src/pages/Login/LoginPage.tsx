@@ -89,7 +89,7 @@ export function LoginPage() {
       // completeAuth 与 navigate 在同一同步块内，React 批处理成一次渲染，
       // 避免 setUser 先触发 RedirectIfAuthed 用残留的 location.state.from 抢跳
       completeAuth(session)
-      navigate(session.currentTeamId ? PATHS.teamDetail(session.currentTeamId) : session.hasTeam ? PATHS.MY_TEAMS : PATHS.WELCOME, { replace: true, state: null })
+      navigate(session.currentTeamId ? PATHS.teamDetail(session.currentTeamId) : session.hasTeam ? PATHS.APP : PATHS.WELCOME, { replace: true, state: null })
     } catch (err) {
       setError(formatApiError(err))
     } finally {

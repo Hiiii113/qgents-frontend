@@ -29,7 +29,7 @@ export default function NotFoundPage() {
       </p>
       <button
         type="button"
-        onClick={() => navigate(PATHS.MY_TEAMS, { replace: true })}
+        onClick={() => navigate(PATHS.APP, { replace: true })}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         style={{

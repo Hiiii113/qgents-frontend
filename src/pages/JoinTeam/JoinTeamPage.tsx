@@ -57,8 +57,8 @@ export default function JoinTeamPage() {
       setSuccess('已成功加入团队')
       void queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
       void message.success('已成功加入团队')
-      // 令牌接受响应不含团队 ID，回到刷新后的团队列表选择项目。
-      navigate(PATHS.MY_TEAMS, { replace: true })
+      // 令牌接受响应不含团队 ID，回首页恢复可用团队并展示项目。
+      navigate(PATHS.APP, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : '加入失败，邀请令牌可能已过期')
     } finally {
@@ -68,8 +68,8 @@ export default function JoinTeamPage() {
 
   return (
     <div className="join-team">
-      <Link to={PATHS.MY_TEAMS} className="join-team__back">
-        ← 返回我的团队
+      <Link to={PATHS.APP} className="join-team__back">
+        ← 返回首页
       </Link>
       <h1>加入已有团队</h1>
       <p className="join-team__desc">

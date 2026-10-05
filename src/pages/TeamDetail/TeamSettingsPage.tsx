@@ -20,6 +20,7 @@ import { CameraOutlined, GithubOutlined, UploadOutlined } from '@ant-design/icon
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { teamApi } from '@/api'
 import { useAuth } from '@/context/AuthContext'
+import { useAppUiStore } from '@/store/appUiStore'
 import { EmptyState } from '@/components/EmptyState'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
@@ -77,7 +78,9 @@ export default function TeamSettingsPage() {
     onSuccess: () => {
       message.success('团队已解散')
       queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
-      navigate(PATHS.MY_TEAMS, { replace: true })
+      queryClient.removeQueries({ queryKey: ['me'] })
+      useAppUiStore.getState().clearContext()
+      navigate(PATHS.APP, { replace: true })
     },
     onError: (err) => {
       message.error(err instanceof Error ? err.message : '解散失败')
@@ -181,7 +184,7 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
       setAvatarUrl(uploaded)
       await teamApi.update(teamId, { avatarUrl: uploaded })
       message.success('团队头像已更新')
-      // 同步刷新所有展示团队头像的查询：详情页、我的团队列表（key 不同，需分别失效）
+      // 同步刷新所有展示团队头像的查询：详情页、个人菜单团队列表（key 不同，需分别失效）
       queryClient.invalidateQueries({ queryKey: ['teams', teamId] })
       queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
     } catch (error) {

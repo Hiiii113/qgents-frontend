@@ -86,9 +86,9 @@ export default function CreateTeamPage() {
   return (
     <div className="create-team">
       <div className="create-team__top">
-        <Link to={PATHS.MY_TEAMS} className="create-team__back">
+        <Link to={PATHS.APP} className="create-team__back">
           <BackIcon />
-          返回我的团队
+          返回首页
         </Link>
       </div>
 
@@ -153,7 +153,7 @@ export default function CreateTeamPage() {
           <button
             type="button"
             className="create-team__btn create-team__btn--ghost"
-            onClick={() => navigate(PATHS.MY_TEAMS)}
+            onClick={() => navigate(PATHS.APP)}
           >
             取消
           </button>

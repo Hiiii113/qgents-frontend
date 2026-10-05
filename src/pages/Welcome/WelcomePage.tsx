@@ -6,7 +6,7 @@ import '@/styles/Journey.css'
 export default function WelcomePage() {
   return (
     <div className="welcome-space">
-      <Link className="welcome-space__brand" to={PATHS.MY_TEAMS}>
+      <Link className="welcome-space__brand" to={PATHS.APP}>
         Qgents
       </Link>
       <div className="journey-page">

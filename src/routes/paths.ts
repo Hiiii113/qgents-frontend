@@ -1,6 +1,6 @@
 export const PATHS = {
   LOGIN: '/login', FORGOT_PASSWORD: '/forgot-password', WELCOME: '/welcome', APP: '/app',
-  MY_TEAMS: '/app/teams', CREATE_TEAM: '/app/teams/create', JOIN_TEAM: '/app/teams/join',
+  CREATE_TEAM: '/app/teams/create', JOIN_TEAM: '/app/teams/join',
   teamDetail: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}`,
   teamSettings: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}/settings`,
   teamActivities: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}/activities`,

@@ -9,10 +9,10 @@ src/
 │   ├── chat/               ChatPanel、输入器、虚拟列表、消息行、附件预览、同步 hook
 │   ├── KnowledgeActions    Skill / Memory 详情审核操作
 │   └── WorkspacePage       管理页共享布局
-├── layouts/MainLayout/     团队 / 项目聊天入口、个人中心、通知
+├── layouts/MainLayout/     当前团队首页、个人资料与团队切换浮层、通知
 ├── pages/
 │   ├── Login/ ForgotPassword/ Welcome/
-│   ├── CreateTeam/ JoinTeam/ MyTeams/ TeamDetail/
+│   ├── CreateTeam/ JoinTeam/ Home/ TeamDetail/
 │   ├── CreateProject/
 │   ├── ChatWorkspace/      按团队查看项目会话
 │   ├── GitHubIntegration/  团队 GitHub App 连接
@@ -43,3 +43,5 @@ src/
 测试覆盖当前 API payload、团队 Agent 缓存、导航和权限、普通消息、回复重试、输入法、历史合并、并发增量及千条消息的有限 DOM 挂载。附件、GitHub 和真实 Agent 执行仍需后端环境联调；Mock 不声称已经执行真实代码操作。
 
 个人中心为顶部头像旁的浮层，点击头像更换、点击昵称就地修改；昵称保存使用 PATCH /me 返回的用户资料，头像确认成功后更新显示，无独立抽屉或上传按钮。
+
+首页路由 /app 自动进入服务端选定团队的项目页；旧 /app/teams 列表页已删除。团队切换只在个人中心的团队子菜单中，带团队头像和当前选择标记，保存成功后进入所选团队项目页；主菜单保留创建、加入团队。

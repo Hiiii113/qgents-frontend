@@ -1,6 +1,9 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { authApi } from '@/api/auth'
+import { teamApi } from '@/api/team'
+import { useAppUiStore } from '@/store/appUiStore'
+import { Route, Routes } from 'react-router-dom'
 import { renderWorkspace } from '@/test/renderWorkspace'
 import { PersonalCenter } from './PersonalCenter'
 
@@ -12,7 +15,9 @@ vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user, updateUser, lo
 afterEach(() => { cleanup(); vi.restoreAllMocks(); updateUser.mockReset() })
 
 function openMenu() {
-  const view = renderWorkspace(<PersonalCenter />, '/app', '/app', () => {})
+  const view = renderWorkspace(<PersonalCenter />, '/app', '/app', client => {
+    client.setQueryData(['teams', 'mine'], [{ id: 't1', name: '团队一' }, { id: 't2', name: '团队二', avatarUrl: 'https://example.test/team.png' }])
+  })
   fireEvent.click(screen.getByRole('button', { name: '打开个人中心' }))
   return view
 }
@@ -23,6 +28,31 @@ it('opens a profile popover with inline avatar and nickname controls', async () 
   expect(screen.getByRole('button', { name: '更换个人头像' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '修改昵称' })).toBeInTheDocument()
   expect(document.querySelector('.ant-drawer')).toBeNull()
+})
+
+it('shows team avatars on hover and saves the selected team before navigating', async () => {
+  useAppUiStore.getState().setCurrentTeam('t1')
+  vi.spyOn(teamApi, 'listMine').mockResolvedValue([{ id: 't1', name: '团队一' }, { id: 't2', name: '团队二', avatarUrl: 'https://example.test/team.png' }])
+  const save = vi.spyOn(authApi, 'selectTeam').mockResolvedValue(undefined)
+  renderWorkspace(<Routes><Route index element={<PersonalCenter />} /><Route path="teams/:teamId" element={<div>团队项目首页</div>} /></Routes>, '/app', '/app/*', () => {})
+  fireEvent.click(screen.getByRole('button', { name: '打开个人中心' }))
+  fireEvent.mouseEnter(await screen.findByRole('button', { name: '切换团队' }))
+  const team = await screen.findByRole('button', { name: '进入团队 团队二' })
+  expect(team.querySelector('img')).toHaveAttribute('src', 'https://example.test/team.png')
+  fireEvent.click(team)
+  expect(await screen.findByText('团队项目首页')).toBeInTheDocument()
+  expect(save).toHaveBeenCalledWith('t2')
+  expect(useAppUiStore.getState().currentTeamId).toBe('t2')
+})
+
+it('keeps the current team when saving a switch fails', async () => {
+  useAppUiStore.getState().setCurrentTeam('t1')
+  vi.spyOn(authApi, 'selectTeam').mockRejectedValue(new Error('暂无团队访问权限'))
+  openMenu()
+  fireEvent.mouseEnter(await screen.findByRole('button', { name: '切换团队' }))
+  fireEvent.click(await screen.findByRole('button', { name: '进入团队 团队二' }))
+  expect(await screen.findByText('暂无团队访问权限')).toBeInTheDocument()
+  expect(useAppUiStore.getState().currentTeamId).toBe('t1')
 })
 
 it('saves the nickname and uses the server profile response', async () => {
