@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Alert, App, Avatar, Button, Input, Popover, Spin, Upload } from 'antd'
+import { Alert, App, Avatar, Button, Grid, Input, Popover, Spin, Upload } from 'antd'
 import { CameraOutlined, CheckOutlined, EditOutlined, LogoutOutlined, PlusOutlined, RightOutlined, TeamOutlined } from '@ant-design/icons'
 import { useAuth } from '@/context/AuthContext'
 import { authApi, teamApi, uploadAvatar } from '@/api'
@@ -13,6 +13,7 @@ import './PersonalCenter.css'
 /** 头像菜单：资料就地编辑，不遮挡当前页面。 */
 export function PersonalCenter() {
   const navigate = useNavigate()
+  const screens = Grid.useBreakpoint()
   const { message } = App.useApp()
   const { user, logout, updateUser } = useAuth()
   const [open, setOpen] = useState(false)
@@ -108,7 +109,7 @@ export function PersonalCenter() {
       </div>
     </div>
     <div className="personal-menu__actions">
-      <Popover placement="leftTop" trigger={['hover', 'click']} content={teamMenu} arrow={false}
+      <Popover placement={screens.sm ? 'leftTop' : 'bottom'} trigger={['hover', 'click']} content={teamMenu} arrow={false}
         styles={{ container: { padding: 8 } }}>
         <button type="button" className="personal-menu__item" aria-label="切换团队">
           <TeamOutlined /><span>切换团队</span><RightOutlined className="personal-menu__arrow" />
