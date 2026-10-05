@@ -1,7 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { Layout } from 'antd'
 import { Banner } from './Banner'
-import { PersonalCenter } from './PersonalCenter'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { PATHS } from '@/routes/paths'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
@@ -11,8 +10,7 @@ import { PageLoader } from '@/components/PageLoader'
 const { Content } = Layout
 
 /**
- * 主应用布局：Ant Design Layout + Banner + 内容区 + 个人中心 Drawer
- * PersonalCenterProvider 已在 AppProviders 中挂载，此处不再重复包裹
+ * 主应用布局：顶部导航和个人菜单，页面内容区域独立加载。
  */
 export function MainLayout() {
   const location = useLocation()
@@ -41,7 +39,6 @@ export function MainLayout() {
           </Suspense>
         </ErrorBoundary>
       </Content>
-      <PersonalCenter />
     </Layout>
   )
 }

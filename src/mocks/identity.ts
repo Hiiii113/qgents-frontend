@@ -131,7 +131,7 @@ export const identityHandlers = [
     if (typeof body.avatarUrl === 'string' && body.avatarUrl.trim()) {
       MOCK_USER.avatarUrl = body.avatarUrl.trim()
     }
-    return HttpResponse.json({ data: null })
+    return HttpResponse.json({ data: { ...MOCK_USER } })
   }),
 
   // 签发头像直传凭证（模拟 OSS，uploadUrl 指向本机路径供 MSW 拦截 PUT）

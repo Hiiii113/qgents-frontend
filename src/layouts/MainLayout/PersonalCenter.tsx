@@ -1,156 +1,101 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
-import {
-  App,
-  Drawer,
-  Avatar,
-  Typography,
-  Button,
-  Space,
-  Divider,
-  Input,
-  Upload,
-} from 'antd'
-import {
-  LogoutOutlined,
-  CameraOutlined,
-} from '@ant-design/icons'
+import { App, Avatar, Button, Input, Popover, Spin, Upload } from 'antd'
+import { CameraOutlined, CheckOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons'
 import { useAuth } from '@/context/AuthContext'
-import { usePersonalCenter } from '@/context/PersonalCenterContext'
-import { ApiError, authApi, uploadAvatar } from '@/api'
+import { authApi, uploadAvatar } from '@/api'
 import { formatApiError } from '@/utils/formatApiError'
 import { PATHS } from '@/routes/paths'
+import './PersonalCenter.css'
 
-const { Title, Text } = Typography
-
-/** 头像图片限制： 要求 image/*、大小 ≤ 5MB */
-const AVATAR_MAX_BYTES = 5 * 1024 * 1024
-
-/**
- * 个人中心 —— Ant Design Drawer
- * 明确不包含「当前空间」「账号设置」
- */
+/** 头像菜单：资料就地编辑，不遮挡当前页面。 */
 export function PersonalCenter() {
   const navigate = useNavigate()
   const { message } = App.useApp()
   const { user, logout, updateUser } = useAuth()
-  const { open, closePersonalCenter } = usePersonalCenter()
-  const [nickname, setNickname] = useState(user?.displayName ?? '')
+  const [open, setOpen] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nickname, setNickname] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const name = user?.displayName || '用户'
 
-  const name = user?.displayName ?? '用户'
-  const email = user?.email ?? '—'
-  const avatarChar = user?.avatarChar ?? name.slice(0, 1)
-
-  // PATCH /me：改昵称（头像更新走 uploadAvatar → confirm 后单独静默持久化 public URL，不在此弹窗）
   const updateProfile = useMutation({
-    mutationFn: (payload: { displayName?: string; avatarUrl?: string }) => authApi.updateMe(payload),
-    onSuccess: (_data, payload) => {
-      if (user) {
-        updateUser({
-          ...user,
-          displayName: payload.displayName?.trim() || user.displayName,
-          avatarUrl: payload.avatarUrl ?? user.avatarUrl,
-        })
-      }
-      message.success('资料已更新')
+    mutationFn: (displayName: string) => authApi.updateMe({ displayName }),
+    onSuccess: (updated) => {
+      updateUser(updated)
+      setEditingName(false)
+      message.success('昵称已更新')
     },
-    onError: (error) => {
-      message.error(formatApiError(error))
-    },
+    onError: (error) => message.error(formatApiError(error)),
   })
 
-  async function handleAvatarUpload(file: File): Promise<boolean> {
+  async function handleAvatarUpload(file: File) {
     if (!file.type.startsWith('image/')) {
       message.warning('仅支持图片文件')
       return false
     }
-    if (file.size > AVATAR_MAX_BYTES) {
-      message.warning('头像图片需 ≤ 5MB')
+    if (file.size > 5 * 1024 * 1024) {
+      message.warning('图片不超过 5MB')
       return false
     }
     setAvatarUploading(true)
     try {
       const avatarUrl = await uploadAvatar(file)
-      if (user) {
-        updateUser({ ...user, avatarUrl })
-        // 头像 URL 持久化到后端（PATCH /me 兼容任意 http(s) URL，）；静默调用，成功提示由下方「头像已更新」统一给出
-        await authApi.updateMe({ avatarUrl })
-      }
+      if (user) updateUser({ ...user, avatarUrl })
       message.success('头像已更新')
     } catch (error) {
-      if (error instanceof ApiError && error.status === 501) {
-        message.warning('头像上传暂不可用')
-      } else {
-        message.error(formatApiError(error))
-      }
+      message.error(formatApiError(error))
     } finally {
       setAvatarUploading(false)
     }
     return false
   }
 
-  async function handleLogout() {
-    await logout()
-    closePersonalCenter()
-    navigate(PATHS.LOGIN, { replace: true })
+  function saveNickname() {
+    const displayName = nickname.trim()
+    if (!displayName || updateProfile.isPending) return
+    if (displayName === name) { setEditingName(false); return }
+    updateProfile.mutate(displayName)
   }
 
-  return (
-    <Drawer
-      title="个人中心"
-      placement="right"
-      size={360}
-      open={open}
-      onClose={closePersonalCenter}
-      styles={{ body: { paddingTop: 8 } }}
-    >
-      <Space align="start" size={12} style={{ marginBottom: 16 }}>
-        <Avatar size={48} src={user?.avatarUrl} style={{ background: '#dfe8d3', color: '#456339' }}>
-          {avatarChar}
-        </Avatar>
-        <div>
-          <Title level={5} style={{ margin: 0 }}>
-            {name}
-          </Title>
-          <Text type="secondary">{email}</Text>
-        </div>
-      </Space>
+  const content = <section className="personal-menu" aria-label="个人中心">
+    <div className="personal-menu__profile">
+      <Upload accept="image/*" showUploadList={false} beforeUpload={handleAvatarUpload} disabled={avatarUploading}>
+        <button type="button" className="personal-menu__avatar" aria-label="更换个人头像" disabled={avatarUploading}>
+          <Avatar size={60} src={user?.avatarUrl}>{name.slice(0, 1)}</Avatar>
+          <span className={`personal-menu__avatar-mask${avatarUploading ? ' is-visible' : ''}`}>
+            {avatarUploading ? <Spin size="small" /> : <CameraOutlined />}
+          </span>
+        </button>
+      </Upload>
+      <div className="personal-menu__identity">
+        {editingName ? <div className="personal-menu__name-editor">
+          <Input autoFocus aria-label="昵称" maxLength={120} value={nickname}
+            disabled={updateProfile.isPending} onChange={event => setNickname(event.target.value)}
+            onPressEnter={saveNickname} onKeyDown={event => { if (event.key === 'Escape') setEditingName(false) }} />
+          <Button type="text" icon={<CheckOutlined />} aria-label="保存昵称" loading={updateProfile.isPending}
+            disabled={!nickname.trim()} onClick={saveNickname} />
+        </div> : <button type="button" className="personal-menu__name" aria-label="修改昵称"
+          onClick={() => { setNickname(name); setEditingName(true) }}>
+          <strong>{name}</strong><EditOutlined />
+        </button>}
+        <span className="personal-menu__email">{user?.email}</span>
+      </div>
+    </div>
+    <div className="personal-menu__actions">
+      <button type="button" className="personal-menu__item personal-menu__item--logout" onClick={async () => {
+        await logout(); setOpen(false); navigate(PATHS.LOGIN, { replace: true })
+      }}><LogoutOutlined /><span>退出登录</span></button>
+    </div>
+  </section>
 
-      {/* 编辑资料：改昵称 + 上传头像（OSS 未启用时后端 501，前端提示暂不可用） */}
-      <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }} size={8}>
-        <Space.Compact style={{ width: '100%' }}>
-          <Input
-            value={nickname}
-            maxLength={30}
-            placeholder="昵称"
-            onChange={(e) => setNickname(e.target.value)}
-          />
-          <Button
-            type="primary"
-            loading={updateProfile.isPending}
-            disabled={!nickname.trim() || nickname.trim() === (user?.displayName ?? '')}
-            onClick={() => updateProfile.mutate({ displayName: nickname.trim() })}
-          >
-            保存昵称
-          </Button>
-        </Space.Compact>
-        <Upload showUploadList={false} accept="image/*" beforeUpload={handleAvatarUpload}>
-          <Button block icon={<CameraOutlined />} loading={avatarUploading} disabled={avatarUploading}>
-            上传头像
-          </Button>
-        </Upload>
-      </Space>
-
-      <Divider style={{ margin: '16px 0' }} />
-
-      <Space orientation="vertical" style={{ width: '100%' }} size={8}>
-        <Button block danger icon={<LogoutOutlined />} onClick={handleLogout}>
-          退出登录
-        </Button>
-      </Space>
-
-    </Drawer>
-  )
+  return <Popover placement="bottomRight" trigger="click" open={open} onOpenChange={next => {
+    setOpen(next); if (!next) setEditingName(false)
+  }} content={content} arrow={false} styles={{ container: { padding: 0 } }}>
+    <Button type="text" aria-label="打开个人中心" className="personal-menu__trigger">
+      <span className="qg-banner__user-name">{name}</span>
+      <Avatar size={32} src={user?.avatarUrl}>{name.slice(0, 1)}</Avatar>
+    </Button>
+  </Popover>
 }

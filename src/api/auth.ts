@@ -7,6 +7,7 @@ import type {
   RefreshResponse,
   MeResponse,
   UpdateMePayload,
+  User,
 } from '@/types'
 
 /**
@@ -63,7 +64,7 @@ export const authApi = {
 
   /** PATCH /me — 修改昵称和头像（写操作由 client 自动带 Idempotency-Key） */
   updateMe(payload: UpdateMePayload) {
-    return request<void>('/me', { method: 'PATCH', body: payload })
+    return request<User>('/me', { method: 'PATCH', body: payload })
   },
 
   /** POST /me/avatar/credential — 签发头像直传凭证（OSS 未启用时 501 AVATAR_STORAGE_NOT_CONFIGURED） */

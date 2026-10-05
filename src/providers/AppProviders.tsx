@@ -4,7 +4,6 @@ import type { ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
 import { AuthProvider } from '@/context/AuthProvider'
-import { PersonalCenterProvider } from '@/context/PersonalCenterProvider'
 import { queryClient } from '@/query'
 import { QG_FONT_FAMILY } from '@/theme/antdTheme'
 import { PageLoader } from '@/components/PageLoader'
@@ -33,9 +32,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <AntdApp>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <PersonalCenterProvider>
-              <BootstrapGate>{children}</BootstrapGate>
-            </PersonalCenterProvider>
+            <BootstrapGate>{children}</BootstrapGate>
           </AuthProvider>
         </QueryClientProvider>
       </AntdApp>
