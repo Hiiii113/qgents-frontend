@@ -150,10 +150,9 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
           return false
         }}><Button type="text" aria-label="添加附件" icon={<PaperClipOutlined />} disabled={busy || disabled} /></Upload>
       </div>
-      <div className="chat-composer__send"><span>Enter 发送 · Shift + Enter 换行</span>
+      <div className="chat-composer__send">
         <Button type="primary" icon={<SendOutlined />} loading={busy} disabled={disabled || (!draft.trim() && !attachments.length)} onClick={() => void send()}>发送</Button>
       </div>
     </div>
-    <p className="chat-composer__hint">普通消息只参与讨论；选择 @Agent 后，它会根据你的要求回答或开展工作。</p>
   </div>
 }
