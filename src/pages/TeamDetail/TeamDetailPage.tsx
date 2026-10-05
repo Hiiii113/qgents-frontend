@@ -13,6 +13,7 @@ import { PATHS } from '@/routes/paths'
 import { projectApi, teamApi } from '@/api'
 import { CreateProjectModal } from '@/components/CreateProjectModal'
 import { useRememberTeam } from '@/hooks/useRememberTeam'
+import { useAuth } from '@/context/AuthContext'
 import { useTeamEvents } from '@/realtime/useTeamEvents'
 import '@/styles/Journey.css'
 
@@ -20,6 +21,7 @@ import '@/styles/Journey.css'
 export default function TeamDetailPage() {
   const { teamId = '' } = useParams<{ teamId: string }>()
   const location = useLocation()
+  const { user } = useAuth()
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   useTeamEvents(teamId || undefined)
@@ -57,15 +59,9 @@ export default function TeamDetailPage() {
   return (
     <div className="journey-page">
       <header className="journey-hero">
-        <div className="journey-team-heading">
-          <Avatar size={60} shape="square" src={team.data.avatarUrl}>
-            {team.data.name.slice(0, 1)}
-          </Avatar>
-          <div>
-            <span className="journey-eyebrow">TEAM SPACE</span>
-            <h1>{team.data.name}</h1>
-            <p>{team.data.description || '选择一个项目，进入群聊与伙伴协作。'}</p>
-          </div>
+        <div>
+          <h1>{user?.displayName || '用户'}，欢迎回来</h1>
+          <p>从一个项目开始今天的讨论。</p>
         </div>
         <div className="journey-actions">
           <Link to={settings ? PATHS.teamDetail(teamId) : PATHS.teamSettings(teamId)}>
@@ -81,8 +77,8 @@ export default function TeamDetailPage() {
         <>
           <div className="journey-section-title">
             <div>
-              <h2>选择一个项目</h2>
-              <span>{projects.data?.length ?? 0} 个项目 · 聊天与成果都在这里</span>
+              <h2>项目</h2>
+              <span>{projects.data?.length ?? 0} 个项目</span>
             </div>
             <div className="journey-actions">
               <Input

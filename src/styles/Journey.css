@@ -22,9 +22,6 @@
 .journey-card--new > .anticon { display: grid; place-items: center; background: #dfe8d4; width: 48px; height: 48px; border-radius: 14px; font-size: 22px; color: #71865b; }
 .journey-card--new h3 { font-size: 16px; margin-top: 20px; }
 .journey-card--new p { margin-bottom: 0; }
-.journey-team-heading { display: flex; gap: 22px; align-items: center; }
-.journey-team-heading > .ant-avatar { flex-shrink: 0; color: #46643a; background: #dfe8d5; border-radius: 17px; }
-.journey-team-heading h1 { margin-block: 7px; }
 .journey-settings { padding: 0; }
 .journey-loading { display: grid; place-items: center; min-height: 300px; }
 .welcome-space { min-height: 100%; background: #f5f7f2; }
@@ -43,6 +40,5 @@
  .journey-actions .ant-input-affix-wrapper { width: 185px; }
  .welcome-space__choices { grid-template-columns: 1fr; }
  .welcome-space__brand { padding: 24px; }
- .journey-team-heading { gap: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .journey-card { transition: none; } .journey-card:hover { transform: none; } }
