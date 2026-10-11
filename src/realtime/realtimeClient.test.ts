@@ -18,7 +18,7 @@ describe('realtimeWsUrl', () => {
 })
 
 describe('dispatchRealtimeFrame', () => {
-  it('refreshes chat participants after an Agent joins without refetching message history', () => {
+  it('refreshes chat participants after Qgent joins without refetching message history', () => {
     const spy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
     dispatchRealtimeFrame({ type: 'group.member.updated', scope: 'project', projectId: 'p1', groupId: 'g1', payload: {} })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'p1', 'members'] })

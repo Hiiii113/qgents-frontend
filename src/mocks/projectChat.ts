@@ -1,7 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import type { ChatGroup, ChatMember, ChatMessage, SendChatMessage } from '@/types/chat'
-import { chatMessageText } from '@/types/chat'
-import { mockAgents } from './capabilities'
+import { chatMessageText, QGENT_ID, QGENT_NAME, type ChatGroup, type ChatMember, type ChatMessage, type SendChatMessage } from '@/types/chat'
 import type { Project } from '@/types/project'
 import { MOCK_PROJECTS, MOCK_PROJECT_MEMBERS, MOCK_TEAM_MEMBERS, MOCK_USER } from './state'
 
@@ -16,9 +14,10 @@ const notFound = () => HttpResponse.json({ error: { code: 'NOT_FOUND', message: 
 function groupFor(project: Project) {
   let group = [...groups.values()].find(item => item.projectId === project.id && item.defaultGroup)
   if (!group) {
-    group = { defaultGroup: true, id: `group-main-${project.id}`, projectId: project.id, title: project.name, createdAt: project.createdAt ?? new Date().toISOString(), memberCount: project.memberCount ?? 1, unreadCount: 0, pinned: false }
+    group = { defaultGroup: true, id: `group-main-${project.id}`, projectId: project.id, title: project.name, createdAt: project.createdAt ?? new Date().toISOString(), memberCount: (project.memberCount ?? 1) + 1, unreadCount: 0, pinned: false }
     groups.set(group.id, group)
-    messages.set(group.id, [{ id: `welcome-${project.id}`, groupId: group.id, sequence: 1, type: 'SYSTEM', content: { text: '欢迎来到项目聊天。分享想法，或 @Agent 一起开展工作。' }, senderId: '', senderName: 'Qgents', senderType: 'SYSTEM', createdAt: group.createdAt ?? new Date().toISOString() }])
+    groupMembers.set(group.id, [{ id: QGENT_ID, displayName: QGENT_NAME, memberType: 'AGENT' }])
+    messages.set(group.id, [{ id: `welcome-${project.id}`, groupId: group.id, sequence: 1, type: 'SYSTEM', content: { text: '欢迎来到项目聊天。分享想法，或 @Qgent 一起开展工作。' }, senderId: '', senderName: 'Qgents', senderType: 'SYSTEM', createdAt: group.createdAt ?? new Date().toISOString() }])
   }
   return group
 }
@@ -33,7 +32,7 @@ function append(group: ChatGroup, body: Omit<ChatMessage, 'id' | 'sequence' | 'c
 function inviteMembers(projectId: string, userIds: string[], agentIds: string[]): ChatMember[] {
   return [
     ...MOCK_TEAM_MEMBERS.filter(member => userIds.includes(member.userId) && (MOCK_PROJECT_MEMBERS[projectId] ?? []).some(item => item.userId === member.userId)).map(member => ({ id: member.userId, displayName: member.displayName, email: member.email, avatarUrl: member.avatarUrl, memberType: 'USER' as const })),
-    ...mockAgents.filter(agent => agentIds.includes(agent.id)).map(agent => ({ id: agent.id, displayName: agent.name, avatarUrl: agent.avatar, memberType: 'AGENT' as const })),
+    ...(agentIds.includes(QGENT_ID) ? [{ id: QGENT_ID, displayName: QGENT_NAME, memberType: 'AGENT' as const }] : []),
   ]
 }
 const path = '/api/projects/:projectId/groups/:groupId'
@@ -41,7 +40,7 @@ export const projectChatHandlers = [
   http.get('/api/teams/:teamId/projects', ({ params }) => HttpResponse.json({ data: MOCK_PROJECTS[String(params.teamId)] ?? [] })),
   http.post('/api/teams/:teamId/projects', async ({ params, request }) => {
     const body = await request.json() as { name: string; description?: string; memberIds?: string[] }
-    const project: Project = { id: crypto.randomUUID(), teamId: String(params.teamId), name: body.name, description: body.description, role: 'PROJECT_ADMIN', status: 'ACTIVE', createdAt: new Date().toISOString(), memberCount: (body.memberIds?.filter(id => id !== MOCK_USER.id).length ?? 0) + 1 }
+    const project: Project = { id: crypto.randomUUID(), teamId: String(params.teamId), name: body.name, description: body.description, role: 'PROJECT_ADMIN', status: 'ACTIVE', createdAt: new Date().toISOString(), memberCount: (body.memberIds?.filter(id => id !== MOCK_USER.id).length ?? 0) + 1, githubEnabled: true }
     ;(MOCK_PROJECTS[project.teamId] ??= []).push(project)
     MOCK_PROJECT_MEMBERS[project.id] = MOCK_TEAM_MEMBERS.filter(member => member.userId === MOCK_USER.id || body.memberIds?.includes(member.userId)).map(member => ({ ...member, role: member.userId === MOCK_USER.id ? 'PROJECT_ADMIN' : 'PROJECT_MEMBER' }))
     groupFor(project)
@@ -50,7 +49,7 @@ export const projectChatHandlers = [
   http.get('/api/projects/:projectId', ({ params }) => { const project = findProject(params.projectId); return project ? HttpResponse.json({ data: project }) : notFound() }),
   http.patch('/api/projects/:projectId', async ({ params, request }) => {
     const project = findProject(params.projectId); if (!project) return notFound()
-    const body = await request.json() as { name?: string; description?: string; avatarUrl?: string }
+    const body = await request.json() as { name?: string; description?: string; avatarUrl?: string; githubEnabled?: boolean }
     Object.assign(project, body); return HttpResponse.json({ data: project })
   }),
   ...(['archive', 'restore'] as const).map(action => http.post(`/api/projects/:projectId/${action}`, ({ params }) => {
@@ -87,7 +86,7 @@ export const projectChatHandlers = [
   }),
   http.get(`${path}/members`, ({ params }) => {
     const group = groups.get(String(params.groupId)); if (!group) return notFound()
-    const members = group.defaultGroup ? inviteMembers(group.projectId, (MOCK_PROJECT_MEMBERS[group.projectId] ?? []).map(member => member.userId), []) : groupMembers.get(group.id) ?? []
+    const members = group.defaultGroup ? [...inviteMembers(group.projectId, (MOCK_PROJECT_MEMBERS[group.projectId] ?? []).map(member => member.userId), []), { id: QGENT_ID, displayName: QGENT_NAME, memberType: 'AGENT' as const }] : groupMembers.get(group.id) ?? []
     const all = new Map([...members, ...(groupMembers.get(group.id) ?? [])].map(member => [member.id, member]))
     return HttpResponse.json({ data: [...all.values()] })
   }),
@@ -117,11 +116,16 @@ export const projectChatHandlers = [
     const existing = sent.get(key); if (existing) return HttpResponse.json({ data: existing })
     const project = findProject(params.projectId); if (!project) return notFound()
     const group = groups.get(String(params.groupId)); if (!group || group.projectId !== project.id) return notFound()
+    const agentMentions = (body.mentions ?? []) as Array<{ type: string; id: string }>
+    if (agentMentions.some(mention => mention.type === 'AGENT' && mention.id !== QGENT_ID)
+      || (agentMentions.some(mention => mention.type === 'AGENT') && !(groupMembers.get(group.id) ?? []).some(member => member.id === QGENT_ID))) {
+      return HttpResponse.json({ error: { code: 'INVALID_QGENT_MENTION', message: '请只在已邀请 Qgent 的群聊中提及 Qgent。' } }, { status: 422 })
+    }
     const item = append(group, { type: body.type, content: body.content, replyToId: body.replyToId, mentions: body.mentions, senderId: MOCK_USER.id, senderName: MOCK_USER.displayName, senderType: 'USER' })
     sent.set(key, item)
     const agent = body.mentions?.find(mention => mention.type === 'AGENT')
     if (agent) pending.set(item.id, setTimeout(() => {
-      append(group, { type: 'TEXT', content: { text: '收到，我可以协助梳理方案和处理项目工作。当前为演示环境，实际执行结果由后端 Agent 返回。' }, replyToId: item.id, senderId: agent.id, senderName: '通用助手', senderType: 'AGENT' })
+      append(group, { type: 'TEXT', content: { text: '收到，我可以协助梳理方案和处理项目工作。当前为演示环境，真实执行结果由后端返回。' }, replyToId: item.id, senderId: QGENT_ID, senderName: QGENT_NAME, senderType: 'AGENT' })
       pending.delete(item.id)
     }, 2000))
     return HttpResponse.json({ data: item }, { status: 201 })

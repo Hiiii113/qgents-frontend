@@ -1,6 +1,6 @@
 import { request, requestPage } from './client'
 import { withQuery } from './requestHelpers'
-import type { CreateProjectPayload, Project, ProjectMember } from '@/types'
+import type { CreateProjectPayload, Project, ProjectMember, UpdateProjectPayload } from '@/types'
 
 /**
  * 项目管理 API —— 当前接口
@@ -25,7 +25,7 @@ export const projectApi = {
   },
 
   /** PATCH /projects/{projectId} — 修改项目资料（仅 PROJECT_ADMIN） */
-  update(projectId: string, payload: Partial<CreateProjectPayload>) {
+  update(projectId: string, payload: UpdateProjectPayload) {
     return request<Project>(`/projects/${projectId}`, {
       method: 'PATCH',
       body: payload,

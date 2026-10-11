@@ -6,10 +6,9 @@ import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanst
 import { chatApi } from '@/api/chat'
 import { projectApi } from '@/api/project'
 import { useAuth } from '@/context/AuthContext'
-import { useAgents } from '@/hooks/agents'
 import { formatApiError } from '@/utils/formatApiError'
 import type { Page } from '@/types/api'
-import { messageField, type ChatMember, type ChatMessage, type SendChatMessage } from '@/types/chat'
+import { messageField, QGENT_ID, QGENT_NAME, type ChatMember, type ChatMessage, type SendChatMessage } from '@/types/chat'
 import { PATHS } from '@/routes/paths'
 import { GroupMembersModal } from './GroupMembersModal'
 import { AttachmentPreviewModal } from './AttachmentPreviewModal'
@@ -34,7 +33,6 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   const project = useQuery({ queryKey: ['projects', projectId], queryFn: () => projectApi.getById(projectId), enabled: Boolean(projectId) })
   const groups = useQuery({ queryKey: chatKeys.groups(projectId), queryFn: () => chatApi.groups(projectId), enabled: Boolean(projectId) })
   const members = useQuery({ queryKey: chatKeys.members(projectId, groupId), queryFn: () => chatApi.members(projectId, groupId), enabled: Boolean(groupId) })
-  const agents = useAgents(project.data?.teamId)
   const group = groups.data?.find(item => item.id === groupId)
   const pin = useMutation({
     mutationFn: () => chatApi.pin(projectId, groupId, !group?.pinned),
@@ -46,12 +44,9 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   const chat = useChatMessages(projectId, groupId, readingLatest)
   const sendAsync = chat.send.mutateAsync
   const isAdmin = project.data?.role === 'PROJECT_ADMIN'
-  const participants = useMemo<ChatMember[]>(() => {
-    const all = new Map<string, ChatMember>()
-    for (const member of members.data ?? []) all.set(`${member.memberType}:${member.id}`, member)
-    for (const agent of agents.data ?? []) if (agent.status === 'ACTIVE' && (group?.defaultGroup || all.has(`AGENT:${agent.id}`))) all.set(`AGENT:${agent.id}`, { id: agent.id, displayName: agent.name, memberType: 'AGENT', avatarUrl: agent.avatar })
-    return [...all.values()]
-  }, [members.data, agents.data, group?.defaultGroup])
+  const participants = useMemo<ChatMember[]>(() => (members.data ?? [])
+    .filter(member => member.memberType !== 'AGENT' || member.id === QGENT_ID)
+    .map(member => member.memberType === 'AGENT' ? { ...member, displayName: QGENT_NAME, avatarUrl: null } : member), [members.data])
   const recipients = useMemo(() => participants.filter(member => member.memberType !== 'USER' || member.id !== user?.id), [participants, user?.id])
   const stop = useMutation({
     mutationFn: (item: ChatMessage) => chatApi.cancel(projectId, groupId, item.id),
@@ -90,7 +85,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   return <section className="chat-panel">
     <header className="chat-panel__header">
       <div className="chat-panel__identity"><span className="chat-panel__project-icon"><TeamOutlined /></span><div>
-        <h1>{group?.title || project.data?.name || '项目聊天'}</h1><p>{group?.defaultGroup ? '默认群 · 全体项目成员' : '一起讨论，与 Agent 协作'}</p>
+        <h1>{group?.title || project.data?.name || '项目聊天'}</h1><p>{group?.defaultGroup ? '默认群 · 全体项目成员' : '一起讨论，必要时 @Qgent 开展工作'}</p>
       </div></div>
       <div className="chat-panel__header-actions">
         <Tooltip title={group?.pinned ? '取消置顶' : '置顶聊天'}><Button type="text" icon={<PushpinOutlined />} aria-label={group?.pinned ? '取消置顶' : '置顶聊天'} loading={pin.isPending} onClick={() => pin.mutate()} /></Tooltip>
@@ -105,11 +100,11 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
     {project.data?.status === 'ARCHIVED' && <Alert type="info" showIcon message="项目已归档，可以查看历史消息，恢复项目后可继续聊天。" />}
     <ChatComposer key={groupId} draftKey={`qgents:chat-draft:${user?.id}:${projectId}:${groupId}`} projectId={projectId} reply={reply} recipients={recipients} onSend={handleSend} onClearReply={clearReply} disabled={!ready || project.data?.status === 'ARCHIVED'} />
     <Drawer title="群聊成员" open={membersOpen} onClose={() => setMembersOpen(false)}>
-      <p className="chat-members__hint">{group?.defaultGroup ? '默认群的用户与项目成员同步。' : '这个群聊中的伙伴与 Agent。'}</p>
-      <Button type="primary" block onClick={() => setInviteOpen(true)} disabled={project.data?.status === 'ARCHIVED'}>邀请成员 / Agent</Button>
+      <p className="chat-members__hint">{group?.defaultGroup ? '默认群的用户与项目成员同步。' : '这个群聊中的成员与 Qgent。'}</p>
+      <Button type="primary" block onClick={() => setInviteOpen(true)} disabled={project.data?.status === 'ARCHIVED'}>邀请成员 / Qgent</Button>
       <List dataSource={members.data ?? []} renderItem={member => <List.Item><List.Item.Meta
-        avatar={<Avatar src={member.avatarUrl} icon={member.memberType === 'AGENT' ? <RobotOutlined /> : undefined}>{member.displayName.slice(0, 1)}</Avatar>}
-        title={<>{member.displayName} {member.memberType === 'AGENT' && <Tag>Agent</Tag>}</>} description={member.email || undefined} /></List.Item>} />
+        avatar={<Avatar src={member.memberType === 'AGENT' ? undefined : member.avatarUrl} icon={member.memberType === 'AGENT' ? <RobotOutlined /> : undefined}>{member.memberType === 'AGENT' ? undefined : member.displayName.slice(0, 1)}</Avatar>}
+        title={<>{member.memberType === 'AGENT' ? 'Qgent' : member.displayName} {member.memberType === 'AGENT' && <Tag>Qgent</Tag>}</>} description={member.email || undefined} /></List.Item>} />
       <Link to={PATHS.projectSettings(projectId)}><Button block>项目设置</Button></Link>
     </Drawer>
     {inviteOpen && group && project.data && <GroupMembersModal projectId={projectId} teamId={project.data.teamId} group={group} onClose={() => setInviteOpen(false)} />}

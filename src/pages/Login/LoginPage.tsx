@@ -112,7 +112,7 @@ export function LoginPage() {
         </div>
 
         <h1 className="login-page__headline">
-          团队与 Agent, 在同一个项目现场协作
+          团队与 Qgent，在同一个项目现场协作
         </h1>
 
         <ul className="login-page__features">
@@ -122,7 +122,7 @@ export function LoginPage() {
             </span>
             <div>
               <strong>从项目聊天开始</strong>
-              <p>成员共同讨论，@Agent 协助分析与执行</p>
+              <p>成员共同讨论，@Qgent 协助分析与执行</p>
             </div>
           </li>
           <li>
@@ -130,8 +130,8 @@ export function LoginPage() {
               <BotIcon />
             </span>
             <div>
-              <strong>按需使用 Agent</strong>
-              <p>自主选择协作伙伴，保留上下文与成果</p>
+              <strong>按需使用 Qgent</strong>
+              <p>在群聊中 @Qgent 发起协作，保留上下文与成果</p>
             </div>
           </li>
           <li>

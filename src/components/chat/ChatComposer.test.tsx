@@ -4,8 +4,9 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ChatComposer } from './ChatComposer'
 import type { ChatMember, ChatMessage, SendChatMessage } from '@/types/chat'
+import { QGENT_ID } from '@/types/chat'
 afterEach(() => { cleanup(); sessionStorage.clear(); vi.restoreAllMocks() })
-const agent = { id: 'a1', displayName: '助手', memberType: 'AGENT' as const }
+const agent = { id: QGENT_ID, displayName: 'Qgent', memberType: 'AGENT' as const }
 function show(send = vi.fn<(body: SendChatMessage) => Promise<unknown>>().mockResolvedValue({}), reply: ChatMessage | null = null, recipients: ChatMember[] = [agent]) {
   render(<App><ChatComposer projectId="p1" recipients={recipients} reply={reply} onSend={send} onClearReply={vi.fn()} /></App>)
   return send
@@ -59,32 +60,32 @@ describe('chat composition', () => {
     expect(send).not.toHaveBeenCalled()
   })
 
-  it('searches recipients after typing @ and sends the selected Agent id', async () => {
+  it('searches group recipients after typing @ and sends the selected Qgent id', async () => {
     const send = show(undefined, null, [agent, { id: 'u2', displayName: '张工', memberType: 'USER' }])
     const user = userEvent.setup()
-    await user.type(screen.getByLabelText('消息内容'), '@助')
-    await user.click(await screen.findByRole('menuitem', { name: /助手/ }))
-    expect(screen.getByLabelText('消息内容')).toHaveValue('@助手 ')
+    await user.type(screen.getByLabelText('消息内容'), '@Q')
+    await user.click(await screen.findByRole('menuitem', { name: /Qgent/ }))
+    expect(screen.getByLabelText('消息内容')).toHaveValue('@Qgent ')
     await user.type(screen.getByLabelText('消息内容'), '分析一下')
     await user.click(screen.getByRole('button', { name: /发送/ }))
     await waitFor(() => expect(send).toHaveBeenCalledOnce())
-    expect(send.mock.calls[0][0]).toMatchObject({ content: { text: '@助手 分析一下' }, mentions: [{ type: 'AGENT', id: 'a1' }] })
+    expect(send.mock.calls[0][0]).toMatchObject({ content: { text: '@Qgent 分析一下' }, mentions: [{ type: 'AGENT', id: QGENT_ID }] })
   })
 
   it('uses arrows and Enter to choose a mention without sending the message', async () => {
     const send = show(undefined, null, [{ id: 'u2', displayName: '张工', memberType: 'USER' }, agent])
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('消息内容'), '@')
-    await screen.findByRole('menuitem', { name: /助手/ })
+    await screen.findByRole('menuitem', { name: /Qgent/ })
     const input = screen.getByLabelText('消息内容')
     // Mentions 使用浏览器 KeyboardEvent.which；jsdom 的 userEvent 默认不填该值。
     fireEvent.keyDown(input, { key: 'ArrowDown', which: 40, keyCode: 40 })
     fireEvent.keyDown(input, { key: 'Enter', which: 13, keyCode: 13 })
     expect(send).not.toHaveBeenCalled()
-    expect(screen.getByLabelText('消息内容')).toHaveValue('@助手 ')
+    expect(screen.getByLabelText('消息内容')).toHaveValue('@Qgent ')
     fireEvent.keyDown(input, { key: 'Enter', which: 13, keyCode: 13 })
     await waitFor(() => expect(send).toHaveBeenCalledOnce())
-    expect(send.mock.calls[0][0].mentions).toEqual([{ type: 'AGENT', id: 'a1' }])
+    expect(send.mock.calls[0][0].mentions).toEqual([{ type: 'AGENT', id: QGENT_ID }])
   })
 
   it('does not select a candidate on Shift Enter or IME confirmation', async () => {
@@ -92,14 +93,14 @@ describe('chat composition', () => {
     const user = userEvent.setup()
     const input = screen.getByLabelText('消息内容')
     await user.type(input, '@')
-    await screen.findByRole('menuitem', { name: /助手/ })
+    await screen.findByRole('menuitem', { name: /Qgent/ })
     fireEvent.keyDown(input, { key: 'Enter', which: 13, keyCode: 13, shiftKey: true })
     fireEvent.keyDown(input, { key: 'Enter', which: 13, keyCode: 13, isComposing: true })
     expect(input).toHaveValue('@')
     expect(send).not.toHaveBeenCalled()
   })
 
-  it('distinguishes a member from an Agent with the same nickname', async () => {
+  it('distinguishes a member from Qgent when selecting a mention', async () => {
     const send = show(undefined, null, [agent, { id: 'u2', displayName: '助手', memberType: 'USER' }])
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('消息内容'), '@')
@@ -109,17 +110,17 @@ describe('chat composition', () => {
     expect(send.mock.calls[0][0].mentions).toEqual([{ type: 'USER', id: 'u2' }])
   })
 
-  it('does not trigger an Agent from typed or removed mention text', async () => {
+  it('does not trigger Qgent from typed or removed mention text', async () => {
     const send = show()
     const user = userEvent.setup()
     const input = screen.getByLabelText('消息内容')
     await user.type(input, '@')
-    await user.click(await screen.findByRole('menuitem', { name: /助手/ }))
-    fireEvent.change(input, { target: { value: '@助手2 普通讨论' } })
+    await user.click(await screen.findByRole('menuitem', { name: /Qgent/ }))
+    fireEvent.change(input, { target: { value: '@Qgent2 普通讨论' } })
     await user.click(screen.getByRole('button', { name: /发送/ }))
     await waitFor(() => expect(send).toHaveBeenCalledOnce())
     expect(send.mock.calls[0][0].mentions).toEqual([])
-    fireEvent.change(input, { target: { value: '@助手 直接打字' } })
+    fireEvent.change(input, { target: { value: '@Qgent 直接打字' } })
     await user.click(screen.getByRole('button', { name: /发送/ }))
     await waitFor(() => expect(send).toHaveBeenCalledTimes(2))
     expect(send.mock.calls[1][0].mentions).toEqual([])

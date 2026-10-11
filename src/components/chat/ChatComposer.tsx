@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Alert, App, Avatar, Button, Mentions, Tag, Upload } from 'antd'
-import { CloseOutlined, PaperClipOutlined, SendOutlined } from '@ant-design/icons'
+import { CloseOutlined, PaperClipOutlined, RobotOutlined, SendOutlined } from '@ant-design/icons'
 import type { MentionsRef } from 'antd/es/mentions'
 import { attachmentApi, uploadAttachment } from '@/api/attachment'
 import { formatApiError } from '@/utils/formatApiError'
-import { chatMessageText, type ChatMember, type ChatMention, type ChatMessage, type SendChatMessage } from '@/types/chat'
+import { chatMessageText, QGENT_ID, QGENT_NAME, type ChatMember, type ChatMention, type ChatMessage, type SendChatMessage } from '@/types/chat'
 
 type Attachment = { id: string; file: File; attachmentId?: string }
 function containsMention(text: string, name: string) {
@@ -92,7 +92,7 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
       if (draft.trim()) {
         const mentions: ChatMention[] = recipients
           .filter(item => selected.includes(`${item.memberType}:${item.id}`) && containsMention(draft, item.displayName))
-          .map(item => ({ type: item.memberType, id: item.id }))
+          .map(item => item.memberType === 'AGENT' ? { type: 'AGENT', id: QGENT_ID } : { type: 'USER', id: item.id })
         await onSend({ type: 'TEXT', content: { text: draft.trim() }, mentions, replyToId: reply?.id, clientMessageId: messageId.current })
       }
       edit('')
@@ -113,13 +113,13 @@ export function ChatComposer({ projectId, reply, recipients, onSend, onClearRepl
     )}</div>}
     <Mentions
       ref={inputRef}
-      aria-label="消息内容" placeholder="写下想法，输入 @ 选择 Agent 或成员…"
+      aria-label="消息内容" placeholder="写下想法，输入 @ 选择 Qgent 或成员…"
       value={draft} onChange={edit} autoSize={{ minRows: 2, maxRows: 7 }}
-      placement="top" notFoundContent="没有匹配的 Agent 或成员"
+      placement="top" notFoundContent="没有匹配的 Qgent 或成员"
       validateSearch={text => !/\s/.test(text)}
       options={recipients.map(item => ({
         key: `${item.memberType}:${item.id}`, memberKey: `${item.memberType}:${item.id}`, value: item.displayName,
-        label: <span className="chat-mention-option"><Avatar size={28} src={item.avatarUrl}>{item.displayName.slice(0, 1)}</Avatar><span>{item.displayName}<small>{item.memberType === 'AGENT' ? 'Agent' : item.email || '成员'}</small></span></span>,
+        label: <span className="chat-mention-option"><Avatar size={28} src={item.memberType === 'AGENT' ? undefined : item.avatarUrl} icon={item.memberType === 'AGENT' ? <RobotOutlined /> : undefined}>{item.memberType === 'AGENT' ? undefined : item.displayName.slice(0, 1)}</Avatar><span>{item.memberType === 'AGENT' ? QGENT_NAME : item.displayName}<small>{item.memberType === 'AGENT' ? 'Qgent' : item.email || '成员'}</small></span></span>,
       }))}
       onSelect={option => {
         // 昵称可重复，选项单独携带成员 ID，发送时不靠昵称推断对象。

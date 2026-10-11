@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { setupServer } from 'msw/node'
 import { handlers } from './handlers'
+import { QGENT_ID } from '@/types/chat'
 const server = setupServer(...handlers)
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterAll(() => server.close())
@@ -10,24 +11,18 @@ async function json(path: string, body?: unknown) {
   return await response.json() as { data: { id: string; cancelledRuns?: number }; page?: { hasMore: boolean } }
 }
 describe('current Mock chat protocol', () => {
-  it('uploads an Agent avatar and preserves its image media type', async () => {
-    const avatarBase = window.location.origin + '/api/teams/team-owned-001/agents/avatar'
-    const credential = await fetch(`${avatarBase}/credential`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mediaType: 'image/jpeg', sizeBytes: 3 }) }).then(response => response.json()) as { data: { uploadUrl: string; objectKey: string; headers: Record<string, string> } }
-    const uploaded = await fetch(credential.data.uploadUrl, { method: 'PUT', headers: credential.data.headers, body: new Uint8Array([1, 2, 3]) })
-    expect(uploaded.ok).toBe(true)
-    const confirmed = await fetch(`${avatarBase}/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ objectKey: credential.data.objectKey }) }).then(response => response.json()) as { data: { avatarUrl: string } }
-    const image = await fetch(confirmed.data.avatarUrl)
-    expect(image.headers.get('Content-Type')).toBe('image/jpeg')
-    expect(new Uint8Array(await image.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]))
-  })
   it('keeps newly created teams accessible and creates a default project group', async () => {
     const team = await json(window.location.origin + '/api/teams', { name: '入口验证团队' })
     const detail = await json(window.location.origin + `/api/teams/${team.data.id}`)
     expect(detail.data.id).toBe(team.data.id)
     const project = await json(window.location.origin + `/api/teams/${team.data.id}/projects`, { name: '聊天项目' })
-    const groups = await fetch(window.location.origin + `/api/projects/${project.data.id}/groups`).then(response => response.json()) as { data: Array<{ defaultGroup: boolean }> }
+    const projectDetail = await fetch(window.location.origin + `/api/projects/${project.data.id}`).then(response => response.json()) as { data: { githubEnabled: boolean } }
+    expect(projectDetail.data.githubEnabled).toBe(true)
+    const groups = await fetch(window.location.origin + `/api/projects/${project.data.id}/groups`).then(response => response.json()) as { data: Array<{ id: string; defaultGroup: boolean }> }
     expect(groups.data).toHaveLength(1)
     expect(groups.data[0].defaultGroup).toBe(true)
+    const members = await fetch(window.location.origin + `/api/projects/${project.data.id}/groups/${groups.data[0].id}/members`).then(response => response.json()) as { data: Array<{ id: string }> }
+    expect(members.data.some(member => member.id === QGENT_ID)).toBe(true)
   })
   it('provides one project group and returns a message directly without creating a task', async () => {
     const groups = await fetch(window.location.origin + '/api/projects/proj-001/groups').then(response => response.json()) as { data: Array<{ id: string }> }
@@ -42,20 +37,30 @@ describe('current Mock chat protocol', () => {
     expect(response.data.filter(item => item.id === first.data.id)).toHaveLength(1)
     expect(response.data.filter(item => item.senderType === 'AGENT')).toHaveLength(0)
   })
-  it('creates a separate conversation, invites an Agent and keeps histories separate', async () => {
-    const created = await json(window.location.origin + '/api/projects/proj-001/groups', { title: '方案讨论', userIds: [], agentIds: ['agent-general'] })
+  it('creates a separate conversation, optionally invites Qgent and keeps histories separate', async () => {
+    const created = await json(window.location.origin + '/api/projects/proj-001/groups', { title: '方案讨论', userIds: [], agentIds: [QGENT_ID] })
     const groupBase = window.location.origin + `/api/projects/proj-001/groups/${created.data.id}`
     const members = await fetch(`${groupBase}/members`).then(response => response.json()) as { data: Array<{ id: string }> }
-    expect(members.data.some(member => member.id === 'agent-general')).toBe(true)
+    expect(members.data.some(member => member.id === QGENT_ID)).toBe(true)
     const message = await json(`${groupBase}/messages`, { type: 'TEXT', content: { text: '新群讨论' }, mentions: [], clientMessageId: 'new-group-contract' })
     const defaultMessages = await fetch(`${base}/messages`).then(response => response.json()) as { data: Array<{ id: string }> }
     expect(defaultMessages.data.some(item => item.id === message.data.id)).toBe(false)
-    await json(`${groupBase}/members`, { userIds: [], agentIds: ['agent-general'] })
+    await json(`${groupBase}/members`, { userIds: [], agentIds: [QGENT_ID] })
     const after = await fetch(`${groupBase}/members`).then(response => response.json()) as { data: Array<{ id: string }> }
-    expect(after.data.filter(member => member.id === 'agent-general')).toHaveLength(1)
+    expect(after.data.filter(member => member.id === QGENT_ID)).toHaveLength(1)
   })
-  it('cancels only execution triggered by an explicit Agent mention', async () => {
-    const trigger = await json(`${base}/messages`, { type: 'TEXT', content: { text: '@助手 分析一下' }, mentions: [{ type: 'AGENT', id: 'agent-general' }], clientMessageId: 'agent-mock-contract' })
+  it('rejects Qgent mentions in uninvited groups and mentions to another identity', async () => {
+    const created = await json(window.location.origin + '/api/projects/proj-001/groups', { title: '普通讨论', userIds: [], agentIds: [] })
+    const groupPath = window.location.origin + `/api/projects/proj-001/groups/${created.data.id}/messages`
+    const uninvited = await fetch(groupPath, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'TEXT', content: { text: '@Qgent' }, mentions: [{ type: 'AGENT', id: QGENT_ID }], clientMessageId: 'qgent-not-invited' }) })
+    expect(uninvited.status).toBe(422)
+    expect(await uninvited.json()).toMatchObject({ error: { code: 'INVALID_QGENT_MENTION' } })
+    const wrongIdentity = await fetch(`${base}/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'TEXT', content: { text: '@Old agent' }, mentions: [{ type: 'AGENT', id: 'agent-general' }], clientMessageId: 'wrong-agent-id' }) })
+    expect(wrongIdentity.status).toBe(422)
+    expect(await wrongIdentity.json()).toMatchObject({ error: { code: 'INVALID_QGENT_MENTION' } })
+  })
+  it('cancels only execution triggered by an explicit Qgent mention', async () => {
+    const trigger = await json(`${base}/messages`, { type: 'TEXT', content: { text: '@Qgent 分析一下' }, mentions: [{ type: 'AGENT', id: QGENT_ID }], clientMessageId: 'qgent-mock-contract' })
     const stopped = await json(`${base}/messages/${trigger.data.id}/cancel-agent`, {})
     expect(stopped.data.cancelledRuns).toBe(1)
     const repeated = await json(`${base}/messages/${trigger.data.id}/cancel-agent`, {})

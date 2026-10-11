@@ -21,6 +21,8 @@ export interface Project {
   memberCount?: number
   // 项目状态（ACTIVE -> ARCHIVED；未返回时前端隐藏状态项）
   status?: 'ACTIVE' | 'ARCHIVED'
+  // 项目级 GitHub 能力，接口缺省时按开启处理。
+  githubEnabled?: boolean
 }
 
 /**
@@ -46,3 +48,5 @@ export interface CreateProjectPayload {
   // 项目头像 URL（PATCH 更新用；由项目头像上传 confirm 返回）
   avatarUrl?: string
 }
+
+export type UpdateProjectPayload = Partial<CreateProjectPayload> & { githubEnabled?: boolean }

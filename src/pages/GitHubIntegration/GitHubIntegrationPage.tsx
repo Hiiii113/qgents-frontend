@@ -34,7 +34,7 @@ export function GitHubIntegrationPage() {
     onSuccess: () => { void client.invalidateQueries({ queryKey: ['github', teamId] }); void client.invalidateQueries({ queryKey: ['repositories'] }) },
     onError: error => void message.error(formatApiError(error)),
   })
-  return <WorkspacePage title="GitHub 连接" description="团队通过 GitHub App 授权仓库。项目按需导入，Agent 可在聊天中使用这些能力。"
+  return <WorkspacePage title="GitHub 连接" description="团队通过 GitHub App 授权仓库。项目按需导入，Qgent 可在聊天中使用这些能力。"
     action={owner && <Button type="primary" icon={<GithubOutlined />} loading={connect.isPending} onClick={() => connect.mutate()}>连接 GitHub App</Button>}>
     {!teamId ? <Alert type="info" message="请先从团队或项目进入 GitHub 连接。" /> : connections.isPending ? <Spin delay={180} />
       : connections.isError ? <Alert type="error" showIcon message={formatApiError(connections.error)} action={<Button onClick={() => void connections.refetch()}>重试</Button>} />
@@ -45,7 +45,7 @@ export function GitHubIntegrationPage() {
             {owner && <div className="workspace-card__actions"><Button type="text" size="small" icon={<ReloadOutlined />} loading={action.isPending && action.variables?.id === connection.id} onClick={() => action.mutate({ id: connection.id, kind: 'sync' })}>刷新授权</Button>
               <Popconfirm title="解除团队的 GitHub 连接？" description="相关仓库会从项目导入列表移除，GitHub 仓库本身不会删除。" onConfirm={() => action.mutateAsync({ id: connection.id, kind: 'disconnect' })}><Button type="text" size="small" danger>解除连接</Button></Popconfirm></div>}
           </article>)}</div>}
-    <p className="workspace-page__note">GitHub 是可选能力。连接之后，在项目的仓库页选择导入；项目聊天和 Agent 问答可独立使用。</p>
+    <p className="workspace-page__note">GitHub 能力默认开启。连接后，在项目仓库页导入 Qgent 可使用的仓库；项目管理员可在项目设置中关闭此能力。导入仓库不会自动执行代码操作。</p>
   </WorkspacePage>
 }
 export default GitHubIntegrationPage

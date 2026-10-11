@@ -3,7 +3,7 @@
 ## 状态与数据
 
 - 后端数据统一使用 TanStack Query 管理；查询资源的 `queryKey` 必须包含资源归属，例如 `projectId`。
-- 全局客户端 UI 状态使用 Zustand；当前只放跨页面 UI 状态，不放团队、项目、Agent 等接口资源。
+- 全局客户端 UI 状态使用 Zustand；当前只放跨页面 UI 状态，不放团队、项目等接口资源。
 - 组件内部的短生命周期状态使用 React `useState`。
 - 需要分享、刷新后保留或可复制的筛选和选中状态使用 URL 参数。
 - mutation 成功后使用 `setQueryData` 或 `invalidateQueries` 更新 Query 缓存，不复制列表到 Zustand。

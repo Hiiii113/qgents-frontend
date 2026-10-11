@@ -3,8 +3,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 /**
  * Qgents Web 桌面端入口
- * 架构：IM 群聊 + 任务看板；Agent 云端执行；GitHub 存管代码
- * 本仓库当前阶段：路由与页面框架，业务逻辑由各同学后续填充
+ * 产品入口：项目群聊、固定 Qgent 协作与 GitHub 仓库能力
  */
 function App() {
   return (

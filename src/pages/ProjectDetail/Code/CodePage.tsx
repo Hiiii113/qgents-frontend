@@ -41,14 +41,14 @@ export function CodePage() {
       </div>
     </div>
     {imported.isError && <Alert type="error" showIcon message={formatApiError(imported.error)} action={<Button onClick={() => void imported.refetch()}>重试</Button>} />}
-    {imported.isPending ? <Spin delay={180} /> : !(imported.data ?? []).length ? <Empty description="项目还没有导入仓库。你也可以直接在聊天中讨论和使用 Agent。" />
+    {imported.isPending ? <Spin delay={180} /> : !(imported.data ?? []).length ? <Empty description="项目还没有导入仓库。你也可以直接在聊天中讨论或 @Qgent。" />
       : <div className="workspace-page__grid">{(imported.data ?? []).filter(repo => repo.fullName.toLowerCase().includes(search.toLowerCase())).map(repo => <article className="workspace-card" key={repo.id}>
         <h2><GithubOutlined /> {repo.fullName}</h2><Tag bordered={false}>{repo.privateRepository ? '私有仓库' : '公开仓库'}</Tag>
         <p>默认分支 · {repo.defaultBranch || '尚未设置'}</p>
         <div className="workspace-card__actions"><a href={repo.htmlUrl} target="_blank" rel="noreferrer"><Button type="text" size="small">打开 GitHub</Button></a>
           {canManage && <Popconfirm title="从项目移除这个仓库？" description="不会删除 GitHub 上的仓库。" onConfirm={() => remove.mutateAsync(repo.id)}><Button type="text" danger size="small" loading={remove.isPending && remove.variables === repo.id}>移除</Button></Popconfirm>}</div>
       </article>)}</div>}
-    <p className="workspace-page__note">导入只添加可用仓库，不会自动克隆或启动工作。需要查看改动、提交或创建 PR 时，在聊天中 @Agent 说明你的目标。</p>
+    <p className="workspace-page__note">导入只添加可用仓库，不会自动克隆或启动工作。需要查看改动、提交或创建 PR 时，在聊天中 @Qgent 说明你的目标。</p>
     <Modal title="导入 GitHub 仓库" open={importOpen} onCancel={() => setImportOpen(false)} okText="导入所选仓库" cancelText="取消"
       confirmLoading={importRepos.isPending} okButtonProps={{ disabled: !selected.length }} onOk={() => importRepos.mutate(options.filter(repo => selected.includes(`${repo.installationId}:${repo.repositoryId}`)))}>
       <p>选择团队 GitHub App 已授权的仓库。</p>

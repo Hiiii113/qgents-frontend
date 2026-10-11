@@ -34,13 +34,13 @@ export const MOCK_TEAM_MEMBERS = [
 
 export const MOCK_PROJECTS: Record<string, Project[]> = {
   'team-owned-001': [
-    { id: 'demo-project', teamId: 'team-owned-001', name: 'Demo Project', description: 'Demo project for Mock acceptance', createdAt: '2026-08-13T00:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 2, status: 'ACTIVE' },
-    { id: 'proj-001', teamId: 'team-owned-001', name: 'Qgents', description: '团队多人 + 多 Agent 云端协作开发平台', createdAt: '2026-07-01T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 3, memberCount: 5, status: 'ACTIVE' },
-    { id: 'proj-002', teamId: 'team-owned-001', name: '宠影记', description: '宠物健康管理小程序', createdAt: '2026-07-15T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 4, status: 'ACTIVE' },
+    { id: 'demo-project', teamId: 'team-owned-001', name: 'Demo Project', description: 'Demo project for Mock acceptance', createdAt: '2026-08-13T00:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 2, status: 'ACTIVE', githubEnabled: true },
+    { id: 'proj-001', teamId: 'team-owned-001', name: 'Qgents', description: '团队成员与 Qgent 云端协作开发平台', createdAt: '2026-07-01T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 3, memberCount: 5, status: 'ACTIVE', githubEnabled: true },
+    { id: 'proj-002', teamId: 'team-owned-001', name: '宠影记', description: '宠物健康管理小程序', createdAt: '2026-07-15T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 4, status: 'ACTIVE', githubEnabled: true },
   ],
   'team-joined-001': [
-    { id: 'proj-003', teamId: 'team-joined-001', name: 'AI 决策系统', description: '校园选课推荐与学业规划', createdAt: '2026-06-10T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 2, memberCount: 6, status: 'ACTIVE' },
-    { id: 'proj-004', teamId: 'team-joined-001', name: '校园助手', description: '课表、成绩、图书馆一站式查询', createdAt: '2026-08-01T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 1, memberCount: 3, status: 'ARCHIVED' },
+    { id: 'proj-003', teamId: 'team-joined-001', name: 'AI 决策系统', description: '校园选课推荐与学业规划', createdAt: '2026-06-10T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 2, memberCount: 6, status: 'ACTIVE', githubEnabled: true },
+    { id: 'proj-004', teamId: 'team-joined-001', name: '校园助手', description: '课表、成绩、图书馆一站式查询', createdAt: '2026-08-01T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 1, memberCount: 3, status: 'ARCHIVED', githubEnabled: true },
   ],
 }
 
@@ -82,7 +82,7 @@ export const MOCK_PROJECT_MEMBERS: Record<string, MockProjectMember[]> = {
   ],
 }
 
-// 每个群参与的 Agent（按群隔离：不同需求触发不同 Agent 回群）
+// 新群成员按群隔离；默认群成员从项目成员和固定 Qgent 生成。
 
 
 

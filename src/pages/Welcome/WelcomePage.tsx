@@ -14,7 +14,7 @@ export default function WelcomePage() {
           <div>
             <span className="journey-eyebrow">LET’S GET TOGETHER</span>
             <h1>好想法，从一起聊开始。</h1>
-            <p>先找一个团队空间，再与伙伴和 Agent 一起开展工作。</p>
+            <p>先找一个团队空间，再与伙伴和 Qgent 一起开展工作。</p>
           </div>
         </header>
         <div className="welcome-space__choices">
@@ -37,7 +37,7 @@ export default function WelcomePage() {
             </div>
           </Link>
         </div>
-        <p className="welcome-space__footnote">聊天记录想法，Agent 帮你把它往前推进。</p>
+        <p className="welcome-space__footnote">在聊天中讨论想法，@Qgent 帮你把它往前推进。</p>
       </div>
     </div>
   )

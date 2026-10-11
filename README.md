@@ -1,6 +1,6 @@
 # Qgents 前端
 
-React 19 + TypeScript strict + Ant Design 6。以项目聊天组织团队与 Agent 协作，按需维护伙伴、Skill、Memory 和 GitHub 仓库。
+React 19 + TypeScript strict + Ant Design 6。以项目聊天组织团队与固定 Qgent 协作，按需维护 Skill、Memory 和 GitHub 仓库；GitHub 能力由项目管理员在项目设置中控制，默认开启。
 
 ## 开发
 
@@ -12,7 +12,7 @@ npm run test -- --run
 npm run build
 ```
 
-真实后端配置 `VITE_API_BASE_URL`，本地演示使用 `VITE_USE_MOCK=true`。演示环境登录任意非空账号即可，注册验证码为 `483920`。Mock 只模拟界面与 API 协议，不执行真实 GitHub / Agent / 对象存储操作。
+真实后端配置 `VITE_API_BASE_URL`，本地演示使用 `VITE_USE_MOCK=true`。演示环境登录任意非空账号即可，注册验证码为 `483920`。Mock 只模拟界面与 API 协议，不执行真实 GitHub / Qgent / 对象存储操作。
 
 ## 项目说明
 

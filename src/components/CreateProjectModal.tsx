@@ -26,7 +26,7 @@ export function CreateProjectModal({ teamId, open, onClose }: { teamId: string; 
     onError: failure => setError(formatApiError(failure)),
   })
   return <Modal title="创建项目" open={open} onCancel={onClose} onOk={() => form.submit()} confirmLoading={create.isPending} okText="创建" cancelText="取消">
-    <p>创建后即可在项目聊天中与成员和 Agent 一起协作。</p>
+    <p>创建后即可在项目聊天中与成员和 Qgent 一起协作。</p>
     {error && <Alert type="error" showIcon message={error} />}
     <Form form={form} layout="vertical" onFinish={values => create.mutate(values)} disabled={create.isPending}>
       <Form.Item name="name" label="项目名称" rules={[{ required: true, whitespace: true, message: '请输入项目名称' }, { max: 255 }]}><Input maxLength={255} /></Form.Item>
