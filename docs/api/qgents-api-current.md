@@ -44,7 +44,7 @@ Skill 与 Memory 在项目层维护。详情中提供编辑、提交审核、批
 
 登录、注册、验证码、密码重置、个人资料、团队与邀请、项目成员、通知及头像保留现有请求链。通知类型为 `MESSAGE_MENTION/INVITED/TEAM_JOINED/PROJECT_ADDED`；提及通知打开项目聊天并定位 `resourceId` 对应消息。
 
-附件按配置使用本地磁盘或 OSS，走签发上传凭证、上传、确认、预览/下载链路。IMAGE/FILE 消息必须携带 `attachmentId`，媒体类型使用 `mediaType`，不从 URL 推断附件 ID。团队当前成员身份统一使用 `role`。Mock 是演示数据，不能证明生产环境已接通外部存储、GitHub 或 Qgent 工作环境。
+附件按配置使用本地磁盘或 OSS，走申请上传、上传文件、确认、预览/下载链路。OSS 返回签名 PUT 地址供浏览器直传，本地返回后端 PUT 地址；前端使用返回的方法与请求头，仅对当前 API 来源及路径的上传添加登录凭证和幂等键。确认成功后才返回可用于消息的附件 ID。IMAGE/FILE 消息必须携带 `attachmentId`，媒体类型使用 `mediaType`，不从 URL 推断附件 ID。团队当前成员身份统一使用 `role`。Mock 是演示数据，不能证明生产环境已接通外部存储、GitHub 或 Qgent 工作环境。
 
 登录后调用 GET /me，返回 user、带头像的 teams、projects 与 currentTeamId；服务端恢复最近团队，失去权限时回退到首个可用团队，无团队时返回 null。PUT /me/current-team 请求 { teamId } 保存最近选择并校验成员权限。退出登录清除当前团队和账户查询缓存。
 

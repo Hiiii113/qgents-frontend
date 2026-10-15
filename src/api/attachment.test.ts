@@ -51,7 +51,9 @@ describe('resolvePreviewUrl', () => {
 describe('uploadAttachment', () => {
   it.each([
     ['/api/v1/projects/p/attachments/a/content', `${window.location.origin}/api/projects/p/attachments/a/content`, true],
+    [`${window.location.origin}/api/projects/p/attachments/a`, `${window.location.origin}/api/projects/p/attachments/a`, true],
     ['https://oss.example.com/a?Signature=x', 'https://oss.example.com/a?Signature=x', false],
+    [`${window.location.origin}/oss/a?Signature=x`, `${window.location.origin}/oss/a?Signature=x`, false],
   ])('uploads to %s then confirms the attachment', async (uploadUrl, expectedUrl, authenticated) => {
     localStorage.setItem('qgents_access_token', 'test-token')
     const fetchMock = vi.spyOn(globalThis, 'fetch')
@@ -72,5 +74,30 @@ describe('uploadAttachment', () => {
     expect(headers['Authorization']).toBe(authenticated ? 'Bearer test-token' : undefined)
     expect(Boolean(headers['Idempotency-Key'])).toBe(authenticated)
     expect(fetchMock.mock.calls[2]?.[0]).toBe('/api/projects/p/attachments/a/confirm')
+  })
+
+  it('does not confirm after the file upload fails', async () => {
+    const create = vi.spyOn(attachmentApi, 'createCredential').mockResolvedValue({
+      attachmentId: 'a', uploadUrl: 'https://oss.example.com/a', method: 'PUT', headers: {}, expiresAt: '',
+    })
+    const confirm = vi.spyOn(attachmentApi, 'confirm')
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 403 }))
+    const file = new File(['x'], 'x.txt')
+    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(1) })
+    await expect(uploadAttachment('p', file)).rejects.toThrow('附件上传失败（403）')
+    expect(create).toHaveBeenCalledOnce()
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(confirm).not.toHaveBeenCalled()
+  })
+
+  it('propagates confirmation failures instead of returning a usable attachment id', async () => {
+    vi.spyOn(attachmentApi, 'createCredential').mockResolvedValue({
+      attachmentId: 'a', uploadUrl: 'https://oss.example.com/a', method: 'PUT', headers: {}, expiresAt: '',
+    })
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }))
+    vi.spyOn(attachmentApi, 'confirm').mockRejectedValue(new Error('附件大小不匹配'))
+    const file = new File(['x'], 'x.txt')
+    Object.defineProperty(file, 'arrayBuffer', { value: async () => new ArrayBuffer(1) })
+    await expect(uploadAttachment('p', file)).rejects.toThrow('附件大小不匹配')
   })
 })

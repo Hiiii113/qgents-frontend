@@ -87,20 +87,23 @@ export async function uploadAttachment(projectId: string, file: File): Promise<s
     sizeBytes: file.size,
   })
 
-  // 相对上传地址走后端鉴权；OSS 预签名地址不添加认证头。
-  const isAbsolute = /^https?:\/\//i.test(credential.uploadUrl)
   const targetUrl = resolvePreviewUrl(credential.uploadUrl)
+  const apiBase = new URL(getApiBaseUrl(), window.location.origin)
+  const target = new URL(targetUrl)
+  const apiPath = apiBase.pathname.replace(/\/$/, '')
+  const isBackendUpload = target.origin === apiBase.origin
+    && target.pathname.startsWith(`${apiPath}/projects/`)
   // 保留凭证指定的 Content-Type 等上传头。
   const headers: Record<string, string> = { ...(credential.headers ?? {}) }
-  if (!isAbsolute) {
+  if (isBackendUpload) {
     const token = getStoredToken()
     if (token) headers['Authorization'] = `Bearer ${token}`
     // 后端代理 PUT 属于 /projects/** 写请求，幂等过滤器要求每次上传携带唯一键。
-    // 绝对 OSS 预签名地址不添加该头，避免改变签名请求的 header 集合。
+    // OSS 签名地址只使用后端返回的上传头。
     headers['Idempotency-Key'] = crypto.randomUUID()
   }
   const putRes = await fetch(targetUrl, {
-    method: 'PUT',
+    method: credential.method,
     headers,
     body: await file.arrayBuffer(),
   })
