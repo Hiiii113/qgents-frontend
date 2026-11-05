@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  Alert,
   App,
   Button,
   Card,
@@ -20,7 +21,7 @@ import {
 import { PlusOutlined, TagsOutlined, UserOutlined } from '@ant-design/icons'
 import { skillApi } from '@/api'
 import { EmptyState } from '@/components/EmptyState'
-import type { CreateSkillPayload, Skill, SkillStatus } from '@/types'
+import type { Skill, SkillPreview, SkillStatus, SkillVisibility } from '@/types'
 import './SkillPage.css'
 
 const { Text, Paragraph } = Typography
@@ -52,7 +53,7 @@ const VISIBILITY_META: Record<Skill['visibility'], { color: string; label: strin
 
 /**
  * 共享 Skill —— 当前接口
- * 列表 / 状态筛选 / 详情 / 手动创建 / 归档
+ * 列表 / 状态筛选 / 详情 / 文件导入 / 归档
  * 普通成员的审核操作在知识详情中完成；
  * Project Admin 创建 PROJECT_SHARED Skill 时由后端直接发布。
  */
@@ -63,7 +64,7 @@ export function SkillPage() {
   const [filter, setFilter] = useState<FilterKey>('ALL')
   const [keyword, setKeyword] = useState('')
   const [detailId, setDetailId] = useState<string | null>(null)
-  const [editId, setEditId] = useState<string | null>(null)
+  const [editTarget, setEditTarget] = useState<Skill | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
 
   const { data: skills = [], isLoading, isError, refetch } = useQuery({
@@ -79,14 +80,12 @@ export function SkillPage() {
     const normalized = keyword.trim().toLowerCase()
     return skills.filter((skill) => {
       const matchesFilter = filter === 'ALL' || skill.status === filter
-      const searchable = [skill.name, skill.content, ...(skill.tags ?? [])].join(' ').toLowerCase()
+      const searchable = [skill.name, skill.description, skill.content, ...(skill.tags ?? [])].join(' ').toLowerCase()
       return matchesFilter && (!normalized || searchable.includes(normalized))
     })
   }, [skills, filter, keyword])
 
   const detail = skills.find((s) => s.id === detailId) ?? null
-  // 编辑目标独立于详情抽屉：点「编辑」时保存 editId，避免关闭抽屉后 editTarget 丢失
-  const editTarget = skills.find((s) => s.id === editId) ?? null
 
 
   return (
@@ -138,7 +137,8 @@ export function SkillPage() {
         skill={detail}
         onClose={() => setDetailId(null)}
         onEdit={() => {
-          setEditId(detail?.id ?? null)
+          // 编辑目标独立于详情抽屉，且不随列表刷新而更新，否则会重置表单覆盖未保存的输入
+          setEditTarget(detail)
           setDetailId(null)
           setCreateOpen(true)
         }}
@@ -151,12 +151,12 @@ export function SkillPage() {
         editTarget={editTarget}
         onClose={() => {
           setCreateOpen(false)
-          setEditId(null)
+          setEditTarget(null)
         }}
         onCreated={() => {
           invalidate()
           setCreateOpen(false)
-          setEditId(null)
+          setEditTarget(null)
         }}
       />
     </>
@@ -175,7 +175,7 @@ function SkillCard({ skill, index, onClick }: { skill: Skill; index: number; onC
           <div className="skill-card__name-wrap">
             <Text className="skill-card__name">{skill.name}</Text>
             <Paragraph ellipsis={{ rows: 1 }} className="skill-card__content">
-              {skill.content}
+              {skill.description}
             </Paragraph>
           </div>
         </div>
@@ -269,11 +269,7 @@ function SkillDetail({
 
 /** 新建 / 编辑弹窗 */
 function CreateSkillModal({
-  projectId,
-  open,
-  editTarget,
-  onClose,
-  onCreated,
+  projectId, open, editTarget, onClose, onCreated,
 }: {
   projectId: string
   open: boolean
@@ -281,107 +277,90 @@ function CreateSkillModal({
   onClose: () => void
   onCreated: () => void
 }) {
-  const [form] = Form.useForm<CreateSkillPayload>()
+  const [form] = Form.useForm<{ content: string; tags: string; visibility: SkillVisibility }>()
   const { message } = App.useApp()
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<SkillPreview | null>(null)
+  const [error, setError] = useState('')
 
-  // 弹窗打开/编辑目标变化时显式回填表单（绕开 Modal destroyOnClose 下 initialValues 时序问题，
-  // 确保编辑时标签等所有字段回显）
   useEffect(() => {
     if (!open) return
-    if (editTarget) {
-      form.setFieldsValue({
-        name: editTarget.name,
-        content: editTarget.content,
-        // 标签输入为逗号分隔字符串（提交时 splitTags 转回数组）
-        tags: (editTarget.tags ?? []).join(','),
-        visibility: editTarget.visibility,
-      } as unknown as Partial<CreateSkillPayload>)
-    } else {
-      form.resetFields()
-      form.setFieldsValue({ visibility: 'PRIVATE' })
-    }
+    form.resetFields()
+    form.setFieldsValue({ content: editTarget?.content, tags: editTarget?.tags.join(',') ?? '', visibility: editTarget?.visibility ?? 'PRIVATE' })
+    setFile(null)
+    setPreview(null)
+    setError('')
   }, [open, editTarget, form])
 
-  const create = useMutation({
-    // 编辑模式走 patch（更新原记录），新建才走 create（对照 MemoryPage 同一模式）
-    mutationFn: (payload: CreateSkillPayload) =>
-      editTarget
-        ? skillApi.patch(projectId, editTarget.id, payload)
-        : skillApi.create(projectId, payload),
-    onSuccess: (saved) => {
-      form.resetFields()
-      onCreated()
-      if (editTarget) {
-        message.success('Skill 已更新')
-        return
-      }
-      // PRIVATE 创建即生效；PROJECT_SHARED 的 Admin 自建免审、成员为草稿
-      if (saved.status === 'PUBLISHED') {
-        message.success(saved.visibility === 'PRIVATE' ? 'Skill 已创建（私有，仅自己可用）' : 'Skill 已创建并发布')
-      } else {
-        message.success('Skill 草稿已创建，提交审核后即可共享')
-      }
+  const previewMutation = useMutation({
+    mutationFn: (selected: File) => skillApi.preview(projectId, selected),
+    onSuccess: (result) => setPreview(result),
+    onError: (err) => setError(err.message),
+  })
+  const save = useMutation({
+    mutationFn: (values: { content: string; tags: string; visibility: SkillVisibility }) => {
+      const tags = (values.tags ?? '').split(',').map((tag) => tag.trim()).filter(Boolean)
+      return editTarget
+        ? skillApi.patch(projectId, editTarget.id, { content: values.content, tags })
+        : skillApi.create(projectId, { file: file!, visibility: values.visibility, tags })
     },
+    onSuccess: (saved) => {
+      onCreated()
+      message.success(editTarget ? 'Skill 已更新' : saved.status === 'PUBLISHED' ? 'Skill 已创建并发布' : 'Skill 草稿已创建，提交审核后即可共享')
+    },
+    onError: (err) => setError(err.message),
   })
 
   return (
     <Modal
-      title={editTarget ? '编辑 Skill' : '新建 Skill'}
+      title={editTarget ? '编辑 Skill' : '导入 Skill'}
       open={open}
-      onCancel={onClose}
+      onCancel={() => { if (!previewMutation.isPending && !save.isPending) onClose() }}
+      closable={!previewMutation.isPending && !save.isPending}
+      cancelButtonProps={{ disabled: previewMutation.isPending || save.isPending }}
       onOk={() => form.submit()}
-      okText={editTarget ? '保存' : '创建'}
+      okText={editTarget ? '保存' : '确认创建'}
       cancelText="取消"
-      confirmLoading={create.isPending}
+      confirmLoading={save.isPending}
+      okButtonProps={{ disabled: !editTarget && !preview }}
       destroyOnClose
-      // 编辑目标变化时强制重建 Modal 内容，确保 initialValues（含标签回显）重新生效
-      key={editTarget?.id ?? 'create'}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={(v) => create.mutate({ ...v, tags: splitTags(v.tags) })}
-        initialValues={
-          editTarget
-            ? {
-                name: editTarget.name,
-                content: editTarget.content,
-                tags: (editTarget.tags ?? []).join(','),
-                visibility: editTarget.visibility,
-              }
-            : { visibility: 'PRIVATE' }
-        }
-      >
-        <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
-          <Input placeholder="例如：Java API 规范" maxLength={50} />
-        </Form.Item>
-        <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入内容' }]}>
-          <Input.TextArea
-            placeholder="规范、提示词、操作指引或工具调用约束"
-            autoSize={{ minRows: 3, maxRows: 6 }}
-          />
-        </Form.Item>
-        <Form.Item name="visibility" label="可见性">
-          <Select
-            options={[
-              { value: 'PRIVATE', label: '私有（仅自己可用）' },
-              { value: 'PROJECT_SHARED', label: '项目共享' },
-            ]}
-          />
-        </Form.Item>
+      <Form form={form} layout="vertical" onFinish={(values) => save.mutate(values)}>
+        {editTarget ? (
+          <>
+            <Text>可见性：{VISIBILITY_META[editTarget.visibility].label}</Text>
+            <Form.Item name="content" label="SKILL.md 完整内容" rules={[{ required: true, message: '请输入完整文件内容' }]}>
+              <Input.TextArea autoSize={{ minRows: 8, maxRows: 18 }} />
+            </Form.Item>
+          </>
+        ) : (
+          <>
+            <Paragraph>仅导入单个 SKILL.md。文件中提到的文件、脚本、外部工具或其他 Skill 不会随之安装，宿主特有字段也未必生效。</Paragraph>
+            <Form.Item label="选择 SKILL.md">
+              <input type="file" accept=".md" disabled={previewMutation.isPending} onChange={(event) => {
+                const selected = event.target.files?.[0]
+                setFile(null)
+                setPreview(null)
+                setError('')
+                if (!selected) return
+                setFile(selected)
+                previewMutation.mutate(selected)
+              }} />
+            </Form.Item>
+            {previewMutation.isPending && <Spin />}
+            {preview && <div><Text strong>{preview.name}</Text><Paragraph>{preview.description}</Paragraph><Paragraph style={{ whiteSpace: 'pre-wrap', maxHeight: 240, overflow: 'auto' }}>{preview.content}</Paragraph></div>}
+            <Form.Item name="visibility" label="可见性" rules={[{ required: true }]}>
+              <Select options={[{ value: 'PRIVATE', label: '私有（仅自己可用）' }, { value: 'PROJECT_SHARED', label: '项目共享' }]} />
+            </Form.Item>
+          </>
+        )}
         <Form.Item name="tags" label="标签（逗号分隔）">
-          <Input placeholder="如 java / backend，用逗号分隔" />
+          <Input placeholder="如 java, backend" />
         </Form.Item>
+        {error && <Alert type="error" showIcon message={error} />}
       </Form>
     </Modal>
   )
-}
-
-/** 标签输入（逗号分隔字符串或数组）→ string[] */
-function splitTags(value: unknown): string[] {
-  if (Array.isArray(value)) return value.filter((tag): tag is string => typeof tag === 'string')
-  if (typeof value === 'string') return value.split(',').map((tag) => tag.trim()).filter(Boolean)
-  return []
 }
 
 function formatDate(iso: string): string {
