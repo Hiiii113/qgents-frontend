@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { chatMessageText, QGENT_ID, QGENT_NAME, type ChatGroup, type ChatMember, type ChatMessage, type SendChatMessage } from '@/types/chat'
 import type { Project } from '@/types/project'
 import { MOCK_PROJECTS, MOCK_PROJECT_MEMBERS, MOCK_TEAM_MEMBERS, MOCK_USER } from './state'
+import { nextMockId } from './ids'
 
 const groups = new Map<string, ChatGroup>()
 const groupMembers = new Map<string, ChatMember[]>()
@@ -9,21 +10,25 @@ const messages = new Map<string, ChatMessage[]>()
 const sent = new Map<string, ChatMessage>()
 const pending = new Map<string, ReturnType<typeof setTimeout>>()
 const projects = () => Object.values(MOCK_PROJECTS).flat()
+let nextGroupId = 100
+const defaultGroupIds = new Map<string, string>()
 const findProject = (id: unknown) => projects().find(project => project.id === id)
 const notFound = () => HttpResponse.json({ error: { code: 'NOT_FOUND', message: '资源不存在' } }, { status: 404 })
 function groupFor(project: Project) {
   let group = [...groups.values()].find(item => item.projectId === project.id && item.defaultGroup)
   if (!group) {
-    group = { defaultGroup: true, id: `group-main-${project.id}`, projectId: project.id, title: project.name, createdAt: project.createdAt ?? new Date().toISOString(), memberCount: (project.memberCount ?? 1) + 1, unreadCount: 0, pinned: false }
+    const id = defaultGroupIds.get(project.id) ?? String(nextGroupId++)
+    defaultGroupIds.set(project.id, id)
+    group = { defaultGroup: true, id, projectId: project.id, title: project.name, createdAt: project.createdAt ?? new Date().toISOString(), memberCount: (project.memberCount ?? 1) + 1, unreadCount: 0, pinned: false }
     groups.set(group.id, group)
     groupMembers.set(group.id, [{ id: QGENT_ID, displayName: QGENT_NAME, memberType: 'AGENT' }])
-    messages.set(group.id, [{ id: `welcome-${project.id}`, groupId: group.id, sequence: 1, type: 'SYSTEM', content: { text: '欢迎来到项目聊天。分享想法，或 @Qgent 一起开展工作。' }, senderId: '', senderName: 'Qgents', senderType: 'SYSTEM', createdAt: group.createdAt ?? new Date().toISOString() }])
+    messages.set(group.id, [{ id: '1', groupId: group.id, sequence: 1, type: 'SYSTEM', content: { text: '欢迎来到项目聊天。分享想法，或 @Qgent 一起开展工作。' }, senderId: '', senderName: 'Qgents', senderType: 'SYSTEM', createdAt: group.createdAt ?? new Date().toISOString() }])
   }
   return group
 }
 function append(group: ChatGroup, body: Omit<ChatMessage, 'id' | 'sequence' | 'createdAt' | 'groupId'>) {
   const history = messages.get(group.id) ?? []
-  const item: ChatMessage = { ...body, id: crypto.randomUUID(), groupId: group.id, sequence: (history.at(-1)?.sequence ?? 0) + 1, createdAt: new Date().toISOString() }
+  const item: ChatMessage = { ...body, id: nextMockId(), groupId: group.id, sequence: (history.at(-1)?.sequence ?? 0) + 1, createdAt: new Date().toISOString() }
   history.push(item); messages.set(group.id, history)
   group.lastMessageAt = item.createdAt; group.latestActivityAt = item.createdAt
   group.latestMessage = { type: item.type, text: chatMessageText(item), senderName: item.senderName }
@@ -40,7 +45,7 @@ export const projectChatHandlers = [
   http.get('/api/teams/:teamId/projects', ({ params }) => HttpResponse.json({ data: MOCK_PROJECTS[String(params.teamId)] ?? [] })),
   http.post('/api/teams/:teamId/projects', async ({ params, request }) => {
     const body = await request.json() as { name: string; description?: string; memberIds?: string[] }
-    const project: Project = { id: crypto.randomUUID(), teamId: String(params.teamId), name: body.name, description: body.description, role: 'PROJECT_ADMIN', status: 'ACTIVE', createdAt: new Date().toISOString(), memberCount: (body.memberIds?.filter(id => id !== MOCK_USER.id).length ?? 0) + 1, githubEnabled: true }
+    const project: Project = { id: nextMockId(), teamId: String(params.teamId), name: body.name, description: body.description, role: 'PROJECT_ADMIN', status: 'ACTIVE', createdAt: new Date().toISOString(), memberCount: (body.memberIds?.filter(id => id !== MOCK_USER.id).length ?? 0) + 1, githubEnabled: true }
     ;(MOCK_PROJECTS[project.teamId] ??= []).push(project)
     MOCK_PROJECT_MEMBERS[project.id] = MOCK_TEAM_MEMBERS.filter(member => member.userId === MOCK_USER.id || body.memberIds?.includes(member.userId)).map(member => ({ ...member, role: member.userId === MOCK_USER.id ? 'PROJECT_ADMIN' : 'PROJECT_MEMBER' }))
     groupFor(project)
@@ -78,7 +83,7 @@ export const projectChatHandlers = [
   http.post('/api/projects/:projectId/groups', async ({ params, request }) => {
     const project = findProject(params.projectId); if (!project) return notFound()
     const body = await request.json() as { title: string; userIds: string[]; agentIds: string[] }
-    const group: ChatGroup = { id: crypto.randomUUID(), projectId: project.id, title: body.title.trim(), defaultGroup: false, createdBy: MOCK_USER.id, createdAt: new Date().toISOString(), unreadCount: 0 }
+    const group: ChatGroup = { id: nextMockId(), projectId: project.id, title: body.title.trim(), defaultGroup: false, createdBy: MOCK_USER.id, createdAt: new Date().toISOString(), unreadCount: 0 }
     groups.set(group.id, group); messages.set(group.id, [])
     groupMembers.set(group.id, inviteMembers(project.id, [MOCK_USER.id, ...body.userIds], body.agentIds))
     group.memberCount = groupMembers.get(group.id)?.length

@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { MOCK_USER, MOCK_TEAMS, MOCK_TEAM_MEMBERS, MOCK_PROJECTS, MOCK_MY_INVITATIONS } from './state'
+import { nextMockId } from './ids'
 const registerCodeByEmail = new Map<string, string>()
 let nextTeamId = 10
 let currentTeamId: string | null = MOCK_TEAMS[0]?.id ?? null
@@ -64,7 +65,7 @@ export const identityHandlers = [
         accessTokenExpiresIn: 900,
         refreshToken: 'mock-refresh-token-' + Date.now(),
         refreshTokenExpiresIn: 2592000,
-        user: { id: 'user-' + Date.now(), email: body.email!, displayName: body.displayName || body.email!.split('@')[0], avatarChar: (body.displayName || '用')[0] },
+        user: { id: String(Date.now()), email: body.email!, displayName: body.displayName || body.email!.split('@')[0], avatarChar: (body.displayName || '用')[0] },
       },
     })
   }),
@@ -232,7 +233,7 @@ export const identityHandlers = [
   http.post('/api/teams', async ({ request }) => {
     const body = (await request.json()) as { name?: string; description?: string }
     const newTeam = {
-      id: 'team-new-' + nextTeamId++,
+      id: String(nextTeamId++),
       name: body.name || '未命名团队',
       description: body.description || '',
       createdAt: new Date().toISOString(),
@@ -266,10 +267,10 @@ export const identityHandlers = [
   }),
 
   http.get('/api/teams/:teamId/members', ({ params }) => {
-    const members = String(params.teamId).startsWith('team-new-')
+    const members = Number(params.teamId) >= 10
       ? MOCK_TEAM_MEMBERS.filter(member => member.userId === MOCK_USER.id)
-      : params.teamId === 'team-joined-001'
-      ? MOCK_TEAM_MEMBERS.map((m) => (m.userId === 'user-001' ? { ...m, role: 'TEAM_MEMBER' as const } : m))
+      : params.teamId === '2'
+      ? MOCK_TEAM_MEMBERS.map((m) => (m.userId === '1' ? { ...m, role: 'TEAM_MEMBER' as const } : m))
       : MOCK_TEAM_MEMBERS
     return HttpResponse.json({ data: members })
   }),
@@ -277,7 +278,7 @@ export const identityHandlers = [
   http.post('/api/teams/:teamId/invitations', async ({ request }) => {
     const body = (await request.json()) as { email?: string; role?: string }
     return HttpResponse.json({
-      data: { id: 'inv-' + Date.now(), email: body.email || '', role: body.role || 'TEAM_MEMBER', status: 'PENDING', createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 7 * 86400000).toISOString() },
+      data: { id: nextMockId(), email: body.email || '', role: body.role || 'TEAM_MEMBER', status: 'PENDING', createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 7 * 86400000).toISOString() },
     }, { status: 201 })
   }),
 
@@ -290,7 +291,7 @@ export const identityHandlers = [
 
   http.post('/api/team-invitations/:reference/accept', () =>
     HttpResponse.json({
-      data: { userId: 'user-001', displayName: '陈同学', role: 'TEAM_MEMBER', joinedAt: '2026-08-15T10:00:00Z' },
+      data: { userId: '1', displayName: '陈同学', role: 'TEAM_MEMBER', joinedAt: '2026-08-15T10:00:00Z' },
     }),
   ),
 

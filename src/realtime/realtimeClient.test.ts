@@ -35,8 +35,8 @@ describe('dispatchRealtimeFrame', () => {
     dispatchRealtimeFrame({
       type: 'PROJECT_ADDED',
       scope: 'notification',
-      recipientUserId: 'user-1',
-      payload: { notificationId: 'notification-1', kind: 'PROJECT_ADDED' },
+      recipientUserId: '1',
+      payload: { notificationId: '1', kind: 'PROJECT_ADDED' },
     })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['notifications'] })
   })
@@ -46,14 +46,14 @@ describe('dispatchRealtimeFrame', () => {
     const frame: RealtimeFrame = {
       type: 'message.created',
       scope: 'project',
-      projectId: 'project-1',
-      groupId: 'group-1',
-      resourceId: 'message-1',
-      payload: { projectId: 'project-1', groupId: 'group-1', messageId: 'message-1' },
+      projectId: '1',
+      groupId: '1',
+      resourceId: '1',
+      payload: { projectId: '1', groupId: '1', messageId: '1' },
     }
     dispatchRealtimeFrame(frame)
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'project-1', 'groups'], exact: true })
-    expect(spy).not.toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'project-1', 'groups', 'group-1', 'messages'] })
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'projects', '1', 'groups'], exact: true })
+    expect(spy).not.toHaveBeenCalledWith({ queryKey: ['chat', 'projects', '1', 'groups', '1', 'messages'] })
   })
 
   it('ignores removed task event types', () => {
@@ -61,8 +61,8 @@ describe('dispatchRealtimeFrame', () => {
     dispatchRealtimeFrame({
       type: 'task.updated',
       scope: 'project',
-      projectId: 'project-1',
-      payload: { projectId: 'project-1', taskId: 'task-1' },
+      projectId: '1',
+      payload: { projectId: '1', taskId: '1' },
     })
     expect(spy).not.toHaveBeenCalled()
   })
@@ -72,12 +72,12 @@ describe('dispatchRealtimeFrame', () => {
     dispatchRealtimeFrame({
       type: 'project.member.added',
       scope: 'team',
-      teamId: 'team-1',
-      payload: { teamId: 'team-1' },
+      teamId: '1',
+      payload: { teamId: '1' },
     })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['teams', 'mine'] })
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['teams', 'team-1', 'projects'] })
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['teams', 'team-1', 'members'] })
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['teams', '1', 'projects'] })
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['teams', '1', 'members'] })
   })
 
   it('ignores a project frame without a project id', () => {

@@ -15,7 +15,7 @@ export interface ChatGroup {
   latestMessage?: { senderName?: string | null; text?: string | null; type?: string } | null
 }
 
-export const QGENT_ID = '00000000-0000-0000-0000-000000000001'
+export const QGENT_ID = '0'
 export const QGENT_NAME = 'Qgent'
 export type QgentId = typeof QGENT_ID
 

@@ -2,10 +2,11 @@ import { http, HttpResponse } from 'msw'
 import type { Skill, SkillPreview, SkillVisibility, UpdateSkillPayload } from '@/types/skill'
 import type { AvailableRepository, GithubConnection, ImportedRepository } from '@/api/repositories'
 import { MOCK_PROJECTS, MOCK_USER } from './state'
+import { nextMockId } from './ids'
 
 const skills: Skill[] = []
-const connections: GithubConnection[] = [{ id: 'installation-demo', teamId: 'team-owned-001', providerInstallationId: 1001, accountLogin: 'qgents-demo', accountType: 'Organization', suspended: false }]
-const available: AvailableRepository[] = [{ installationId: 'installation-demo', repositoryId: 10001, fullName: 'qgents-demo/web', defaultBranch: 'main', htmlUrl: 'https://github.com/qgents-demo/web', privateRepository: false }]
+const connections: GithubConnection[] = [{ id: '1', teamId: '1', providerInstallationId: 1001, accountLogin: 'qgents-demo', accountType: 'Organization', suspended: false }]
+const available: AvailableRepository[] = [{ installationId: '1', repositoryId: 10001, fullName: 'qgents-demo/web', defaultBranch: 'main', htmlUrl: 'https://github.com/qgents-demo/web', privateRepository: false }]
 const imported = new Map<string, ImportedRepository[]>()
 const notFound = () => HttpResponse.json({ error: { code: 'NOT_FOUND', message: '资源不存在' } }, { status: 404 })
 const skillPath = '/api/projects/:projectId/skills'
@@ -40,7 +41,7 @@ export const capabilityHandlers = [
     const now = new Date().toISOString()
     const projectId = String(params.projectId)
     const autoPublish = visibility === 'PRIVATE' || Object.values(MOCK_PROJECTS).flat().find(project => project.id === projectId)?.role === 'PROJECT_ADMIN'
-    const skill: Skill = { ...document, visibility, tags, id: crypto.randomUUID(), projectId, status: autoPublish ? 'PUBLISHED' : 'DRAFT', creator: MOCK_USER, reviewer: autoPublish ? MOCK_USER : null, reviewedAt: autoPublish ? now : null, createdAt: now, updatedAt: now }
+    const skill: Skill = { ...document, visibility, tags, id: nextMockId(), projectId, status: autoPublish ? 'PUBLISHED' : 'DRAFT', creator: MOCK_USER, reviewer: autoPublish ? MOCK_USER : null, reviewedAt: autoPublish ? now : null, createdAt: now, updatedAt: now }
     skills.push(skill); return HttpResponse.json({ data: skill }, { status: 201 })
   }),
   http.patch(`${skillPath}/:skillId`, async ({ params, request }) => {
@@ -65,7 +66,7 @@ export const capabilityHandlers = [
     const { installationId, repositoryId } = await request.json() as { installationId: string; repositoryId: number }
     const repository = available.find(item => item.installationId === installationId && item.repositoryId === repositoryId); if (!repository) return notFound()
     const projectId = String(params.projectId)
-    const item: ImportedRepository = { ...repository, id: crypto.randomUUID(), projectId, providerRepositoryId: repositoryId }
+    const item: ImportedRepository = { ...repository, id: nextMockId(), projectId, providerRepositoryId: repositoryId }
     const list = imported.get(projectId) ?? []; list.push(item); imported.set(projectId, list)
     return HttpResponse.json({ data: item }, { status: 201 })
   }),

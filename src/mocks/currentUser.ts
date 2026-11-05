@@ -1,5 +1,5 @@
 export const MOCK_CURRENT_USER = {
-  id: 'user-001',
+  id: '1',
   email: 'demo@qgents.dev',
   displayName: '陈同学',
   avatarChar: '陈',

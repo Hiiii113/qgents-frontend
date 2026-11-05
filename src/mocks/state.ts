@@ -6,7 +6,7 @@ export const MOCK_USER: { id: string; email: string; displayName: string; avatar
 
 export const MOCK_TEAMS: Team[] = [
   {
-    id: 'team-owned-001',
+    id: '1',
     name: '星河工作室',
     description: '全栈开发团队，专注内部工具与开源项目',
     createdAt: '2026-06-01T08:00:00Z',
@@ -15,7 +15,7 @@ export const MOCK_TEAMS: Team[] = [
     avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=星河工作室',
   },
   {
-    id: 'team-joined-001',
+    id: '2',
     name: '广工创新团队',
     description: '校园技术团队，AI 与 Web 方向',
     createdAt: '2026-05-15T08:00:00Z',
@@ -25,22 +25,22 @@ export const MOCK_TEAMS: Team[] = [
 ]
 
 export const MOCK_TEAM_MEMBERS = [
-  { userId: 'user-001', displayName: '陈同学', email: 'demo@qgents.dev', role: 'TEAM_OWNER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=陈同学' },
-  { userId: 'user-002', displayName: '张工', email: 'zhang@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=张工' },
-  { userId: 'user-003', displayName: '李设计', email: 'li@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=李设计' },
-  { userId: 'user-004', displayName: '王测试', email: 'wang@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=王测试' },
-  { userId: 'user-005', displayName: '赵架构', email: 'zhao@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=赵架构' },
+  { userId: '1', displayName: '陈同学', email: 'demo@qgents.dev', role: 'TEAM_OWNER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=陈同学' },
+  { userId: '2', displayName: '张工', email: 'zhang@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=张工' },
+  { userId: '3', displayName: '李设计', email: 'li@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=李设计' },
+  { userId: '4', displayName: '王测试', email: 'wang@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=王测试' },
+  { userId: '5', displayName: '赵架构', email: 'zhao@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=赵架构' },
 ]
 
 export const MOCK_PROJECTS: Record<string, Project[]> = {
-  'team-owned-001': [
-    { id: 'demo-project', teamId: 'team-owned-001', name: 'Demo Project', description: 'Demo project for Mock acceptance', createdAt: '2026-08-13T00:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 2, status: 'ACTIVE', githubEnabled: true },
-    { id: 'proj-001', teamId: 'team-owned-001', name: 'Qgents', description: '团队成员与 Qgent 云端协作开发平台', createdAt: '2026-07-01T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 3, memberCount: 5, status: 'ACTIVE', githubEnabled: true },
-    { id: 'proj-002', teamId: 'team-owned-001', name: '宠影记', description: '宠物健康管理小程序', createdAt: '2026-07-15T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 4, status: 'ACTIVE', githubEnabled: true },
+  '1': [
+    { id: '1', teamId: '1', name: 'Demo Project', description: 'Demo project for Mock acceptance', createdAt: '2026-08-13T00:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 2, status: 'ACTIVE', githubEnabled: true },
+    { id: '2', teamId: '1', name: 'Qgents', description: '团队成员与 Qgent 云端协作开发平台', createdAt: '2026-07-01T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 3, memberCount: 5, status: 'ACTIVE', githubEnabled: true },
+    { id: '3', teamId: '1', name: '宠影记', description: '宠物健康管理小程序', createdAt: '2026-07-15T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 4, status: 'ACTIVE', githubEnabled: true },
   ],
-  'team-joined-001': [
-    { id: 'proj-003', teamId: 'team-joined-001', name: 'AI 决策系统', description: '校园选课推荐与学业规划', createdAt: '2026-06-10T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 2, memberCount: 6, status: 'ACTIVE', githubEnabled: true },
-    { id: 'proj-004', teamId: 'team-joined-001', name: '校园助手', description: '课表、成绩、图书馆一站式查询', createdAt: '2026-08-01T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 1, memberCount: 3, status: 'ARCHIVED', githubEnabled: true },
+  '2': [
+    { id: '4', teamId: '2', name: 'AI 决策系统', description: '校园选课推荐与学业规划', createdAt: '2026-06-10T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 2, memberCount: 6, status: 'ACTIVE', githubEnabled: true },
+    { id: '5', teamId: '2', name: '校园助手', description: '课表、成绩、图书馆一站式查询', createdAt: '2026-08-01T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 1, memberCount: 3, status: 'ARCHIVED', githubEnabled: true },
   ],
 }
 
@@ -50,8 +50,8 @@ export const MOCK_PROJECTS: Record<string, Project[]> = {
 // 当前用户收到的待处理团队邀请（演示用样例，对齐后端1对接文档：无 token）
 export const MOCK_MY_INVITATIONS: MyTeamInvitation[] = [
   {
-    id: 'my-inv-001',
-    teamId: 'team-joined-001',
+    id: '1',
+    teamId: '2',
     teamName: '广工创新团队',
     role: 'TEAM_MEMBER',
     inviterDisplayName: '陈同学',
@@ -75,10 +75,10 @@ interface MockProjectMember {
 
 // 项目成员（按项目隔离，作为群 USER 成员来源；同时供 GET /projects/:id/members 复用）
 export const MOCK_PROJECT_MEMBERS: Record<string, MockProjectMember[]> = {
-  'proj-001': [
-    { userId: 'user-001', displayName: '陈同学', email: 'demo@qgents.dev', role: 'PROJECT_ADMIN', avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=陈同学' },
-    { userId: 'user-002', displayName: '张工', email: 'zhang@example.com', role: 'PROJECT_MEMBER', avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=张工' },
-    { userId: 'user-003', displayName: '李设计', email: 'li@example.com', role: 'PROJECT_MEMBER', avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=李设计' },
+  '2': [
+    { userId: '1', displayName: '陈同学', email: 'demo@qgents.dev', role: 'PROJECT_ADMIN', avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=陈同学' },
+    { userId: '2', displayName: '张工', email: 'zhang@example.com', role: 'PROJECT_MEMBER', avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=张工' },
+    { userId: '3', displayName: '李设计', email: 'li@example.com', role: 'PROJECT_MEMBER', avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=李设计' },
   ],
 }
 
