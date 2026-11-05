@@ -113,7 +113,7 @@ async function doFetch(
   idempotencyKey: string | null,
 ): Promise<{ res: Response; json: unknown }> {
   const { body, skipAuth, headers, ...rest } = options
-  const finalHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
+  const finalHeaders: Record<string, string> = body instanceof FormData ? {} : { 'Content-Type': 'application/json' }
 
   if (!skipAuth) {
     const token = getStoredToken()
@@ -130,7 +130,7 @@ async function doFetch(
   const res = await fetch(joinApiUrl(BASE_URL, path), {
     ...rest,
     headers: finalHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
   })
 
   // 204 No Content

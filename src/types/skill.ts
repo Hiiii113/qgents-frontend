@@ -22,6 +22,7 @@ export interface Skill {
   id: string
   projectId: string
   name: string
+  description: string
   content: string
   tags: string[]
   visibility: SkillVisibility
@@ -33,10 +34,19 @@ export interface Skill {
   updatedAt: string
 }
 
-// 创建草稿请求体（POST /skills）
-export interface CreateSkillPayload {
+export interface SkillPreview {
   name: string
+  description: string
   content: string
+}
+
+export interface CreateSkillPayload {
+  file: File
   tags: string[]
   visibility: SkillVisibility
+}
+
+export interface UpdateSkillPayload {
+  content?: string
+  tags?: string[]
 }

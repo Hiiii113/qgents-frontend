@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AUTH_EXPIRED_EVENT, request } from './client'
+import { skillApi } from './skill'
 
 function response(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -38,6 +39,28 @@ describe('API client authentication recovery', () => {
       headers: expect.objectContaining({ Authorization: 'Bearer new-access-token' }),
     }))
     expect(localStorage.getItem('qgents_access_token')).toBe('new-access-token')
+  })
+
+  it('sends Skill preview and creation as multipart and edits as JSON', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => response(200, { data: {} }))
+    const file = new File([`---
+name: Test
+description: Demo
+---
+Body`], 'SKILL.md')
+    await skillApi.preview('p1', file)
+    await skillApi.create('p1', { file, visibility: 'PRIVATE', tags: ['demo'] })
+    await skillApi.patch('p1', 's1', { content: 'new content', tags: ['updated'] })
+    const preview = fetchMock.mock.calls[0][1]!
+    const create = fetchMock.mock.calls[1][1]!
+    const patch = fetchMock.mock.calls[2][1]!
+    expect((preview.body as FormData).get('file')).toBe(file)
+    expect((create.body as FormData).get('file')).toBe(file)
+    expect((create.body as FormData).get('visibility')).toBe('PRIVATE')
+    expect((create.body as FormData).get('tags')).toBe('["demo"]')
+    expect(preview.headers).not.toHaveProperty('Content-Type')
+    expect(create.headers).not.toHaveProperty('Content-Type')
+    expect(patch.body).toBe(JSON.stringify({ content: 'new content', tags: ['updated'] }))
   })
 
   it('clears the session only after refresh fails', async () => {

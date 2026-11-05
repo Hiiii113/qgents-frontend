@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import type { CreateSkillPayload, Skill } from '@/types/skill'
+import type { Skill, SkillPreview, SkillVisibility, UpdateSkillPayload } from '@/types/skill'
 import type { AvailableRepository, GithubConnection, ImportedRepository } from '@/api/repositories'
 import { MOCK_PROJECTS, MOCK_USER } from './state'
 
@@ -10,20 +10,45 @@ const imported = new Map<string, ImportedRepository[]>()
 const notFound = () => HttpResponse.json({ error: { code: 'NOT_FOUND', message: '资源不存在' } }, { status: 404 })
 const skillPath = '/api/projects/:projectId/skills'
 const githubPath = '/api/teams/:teamId/integrations/github'
+// shortcut: Mock 只解析简单的单行 frontmatter，完整 YAML 校验以服务端为准。
+function parseSkill(content: string): SkillPreview | null {
+  const parts = content.replace(/^\uFEFF/, '').match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/)
+  if (!parts || !parts[2].trim()) return null
+  const name = parts[1].match(/^name:\s*(.+)$/m)?.[1].trim().replace(/^['"]|['"]$/g, '')
+  const description = parts[1].match(/^description:\s*(.+)$/m)?.[1].trim().replace(/^['"]|['"]$/g, '')
+  return name && description ? { name, description, content } : null
+}
+const invalidSkill = () => HttpResponse.json({ error: { message: 'SKILL.md 格式无效，请检查名称、描述和正文' } }, { status: 400 })
+async function readSkillFile(form: FormData) {
+  const file = form.get('file')
+  if (!(file instanceof File) || file.name !== 'SKILL.md' || file.size > 256 * 1024) return null
+  return parseSkill(await file.text())
+}
 export const capabilityHandlers = [
   http.get(skillPath, ({ params }) => HttpResponse.json({ data: skills.filter(skill => skill.projectId === params.projectId) })),
   http.get(`${skillPath}/:skillId`, ({ params }) => HttpResponse.json({ data: skills.find(skill => skill.id === params.skillId) })),
+  http.post(`${skillPath}/preview`, async ({ request }) => {
+    const document = await readSkillFile(await request.formData())
+    return document ? HttpResponse.json({ data: document }) : invalidSkill()
+  }),
   http.post(skillPath, async ({ params, request }) => {
-    const body = await request.json() as CreateSkillPayload
+    const body = await request.formData()
+    const document = await readSkillFile(body)
+    if (!document) return invalidSkill()
+    const visibility = body.get('visibility') as SkillVisibility
+    const tags = JSON.parse(String(body.get('tags'))) as string[]
     const now = new Date().toISOString()
     const projectId = String(params.projectId)
-    const autoPublish = body.visibility === 'PRIVATE' || Object.values(MOCK_PROJECTS).flat().find(project => project.id === projectId)?.role === 'PROJECT_ADMIN'
-    const skill: Skill = { ...body, id: crypto.randomUUID(), projectId, status: autoPublish ? 'PUBLISHED' : 'DRAFT', creator: MOCK_USER, reviewer: autoPublish ? MOCK_USER : null, reviewedAt: autoPublish ? now : null, createdAt: now, updatedAt: now }
+    const autoPublish = visibility === 'PRIVATE' || Object.values(MOCK_PROJECTS).flat().find(project => project.id === projectId)?.role === 'PROJECT_ADMIN'
+    const skill: Skill = { ...document, visibility, tags, id: crypto.randomUUID(), projectId, status: autoPublish ? 'PUBLISHED' : 'DRAFT', creator: MOCK_USER, reviewer: autoPublish ? MOCK_USER : null, reviewedAt: autoPublish ? now : null, createdAt: now, updatedAt: now }
     skills.push(skill); return HttpResponse.json({ data: skill }, { status: 201 })
   }),
   http.patch(`${skillPath}/:skillId`, async ({ params, request }) => {
     const skill = skills.find(item => item.id === params.skillId); if (!skill) return notFound()
-    Object.assign(skill, await request.json(), { updatedAt: new Date().toISOString() }); return HttpResponse.json({ data: skill })
+    const body = await request.json() as UpdateSkillPayload
+    const document = body.content === undefined ? null : parseSkill(body.content)
+    if (body.content !== undefined && !document) return invalidSkill()
+    Object.assign(skill, body, document, { updatedAt: new Date().toISOString() }); return HttpResponse.json({ data: skill })
   }),
   ...(['submit-review', 'approve', 'reject', 'archive'] as const).map(action => http.post(`${skillPath}/:skillId/${action}`, ({ params }) => {
     const skill = skills.find(item => item.id === params.skillId); if (!skill) return notFound()
