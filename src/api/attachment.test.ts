@@ -23,9 +23,9 @@ describe('attachmentApi.previewUrl', () => {
       requestId: 'request-1',
     }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
 
-    const result = await attachmentApi.previewUrl('project-1', 'att-1')
+    const result = await attachmentApi.previewUrl('1', 'att-1')
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/projects/project-1/attachments/att-1/preview-url',
+      '/api/projects/1/attachments/att-1/preview-url',
       expect.any(Object),
     )
     expect(result).toMatchObject({
@@ -72,7 +72,6 @@ describe('uploadAttachment', () => {
     expect(upload?.method).toBe('PUT')
     expect(headers['Content-Type']).toBe('image/png')
     expect(headers['Authorization']).toBe(authenticated ? 'Bearer test-token' : undefined)
-    expect(Boolean(headers['Idempotency-Key'])).toBe(authenticated)
     expect(fetchMock.mock.calls[2]?.[0]).toBe('/api/projects/p/attachments/a/confirm')
   })
 

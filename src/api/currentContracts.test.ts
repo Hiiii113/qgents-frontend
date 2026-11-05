@@ -9,7 +9,7 @@ describe('current backend contracts', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(response(message))
     const payload = { type: 'TEXT' as const, content: { text: '普通讨论' }, replyToId: 'm1', mentions: [], clientMessageId: 'send-1' }
     expect(await chatApi.send('p1', 'g1', payload)).toEqual(message)
-    expect(fetch).toHaveBeenCalledWith('/api/projects/p1/groups/g1/messages', expect.objectContaining({ method: 'POST', body: JSON.stringify(payload), headers: expect.objectContaining({ 'Idempotency-Key': 'send-1' }) }))
+    expect(fetch).toHaveBeenCalledWith('/api/projects/p1/groups/g1/messages', expect.objectContaining({ method: 'POST', body: JSON.stringify(payload) }))
   })
   it('stops Qgent execution by trigger message and imports by numeric provider ID', async () => {
     const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => response({ cancelledRuns: 2 }))

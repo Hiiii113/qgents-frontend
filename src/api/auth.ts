@@ -62,7 +62,7 @@ export const authApi = {
     return request<MeResponse>('/me', { signal })
   },
 
-  /** PATCH /me — 修改昵称和头像（写操作由 client 自动带 Idempotency-Key） */
+  /** PATCH /me — 修改昵称和头像 */
   updateMe(payload: UpdateMePayload) {
     return request<User>('/me', { method: 'PATCH', body: payload })
   },

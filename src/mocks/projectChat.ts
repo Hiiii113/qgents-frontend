@@ -117,7 +117,7 @@ export const projectChatHandlers = [
   }),
   http.post(`${path}/messages`, async ({ params, request }) => {
     const body = await request.json() as SendChatMessage
-    const key = `${params.groupId}:${request.headers.get('Idempotency-Key') || body.clientMessageId}`
+    const key = `${params.groupId}:${body.clientMessageId}`
     const existing = sent.get(key); if (existing) return HttpResponse.json({ data: existing })
     const project = findProject(params.projectId); if (!project) return notFound()
     const group = groups.get(String(params.groupId)); if (!group || group.projectId !== project.id) return notFound()

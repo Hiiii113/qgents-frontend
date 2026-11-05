@@ -12,7 +12,6 @@ function response(status: number, body: unknown): Response {
 describe('API client authentication recovery', () => {
   beforeEach(() => {
     localStorage.clear()
-    vi.stubGlobal('crypto', { randomUUID: () => 'idempotency-key' })
   })
 
   afterEach(() => {
@@ -27,9 +26,9 @@ describe('API client authentication recovery', () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(response(401, { error: { message: 'Token expired' } }))
       .mockResolvedValueOnce(response(200, { data: { accessToken: 'new-access-token', refreshToken: 'new-refresh-token' } }))
-      .mockResolvedValueOnce(response(200, { data: { id: 'group-1' } }))
+      .mockResolvedValueOnce(response(200, { data: { id: '1' } }))
 
-    await expect(request<{ id: string }>('/projects/project-1/groups')).resolves.toEqual({ id: 'group-1' })
+    await expect(request<{ id: string }>('/projects/project-1/groups')).resolves.toEqual({ id: '1' })
 
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/auth/refresh', expect.objectContaining({
       method: 'POST',

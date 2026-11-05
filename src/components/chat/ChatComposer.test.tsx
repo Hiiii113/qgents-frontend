@@ -20,7 +20,7 @@ describe('chat composition', () => {
     expect(send.mock.calls[0][0]).toMatchObject({ type: 'TEXT', content: { text: '一起讨论方案' }, mentions: [] })
     expect(send.mock.calls[0][0]).not.toHaveProperty('taskConfig')
   })
-  it('replies as TEXT with replyToId and preserves the idempotency key on retry', async () => {
+  it('replies as TEXT with replyToId and reuses the client message id on retry', async () => {
     const send = vi.fn<(body: SendChatMessage) => Promise<unknown>>().mockRejectedValueOnce(new Error('网络中断')).mockResolvedValue({})
     show(send, { id: 'm1', groupId: 'g1', type: 'TEXT', content: { text: '原消息' }, senderType: 'USER', senderName: '张工', createdAt: '2026-10-01T00:00:00Z' })
     fireEvent.change(screen.getByLabelText('消息内容'), { target: { value: '继续这个想法' } })

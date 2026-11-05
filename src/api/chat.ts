@@ -23,7 +23,7 @@ export const chatApi = {
   message: (projectId: string, groupId: string, messageId: string) =>
     request<ChatMessage>(`${groupPath(projectId, groupId)}/messages/${encodeURIComponent(messageId)}`),
   send: (projectId: string, groupId: string, body: SendChatMessage) =>
-    request<ChatMessage>(`${groupPath(projectId, groupId)}/messages`, { method: 'POST', body, headers: { 'Idempotency-Key': body.clientMessageId } }),
+    request<ChatMessage>(`${groupPath(projectId, groupId)}/messages`, { method: 'POST', body }),
   cancel: (projectId: string, groupId: string, messageId: string) =>
     request<{ cancelledRuns: number }>(`${groupPath(projectId, groupId)}/messages/${encodeURIComponent(messageId)}/cancel-agent`, { method: 'POST' }),
   read: (projectId: string, groupId: string) =>
