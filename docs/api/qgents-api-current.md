@@ -22,7 +22,7 @@
 
 公开发送类型为 `TEXT/CODE/IMAGE/FILE`，响应还包含 `SYSTEM`。请求使用结构化 `content`、可选 `mentions`、可选 `replyToId` 和 `clientMessageId`。回复保持原类型，使用 `replyToId + content`，不发送 QUOTE、replyText 或 Task 配置。普通消息不触发工作；明确的 `{ type: 'AGENT', id: '00000000-0000-0000-0000-000000000001' }` 提及才触发固定 Qgent。Qgent 消息响应使用 `senderType: 'AGENT'` 与固定 `senderId`。停止权限由后端校验，前端提供给原发送者及项目管理员。
 
-消息使用同一请求链路。发送重试复用消息 ID 和幂等键，增量同步按服务端 sequence 去重。WebSocket 只提供刷新信号；断线恢复和可见页面轮询通过 REST 补齐。当前没有公开 Agent 执行进度或 token 流接口，前端不虚构运行状态。
+消息使用同一请求链路。发送重试复用客户端消息 ID（clientMessageId），服务端据此去重；增量同步按服务端 sequence 去重。WebSocket 只提供刷新信号；断线恢复和可见页面轮询通过 REST 补齐。当前没有公开 Agent 执行进度或 token 流接口，前端不虚构运行状态。
 
 ## 固定 Qgent 与知识
 
@@ -44,7 +44,7 @@ Skill 与 Memory 在项目层维护。详情中提供编辑、提交审核、批
 
 登录、注册、验证码、密码重置、个人资料、团队与邀请、项目成员、通知及头像保留现有请求链。通知类型为 `MESSAGE_MENTION/INVITED/TEAM_JOINED/PROJECT_ADDED`；提及通知打开项目聊天并定位 `resourceId` 对应消息。
 
-附件按配置使用本地磁盘或 OSS，走申请上传、上传文件、确认、预览/下载链路。OSS 返回签名 PUT 地址供浏览器直传，本地返回后端 PUT 地址；前端使用返回的方法与请求头，仅对当前 API 来源及路径的上传添加登录凭证和幂等键。确认成功后才返回可用于消息的附件 ID。IMAGE/FILE 消息必须携带 `attachmentId`，媒体类型使用 `mediaType`，不从 URL 推断附件 ID。团队当前成员身份统一使用 `role`。Mock 是演示数据，不能证明生产环境已接通外部存储、GitHub 或 Qgent 工作环境。
+附件按配置使用本地磁盘或 OSS，走申请上传、上传文件、确认、预览/下载链路。OSS 返回签名 PUT 地址供浏览器直传，本地返回后端 PUT 地址；前端使用返回的方法与请求头，仅对当前 API 来源及路径的上传添加登录凭证。确认成功后才返回可用于消息的附件 ID。IMAGE/FILE 消息必须携带 `attachmentId`，媒体类型使用 `mediaType`，不从 URL 推断附件 ID。团队当前成员身份统一使用 `role`。Mock 是演示数据，不能证明生产环境已接通外部存储、GitHub 或 Qgent 工作环境。
 
 登录后调用 GET /me，返回 user、带头像的 teams、projects 与 currentTeamId；服务端恢复最近团队，失去权限时回退到首个可用团队，无团队时返回 null。PUT /me/current-team 请求 { teamId } 保存最近选择并校验成员权限。退出登录清除当前团队和账户查询缓存。
 
