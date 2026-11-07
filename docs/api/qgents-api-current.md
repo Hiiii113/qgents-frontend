@@ -28,7 +28,7 @@
 
 前端不提供团队 Agent 创建、审核、编辑、头像和身份配置接口；用户只与固定身份 Qgent 对话。聊天中按当前群成员展示可提及对象，名称固定为 Qgent，不使用后端可变昵称或头像。
 
-Skill 与 Memory 在项目层维护。详情中提供编辑、提交审核、批准、拒绝和归档，不依赖交付中心。Skill 创建者或管理员可编辑未归档内容，发布内容修改立即生效；Memory 仅草稿及审核中可编辑，已发布知识归档需要管理员。独立 AI 沉淀草稿接口已移除，Memory 响应不再包含该流程的 `source` 与 `sources` 字段。Qgent 通过聊天工具按需查询与操作 Memory，不提供额外的 AI 草稿接口。
+Skill 与项目记忆在项目层维护。Skill 保留编辑、提交审核、批准、拒绝和归档：创建者或管理员可编辑未归档内容，发布内容修改立即生效。项目记忆是项目目录下的单个 `memory.md`，用 `GET /projects/{projectId}/memory` 读取全文、`version` 和 `updatedAt`，用 `PUT /projects/{projectId}/memory` 带上读取到的 `version` 整篇保存；版本不一致返回 409 `MEMORY_VERSION_CONFLICT`，超出上下文字符预算返回 409 `MEMORY_CONTEXT_LIMIT_EXCEEDED`。项目成员均可读写，没有草稿、审核或归档状态。Qgent 通过 `read_project_memory` 和 `write_project_memory` 读写同一个文件，写入前先用普通文字征得用户同意。
 
 ## 可选 GitHub 能力
 
