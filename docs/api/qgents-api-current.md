@@ -4,7 +4,7 @@
 
 ## 项目与聊天
 
-每个项目自动拥有一个默认群聊并包含固定 Qgent；项目成员可创建新群，按需邀请项目成员及 Qgent。默认群对项目成员开放，新群仅向群成员开放。群聊无独立简介字段，创建、修改、群响应和执行上下文均不携带简介；群名通过 `title` 修改。聊天协议保留 `AGENT` 成员类型，固定 Qgent ID 为 `00000000-0000-0000-0000-000000000001`；创建或邀请请求的 `agentIds` 只能包含该 ID。创建项目只传 `name`、`description`、可选 `memberIds`，仓库随后按需导入。项目读写、成员增删和角色调整、头像、归档与恢复使用 `ProjectController` 接口；项目响应包含 `githubEnabled`（缺省默认 `true`），项目管理员通过 `PATCH /projects/{projectId}` 更新；不存在项目 `/settings` 配置接口，也不再通过退出群聊退出项目。
+每个项目自动拥有一个默认群聊并包含固定 Qgent；项目成员可创建新群，按需邀请项目成员及 Qgent。默认群对项目成员开放，新群仅向群成员开放。群聊无独立简介字段，创建、修改、群响应和执行上下文均不携带简介；群名通过 `title` 修改。聊天协议保留 `AGENT` 成员类型，固定 Qgent ID 为 `00000000-0000-0000-0000-000000000001`；创建或邀请请求的 `agentIds` 只能包含该 ID。创建项目只传 `name`、`description`、可选 `memberIds`，仓库随后按需导入。项目读写、成员增删和角色调整、头像、归档与恢复使用 `ProjectController` 接口；`PATCH /projects/{projectId}` 只更新 `name`、`description`、`avatarUrl`，三者都不传时返回 422；不存在项目 `/settings` 配置接口，也不再通过退出群聊退出项目。
 
 | 操作 | 接口 |
 | --- | --- |
@@ -30,9 +30,9 @@
 
 Skill 与项目记忆在项目层维护。Skill 保留编辑、提交审核、批准、拒绝和归档：创建者或管理员可编辑未归档内容，发布内容修改立即生效。项目记忆是项目目录下的单个 `memory.md`，用 `GET /projects/{projectId}/memory` 读取全文、`version` 和 `updatedAt`，用 `PUT /projects/{projectId}/memory` 带上读取到的 `version` 整篇保存；版本不一致返回 409 `MEMORY_VERSION_CONFLICT`，超出上下文字符预算返回 409 `MEMORY_CONTEXT_LIMIT_EXCEEDED`。项目成员均可读写，没有草稿、审核或归档状态。Qgent 通过 `read_project_memory` 和 `write_project_memory` 读写同一个文件，写入前先用普通文字征得用户同意。
 
-## 可选 GitHub 能力
+## GitHub 能力
 
-项目使用 `githubEnabled` 布尔开关，默认开启；仅项目管理员可通过 `PATCH /projects/{projectId}` 更新。开启后 Qgent 可使用团队 GitHub App 授权，并操作导入到该项目的仓库。该能力不绑定到用户可配置的 Agent 身份。
+项目没有 GitHub 开关。团队连接 GitHub App 授权仓库，项目管理员把需要的仓库导入项目，Qgent 即可使用团队 App 授权且已导入当前项目的仓库；该能力不绑定到用户可配置的 Agent 身份。项目设置的基本信息页不再显示 GitHub 开关，团队连接页与项目仓库导入页保留。
 
 团队 GitHub App 安装：`/teams/{teamId}/integrations/github/installations`，连接请求附带 `client=WEB`，返回 `installationUrl`。安装数据使用 `suspended`，不使用历史 `status`。团队所有者可以连接、同步和移除安装记录。
 

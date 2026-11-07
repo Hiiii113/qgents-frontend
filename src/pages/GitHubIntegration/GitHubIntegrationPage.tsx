@@ -45,7 +45,7 @@ export function GitHubIntegrationPage() {
             {owner && <div className="workspace-card__actions"><Button type="text" size="small" icon={<ReloadOutlined />} loading={action.isPending && action.variables?.id === connection.id} onClick={() => action.mutate({ id: connection.id, kind: 'sync' })}>刷新授权</Button>
               <Popconfirm title="解除团队的 GitHub 连接？" description="相关仓库会从项目导入列表移除，GitHub 仓库本身不会删除。" onConfirm={() => action.mutateAsync({ id: connection.id, kind: 'disconnect' })}><Button type="text" size="small" danger>解除连接</Button></Popconfirm></div>}
           </article>)}</div>}
-    <p className="workspace-page__note">GitHub 能力默认开启。连接后，在项目仓库页导入 Qgent 可使用的仓库；项目管理员可在项目设置中关闭此能力。导入仓库不会自动执行代码操作。</p>
+    <p className="workspace-page__note">连接后，在项目仓库页导入 Qgent 可使用的仓库；Qgent 只使用团队 App 授权、且已导入当前项目的仓库。导入仓库不会自动执行代码操作。</p>
   </WorkspacePage>
 }
 export default GitHubIntegrationPage

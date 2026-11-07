@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { Alert, App, Avatar, Button, Form, Input, Popconfirm, Skeleton, Space, Switch, Upload } from 'antd'
+import { Alert, App, Avatar, Button, Form, Input, Popconfirm, Skeleton, Space, Upload } from 'antd'
 import { CameraOutlined, UploadOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
@@ -47,15 +47,6 @@ function ProjectSettings({ project }: { project: Project }) {
     },
     onError: error => setActionError(formatApiError(error)),
   })
-  const github = useMutation({
-    mutationFn: (enabled: boolean) => projectApi.update(project.id, { githubEnabled: enabled }),
-    onSuccess: updated => {
-      client.setQueryData(['projects', project.id], updated)
-      setActionError(null)
-      void message.success(updated.githubEnabled === false ? '项目 GitHub 能力已关闭' : '项目 GitHub 能力已开启')
-    },
-    onError: error => setActionError(formatApiError(error)),
-  })
   return <div className="workspace-card" style={{ maxWidth: 680 }}>
     {actionError && <Alert type="error" showIcon message={actionError} />}
     <Space style={{ marginBottom: 24 }}>
@@ -69,11 +60,6 @@ function ProjectSettings({ project }: { project: Project }) {
       <Form.Item name="description" label="项目描述" rules={[{ max: 16000 }]}><Input.TextArea autoSize={{ minRows: 3, maxRows: 8 }} maxLength={16000} /></Form.Item>
       {editable && <Button type="primary" htmlType="submit" loading={update.isPending}>保存资料</Button>}
     </Form>
-    <div style={{ marginTop: 32, paddingTop: 20, borderTop: '1px solid #e5e9e4' }}>
-      <h3>GitHub 能力</h3>
-      <p>开启后，Qgent 可使用团队 GitHub App 授权并导入到此项目的仓库。</p>
-      <Switch aria-label="启用项目 GitHub 能力" checkedChildren="已开启" unCheckedChildren="已关闭" checked={project.githubEnabled ?? true} disabled={!editable || github.isPending} loading={github.isPending} onChange={enabled => github.mutate(enabled)} />
-    </div>
     {editable && <div style={{ marginTop: 32, paddingTop: 20, borderTop: '1px solid #e5e9e4' }}>
       <h3>{project.status === 'ARCHIVED' ? '恢复项目' : '归档项目'}</h3>
       <p>{project.status === 'ARCHIVED' ? '恢复后可继续协作。' : '暂时结束项目协作时，可以归档项目。'}</p>

@@ -19,8 +19,8 @@ describe('current Mock chat protocol', () => {
     const detail = await json(window.location.origin + `/api/teams/${team.data.id}`)
     expect(detail.data.id).toBe(team.data.id)
     const project = await json(window.location.origin + `/api/teams/${team.data.id}/projects`, { name: '聊天项目' })
-    const projectDetail = await fetch(window.location.origin + `/api/projects/${project.data.id}`).then(response => response.json()) as { data: { githubEnabled: boolean } }
-    expect(projectDetail.data.githubEnabled).toBe(true)
+    const projectDetail = await fetch(window.location.origin + `/api/projects/${project.data.id}`).then(response => response.json()) as { data: { name: string } }
+    expect(projectDetail.data.name).toBe('聊天项目')
     const groups = await fetch(window.location.origin + `/api/projects/${project.data.id}/groups`).then(response => response.json()) as { data: Array<{ id: string; defaultGroup: boolean }> }
     expect(groups.data).toHaveLength(1)
     expect(groups.data[0].defaultGroup).toBe(true)

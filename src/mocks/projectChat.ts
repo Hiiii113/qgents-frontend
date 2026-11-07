@@ -45,7 +45,7 @@ export const projectChatHandlers = [
   http.get('/api/teams/:teamId/projects', ({ params }) => HttpResponse.json({ data: MOCK_PROJECTS[String(params.teamId)] ?? [] })),
   http.post('/api/teams/:teamId/projects', async ({ params, request }) => {
     const body = await request.json() as { name: string; description?: string; memberIds?: string[] }
-    const project: Project = { id: nextMockId(), teamId: String(params.teamId), name: body.name, description: body.description, role: 'PROJECT_ADMIN', status: 'ACTIVE', createdAt: new Date().toISOString(), memberCount: (body.memberIds?.filter(id => id !== MOCK_USER.id).length ?? 0) + 1, githubEnabled: true }
+    const project: Project = { id: nextMockId(), teamId: String(params.teamId), name: body.name, description: body.description, role: 'PROJECT_ADMIN', status: 'ACTIVE', createdAt: new Date().toISOString(), memberCount: (body.memberIds?.filter(id => id !== MOCK_USER.id).length ?? 0) + 1 }
     ;(MOCK_PROJECTS[project.teamId] ??= []).push(project)
     MOCK_PROJECT_MEMBERS[project.id] = MOCK_TEAM_MEMBERS.filter(member => member.userId === MOCK_USER.id || body.memberIds?.includes(member.userId)).map(member => ({ ...member, role: member.userId === MOCK_USER.id ? 'PROJECT_ADMIN' : 'PROJECT_MEMBER' }))
     groupFor(project)
@@ -54,7 +54,7 @@ export const projectChatHandlers = [
   http.get('/api/projects/:projectId', ({ params }) => { const project = findProject(params.projectId); return project ? HttpResponse.json({ data: project }) : notFound() }),
   http.patch('/api/projects/:projectId', async ({ params, request }) => {
     const project = findProject(params.projectId); if (!project) return notFound()
-    const body = await request.json() as { name?: string; description?: string; avatarUrl?: string; githubEnabled?: boolean }
+    const body = await request.json() as { name?: string; description?: string; avatarUrl?: string }
     Object.assign(project, body); return HttpResponse.json({ data: project })
   }),
   ...(['archive', 'restore'] as const).map(action => http.post(`/api/projects/:projectId/${action}`, ({ params }) => {

@@ -34,13 +34,13 @@ export const MOCK_TEAM_MEMBERS = [
 
 export const MOCK_PROJECTS: Record<string, Project[]> = {
   '1': [
-    { id: '1', teamId: '1', name: 'Demo Project', description: 'Demo project for Mock acceptance', createdAt: '2026-08-13T00:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 2, status: 'ACTIVE', githubEnabled: true },
-    { id: '2', teamId: '1', name: 'Qgents', description: '团队成员与 Qgent 云端协作开发平台', createdAt: '2026-07-01T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 3, memberCount: 5, status: 'ACTIVE', githubEnabled: true },
-    { id: '3', teamId: '1', name: '宠影记', description: '宠物健康管理小程序', createdAt: '2026-07-15T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 4, status: 'ACTIVE', githubEnabled: true },
+    { id: '1', teamId: '1', name: 'Demo Project', description: 'Demo project for Mock acceptance', createdAt: '2026-08-13T00:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 2, status: 'ACTIVE' },
+    { id: '2', teamId: '1', name: 'Qgents', description: '团队成员与 Qgent 云端协作开发平台', createdAt: '2026-07-01T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 3, memberCount: 5, status: 'ACTIVE' },
+    { id: '3', teamId: '1', name: '宠影记', description: '宠物健康管理小程序', createdAt: '2026-07-15T08:00:00Z', role: 'PROJECT_ADMIN', repositoryCount: 1, memberCount: 4, status: 'ACTIVE' },
   ],
   '2': [
-    { id: '4', teamId: '2', name: 'AI 决策系统', description: '校园选课推荐与学业规划', createdAt: '2026-06-10T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 2, memberCount: 6, status: 'ACTIVE', githubEnabled: true },
-    { id: '5', teamId: '2', name: '校园助手', description: '课表、成绩、图书馆一站式查询', createdAt: '2026-08-01T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 1, memberCount: 3, status: 'ARCHIVED', githubEnabled: true },
+    { id: '4', teamId: '2', name: 'AI 决策系统', description: '校园选课推荐与学业规划', createdAt: '2026-06-10T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 2, memberCount: 6, status: 'ACTIVE' },
+    { id: '5', teamId: '2', name: '校园助手', description: '课表、成绩、图书馆一站式查询', createdAt: '2026-08-01T08:00:00Z', role: 'PROJECT_MEMBER', repositoryCount: 1, memberCount: 3, status: 'ARCHIVED' },
   ],
 }
 
