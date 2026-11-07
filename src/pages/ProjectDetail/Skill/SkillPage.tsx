@@ -1,4 +1,4 @@
-import { KnowledgeActions } from '@/components/KnowledgeActions'
+import { SkillActions } from '@/components/SkillActions'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -260,7 +260,7 @@ function SkillDetail({
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 16 }}>
-          <KnowledgeActions kind="skill" projectId={skill.projectId} id={skill.id} creatorId={skill.creator.id} status={skill.status} onEdit={onEdit} />
+          <SkillActions projectId={skill.projectId} id={skill.id} creatorId={skill.creator.id} status={skill.status} onEdit={onEdit} />
         </div>
       </Space>
     </Drawer>

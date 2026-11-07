@@ -102,7 +102,7 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
     if (groupId && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('qgents:message-event', { detail: { ...frame.payload, projectId, groupId } }))
     return
   }
-  if (type.startsWith('memory.')) void queryClient.invalidateQueries({ queryKey: ['memories', projectId] })
+  if (type.startsWith('memory.')) void queryClient.invalidateQueries({ queryKey: ['memory', projectId] })
   if (type.startsWith('skill.')) void queryClient.invalidateQueries({ queryKey: ['skills', projectId] })
   if (type.startsWith('repository.')) void queryClient.invalidateQueries({ queryKey: ['repositories', projectId] })
   if (type.startsWith('group.')) {

@@ -28,7 +28,7 @@ function openSettings(path: string) {
     client.setQueryData(['projects', 'p1', 'members'], [{ userId: 'u1', displayName: '创建者', role: 'PROJECT_ADMIN' }])
     client.setQueryData(['teams', 't1', 'members'], [])
     client.setQueryData(['skills', 'p1'], [])
-    client.setQueryData(['memories', 'p1'], [])
+    client.setQueryData(['memory', 'p1'], { projectId: 'p1', content: '', version: '1', updatedAt: new Date().toISOString() })
     client.setQueryData(['repositories', 'p1'], [])
   })
 }
@@ -41,7 +41,7 @@ it('opens every management capability from the same horizontal tabs and preserve
   ])
   for (const [label, path, control] of [
     ['Skill', 'skills', '新建 Skill'],
-    ['共享知识', 'memory', '新建 Memory'],
+    ['共享知识', 'memory', '保存'],
     ['项目仓库', 'code', '导入仓库'],
   ]) {
     fireEvent.click(screen.getByRole('tab', { name: label }))

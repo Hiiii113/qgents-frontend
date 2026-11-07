@@ -1,42 +1,18 @@
 /**
- * 共享 Memory —— 当前接口
+ * 项目长期记忆 —— 项目目录下的 memory.md 单文件
  *
- * Memory 是经人工确认后供项目复用的知识，不是原始聊天记录。
+ * 正文只有一份，人工编辑和 Qgent 的 write_project_memory 都写这个文件。
  */
 
-// Memory 状态：DRAFT -> PENDING_REVIEW -> APPROVED / REJECTED / ARCHIVED
-export type MemoryStatus =
-  | 'DRAFT'
-  | 'PENDING_REVIEW'
-  | 'APPROVED'
-  | 'REJECTED'
-  | 'ARCHIVED'
-
-// 创建者 / 审核者摘要（展示用）
-export interface MemoryActor {
-  id: string
-  displayName: string
-}
-
-export interface Memory {
-  id: string
+export interface ProjectMemory {
   projectId: string
-  title: string
   content: string
-  category: string
-  tags: string[]
-  status: MemoryStatus
-  creator: MemoryActor
-  reviewer: MemoryActor | null
-  reviewedAt: string | null
-  createdAt: string
+  /** 内容版本（正文 SHA-256），保存时带回，用于检测并发修改 */
+  version: string
   updatedAt: string
 }
 
-// 创建 Memory 请求体（POST /memories）
-export interface CreateMemoryPayload {
-  title: string
+export interface SaveProjectMemoryPayload {
   content: string
-  category: string
-  tags: string[]
+  version: string
 }
