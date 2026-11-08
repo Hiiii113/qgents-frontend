@@ -7,6 +7,7 @@ import type { ChatMember, ChatMessage } from '@/types/chat'
 
 interface Props {
   messages: ChatMessage[]
+  projectId?: string
   participants?: ChatMember[]
   loading: boolean
   hasMore: boolean
@@ -130,7 +131,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
               className={props.targetId === item.id ? 'chat-timeline__row is-located' : 'chat-timeline__row'}
               style={{ position: 'absolute', width: '100%', top: 0, left: 0, transform: `translateY(${row.start}px)` }}>
               {showDate && <div className="chat-timeline__date">{date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}</div>}
-              <ChatMessageRow item={item} reply={item.replyToId ? byId.get(item.replyToId) : undefined}
+              <ChatMessageRow item={item} projectId={props.projectId} reply={item.replyToId ? byId.get(item.replyToId) : undefined}
                 sender={senders.get(`${item.senderType}:${item.senderId}`)}
                 currentUserId={props.currentUserId} canStop={canStop} stopping={props.stoppingId === item.id}
                 onReply={props.onReply} onStop={props.onStop} onPreview={props.onPreview} onLocate={props.onLocate} />

@@ -94,7 +94,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
     </header>
     {chat.query.isError && <Alert showIcon type="error" message={formatApiError(chat.query.error)} action={<Button onClick={() => void chat.query.refetch()}>重试</Button>} />}
     {chat.syncError && <Alert type="warning" showIcon message="消息同步暂时中断，恢复连接后会自动补齐" />}
-    <ChatMessageList messages={chat.messages} participants={participants} loading={chat.query.isPending} hasMore={chat.query.hasNextPage} loadingOlder={chat.query.isFetchingNextPage}
+    <ChatMessageList messages={chat.messages} projectId={projectId} participants={participants} loading={chat.query.isPending} hasMore={chat.query.hasNextPage} loadingOlder={chat.query.isFetchingNextPage}
       currentUserId={user?.id} isAdmin={isAdmin} stoppedIds={stoppedIds} stoppingId={stop.isPending ? stop.variables?.id : undefined}
       targetId={targetId} onReadingLatestChange={setReadingLatest} onLoadOlder={loadOlder} onReply={handleReply} onStop={handleStop} onPreview={handlePreview} onLocate={onLocate} />
     {project.data?.status === 'ARCHIVED' && <Alert type="info" showIcon message="项目已归档，可以查看历史消息，恢复项目后可继续聊天。" />}

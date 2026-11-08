@@ -6,8 +6,8 @@ afterEach(() => {
   localStorage.clear()
 })
 
-describe('attachmentApi.previewUrl', () => {
-  it('requests the preview metadata endpoint with the attachment id', async () => {
+describe('attachmentApi.info', () => {
+  it('requests attachment metadata with the attachment id', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
       data: {
         attachmentId: 'att-1',
@@ -16,22 +16,22 @@ describe('attachmentApi.previewUrl', () => {
         sizeBytes: 102400,
         previewable: true,
         previewType: 'IMAGE',
-        previewUrl: '/api/v1/projects/project-1/attachments/att-1/preview?token=abc',
-        downloadUrl: 'https://oss.example.com/x?Expires=1&Signature=s',
+        contentUrl: '/api/v1/projects/project-1/attachments/att-1/content?token=abc',
         expiresAt: '2026-08-18T12:15:00Z',
       },
       requestId: 'request-1',
     }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
 
-    const result = await attachmentApi.previewUrl('1', 'att-1')
+    const result = await attachmentApi.info('1', 'att-1')
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/projects/1/attachments/att-1/preview-url',
+      '/api/projects/1/attachments/att-1',
       expect.any(Object),
     )
     expect(result).toMatchObject({
       attachmentId: 'att-1',
       previewable: true,
       previewType: 'IMAGE',
+      contentUrl: '/api/v1/projects/project-1/attachments/att-1/content?token=abc',
     })
   })
 })
@@ -42,8 +42,8 @@ describe('resolvePreviewUrl', () => {
   })
 
   it('maps backend paths through the configured API base', () => {
-    expect(resolvePreviewUrl('/api/v1/projects/p/attachments/a/preview?token=x')).toBe(
-      `${window.location.origin}/api/projects/p/attachments/a/preview?token=x`,
+    expect(resolvePreviewUrl('/api/v1/projects/p/attachments/a/content?token=x')).toBe(
+      `${window.location.origin}/api/projects/p/attachments/a/content?token=x`,
     )
   })
 })

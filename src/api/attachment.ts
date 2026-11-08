@@ -12,22 +12,20 @@ export interface AttachmentCredential {
 /** 附件预览类型（服务端判定） */
 export type AttachmentPreviewType = 'IMAGE' | 'PDF' | 'TEXT' | 'CODE' | 'UNSUPPORTED'
 
-/** GET .../attachments/{attachmentId}/preview-url 响应 */
-export interface AttachmentPreview {
+/** GET .../attachments/{attachmentId} 响应 */
+export interface AttachmentInfo {
   attachmentId: string
   fileName: string
   mediaType: string | null
   sizeBytes: number | null
   previewable: boolean
   previewType: AttachmentPreviewType
-  // 短期预览地址，使用 resolvePreviewUrl 转换后打开。
-  previewUrl: string
-  // 下载地址；不可下载时为 null。
-  downloadUrl: string | null
+  // 短期内容地址（带 token），使用 resolvePreviewUrl 转换后交给 img/iframe/fetch。
+  contentUrl: string
   expiresAt: string
 }
 
-/** 附件上传、确认与预览。 */
+/** 附件上传、确认、信息与内容访问。 */
 export const attachmentApi = {
   /** 创建对象存储直传凭证 */
   createCredential(
@@ -48,23 +46,14 @@ export const attachmentApi = {
     )
   },
 
-  /** 需要登录鉴权的内容地址：消息 content.url 直接填此值 */
+  /** 需要登录鉴权的内容地址：消息 content.url 与聊天缩略图使用此值 */
   contentUrl(projectId: string, attachmentId: string): string {
     return `${getApiBaseUrl()}/projects/${projectId}/attachments/${attachmentId}/content`
   },
 
-  /** 无需 Bearer 的短期下载地址 */
-  getDownloadUrl(projectId: string, attachmentId: string) {
-    return request<{ attachmentId: string; downloadUrl: string; expiresAt: string }>(
-      `/projects/${projectId}/attachments/${attachmentId}/download-url`,
-    )
-  },
-
-  /** 获取预览元数据和短期预览地址。 */
-  previewUrl(projectId: string, attachmentId: string) {
-    return request<AttachmentPreview>(
-      `/projects/${projectId}/attachments/${attachmentId}/preview-url`,
-    )
+  /** 获取附件信息和短期内容地址。 */
+  info(projectId: string, attachmentId: string) {
+    return request<AttachmentInfo>(`/projects/${projectId}/attachments/${attachmentId}`)
   },
 }
 
