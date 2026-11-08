@@ -54,7 +54,7 @@ export default function CreateTeamPage() {
         name: name.trim(),
         description: description.trim() || undefined,
       })
-      // 选了头像：创建成功后用返回的 teamId 上传并回写
+      // 选了头像：创建成功后用返回的 teamId 上传，确认接口直接写入团队头像
       if (avatarFile) {
         setAvatarUploading(true)
         try {
@@ -64,8 +64,7 @@ export default function CreateTeamPage() {
           })
           const putRes = await fetch(credential.uploadUrl, { method: 'PUT', body: await avatarFile.arrayBuffer() })
           if (!putRes.ok) throw new Error(`头像上传失败（${putRes.status}）`)
-          const result = await teamApi.avatarConfirm(team.id, credential.objectKey)
-          await teamApi.update(team.id, { avatarUrl: result.avatarUrl })
+          await teamApi.avatarConfirm(team.id, credential.objectKey)
         } catch {
           // 消息提示由应用层显示，跳转到团队后仍可看到上传失败。
           void message.warning('团队已创建，但头像未能上传。请在团队设置中重新上传。')

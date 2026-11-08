@@ -43,7 +43,7 @@ export interface CreateProjectPayload {
   description?: string
   // 初始项目成员 userId 列表
   memberIds?: string[]
-  // 项目头像 URL（PATCH 更新用；由项目头像上传 confirm 返回）
+  // 头像由头像上传 confirm 写入；PATCH 仅接受空串清空，非空地址会被服务端拒绝
   avatarUrl?: string
 }
 

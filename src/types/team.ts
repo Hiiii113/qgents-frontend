@@ -27,11 +27,11 @@ export interface TeamMember {
   avatarUrl?: string
 }
 
-// POST /teams 请求体（创建可带 avatarUrl；PATCH 同理，空串清空、null 保留原值）
+// PATCH /teams/{teamId} 请求体；创建团队不接受 avatarUrl
 export interface CreateTeamPayload {
   name: string
   description?: string
-  // 团队头像 URL（由团队头像上传 confirm 返回，可选）
+  // 头像由头像上传 confirm 写入；这里仅用空串清空，非空地址会被服务端拒绝
   avatarUrl?: string
 }
 

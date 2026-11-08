@@ -159,7 +159,6 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
   const [form] = Form.useForm<CreateTeamPayload>()
   const queryClient = useQueryClient()
   const [avatarUploading, setAvatarUploading] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(team.avatarUrl)
 
   const updateTeam = useMutation({
     mutationFn: (payload: CreateTeamPayload) => teamApi.update(teamId, payload),
@@ -172,17 +171,14 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
 
   useEffect(() => {
     form.setFieldsValue({ name: team.name, description: team.description ?? '' })
-    setAvatarUrl(team.avatarUrl)
   }, [team, form])
 
-  /**  团队头像：签发凭证 → 直传 OSS → 确认 → PATCH 回写（仅 Owner） */
+  /** 团队头像：签发凭证 → 直传 OSS → 确认，确认接口直接写入团队头像（仅 Owner） */
   async function handleAvatarUpload(file: File): Promise<boolean> {
     if (!isOwner || avatarUploading) return false
     setAvatarUploading(true)
     try {
-      const uploaded = await teamApi.uploadAvatar(teamId, file)
-      setAvatarUrl(uploaded)
-      await teamApi.update(teamId, { avatarUrl: uploaded })
+      await teamApi.uploadAvatar(teamId, file)
       message.success('团队头像已更新')
       // 同步刷新所有展示团队头像的查询：详情页、个人菜单团队列表（key 不同，需分别失效）
       queryClient.invalidateQueries({ queryKey: ['teams', teamId] })
@@ -199,7 +195,6 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
     updateTeam.mutate({
       name: values.name.trim(),
       description: values.description?.trim() || undefined,
-      avatarUrl: avatarUrl ?? undefined,
     })
   }
 
@@ -213,7 +208,7 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
     >
       <Form.Item label="团队头像">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Avatar size={56} src={avatarUrl} icon={<CameraOutlined />} style={{ flexShrink: 0 }} />
+          <Avatar size={56} src={team.avatarUrl} icon={<CameraOutlined />} style={{ flexShrink: 0 }} />
           <Upload accept="image/*" showUploadList={false} beforeUpload={handleAvatarUpload}>
             <Button icon={<UploadOutlined />} loading={avatarUploading}>
               上传图片

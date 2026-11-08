@@ -4,7 +4,7 @@ import { App } from 'antd'
 import { projectApi } from '@/api'
 
 /**
- * 项目头像上传（签发直传凭证 → 直传 OSS → 确认返回公共 URL → PATCH /projects/{id} 回写）。
+ * 项目头像上传（签发直传凭证 → 直传 OSS → 确认，服务端直接写入头像 URL）。
  * 供项目设置「基本信息」与「创建项目」弹窗复用（v2.0.6 从群聊设置栏迁出）。
  * @param teamId 项目所属团队 id（传了则在成功后同步失效团队项目列表缓存）
  */
@@ -27,10 +27,7 @@ export function useProjectAvatarUpload(teamId?: string) {
       })
       const putRes = await fetch(credential.uploadUrl, { method: 'PUT', body: await file.arrayBuffer() })
       if (!putRes.ok) throw new Error(`头像上传失败（${putRes.status}）`)
-      const result = await projectApi.avatarConfirm(projectId, credential.objectKey)
-      // URL 追加版本参数：强制浏览器绕过缓存加载最新图（避免旧图缓存 2-3 分钟）
-      const avatarUrl = withCacheBuster(result.avatarUrl)
-      await projectApi.update(projectId, { avatarUrl })
+      await projectApi.avatarConfirm(projectId, credential.objectKey)
       // 同步刷新所有展示项目头像的查询：项目详情/群聊、团队首页-项目列表（key 不同，需分别失效）
       queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
       if (teamId) {
@@ -47,11 +44,4 @@ export function useProjectAvatarUpload(teamId?: string) {
   }
 
   return { uploading, uploadAvatar }
-}
-
-/** 给 OSS 公共读 URL 追加版本参数，强制浏览器绕过缓存加载最新图 */
-function withCacheBuster(url: string): string {
-  if (!url) return url
-  const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}v=${Date.now()}`
 }
