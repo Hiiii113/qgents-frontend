@@ -11,9 +11,11 @@ it('excludes the creator from project invitations', async () => {
     client.setQueryData(['teams', 't1', 'members'], [
       { userId: 'self', displayName: '我自己' },
       { userId: 'other', displayName: '团队伙伴' },
+      { userId: 'owner', displayName: '团队所有者', role: 'TEAM_OWNER' },
     ])
   })
   fireEvent.mouseDown(screen.getByRole('combobox'))
   expect(await screen.findByText('团队伙伴')).toBeInTheDocument()
   expect(screen.queryByText('我自己')).not.toBeInTheDocument()
+  expect(screen.queryByText('团队所有者')).not.toBeInTheDocument()
 })

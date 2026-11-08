@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  Alert,
   Button,
   Modal,
   Popconfirm,
@@ -52,9 +53,13 @@ export function ProjectMembers() {
     queryFn: () => teamApi.listMembers(project?.teamId ?? ''),
     enabled: !!project?.teamId,
   })
+  const teamOwner = teamMembers.find((member) => member.role === 'TEAM_OWNER')
+  const isTeamOwnerRow = (member: ProjectMember) => teamOwner?.userId === member.userId
 
-  const invalidate = () =>
+  const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
+    queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
+  }
 
   const removeMutation = useMutation({
     mutationFn: (userId: string) => projectApi.removeMember(projectId, userId),
@@ -65,11 +70,12 @@ export function ProjectMembers() {
     onError: (err) => message.error(formatApiError(err)),
   })
 
-  // 设为管理员 = 调整项目角色为 PROJECT_ADMIN（设置后不可撤销，前端不提供降级入口）
+  // 项目管理员可以提升、降级和移除其他管理员；团队所有者的继承权限由后端保护。
   const updateRoleMutation = useMutation({
-    mutationFn: (userId: string) => projectApi.updateMemberRole(projectId, userId, 'PROJECT_ADMIN'),
+    mutationFn: ({ userId, role }: { userId: string; role: ProjectMember['role'] }) =>
+      projectApi.updateMemberRole(projectId, userId, role),
     onSuccess: () => {
-      message.success('已设置为管理员')
+      message.success('成员角色已更新')
       invalidate()
     },
     onError: (err) => message.error(formatApiError(err)),
@@ -105,9 +111,9 @@ export function ProjectMembers() {
     })
   }
 
-  // 添加成员候选 = 团队成员 − 已在项目里的成员
+  // 添加成员候选 = 团队成员 − 已在项目里的成员；团队所有者已继承管理员权限，无需显式加入。
   const candidateMembers = teamMembers.filter(
-    (tm) => !members.some((pm) => pm.userId === tm.userId),
+    (tm) => tm.userId !== teamOwner?.userId && !members.some((pm) => pm.userId === tm.userId),
   )
 
   const columns: TableProps<ProjectMember>['columns'] = [
@@ -128,12 +134,13 @@ export function ProjectMembers() {
     },
     {
       title: '角色',
-      dataIndex: 'role',
       key: 'role',
-      width: 120,
-      render: (role: ProjectMember['role']) => (
-        <Tag color={role === 'PROJECT_ADMIN' ? 'gold' : 'default'}>
-          {role === 'PROJECT_ADMIN' ? '管理员' : '成员'}
+      width: 150,
+      render: (_, m) => isTeamOwnerRow(m) ? (
+        <Tag color="gold">继承管理员</Tag>
+      ) : (
+        <Tag color={m.role === 'PROJECT_ADMIN' ? 'gold' : 'default'}>
+          {m.role === 'PROJECT_ADMIN' ? '管理员' : '成员'}
         </Tag>
       ),
     },
@@ -142,39 +149,49 @@ export function ProjectMembers() {
           {
             title: '操作',
             key: 'action',
-            width: 220,
+            width: 240,
             render: (_: unknown, m: ProjectMember) => {
-              const isSelf = m.userId === user?.id
-              // 不能移除自己；管理员不可被操作（不能移除/降级其他管理员）
-              if (isSelf || m.role === 'PROJECT_ADMIN') {
+              if (isTeamOwnerRow(m)) {
                 return (
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    {isSelf ? '—' : '管理员不可被操作'}
+                    团队所有者
                   </Text>
                 )
               }
+              const isSelf = m.userId === user?.id
+              const nextRole = m.role === 'PROJECT_ADMIN' ? 'PROJECT_MEMBER' : 'PROJECT_ADMIN'
+              const actionLabel = m.role === 'PROJECT_ADMIN' ? '降为成员' : '设为管理员'
               return (
                 <Space size={4}>
                   <Popconfirm
-                    title="设为管理员"
-                    description="设置后无法撤销，确定将他设置为管理员吗？"
-                    okText="设为管理员"
+                    title={actionLabel}
+                    description={m.role === 'PROJECT_ADMIN'
+                      ? '该成员将失去项目管理员权限。'
+                      : '该成员将获得项目管理权限。'}
+                    okText={actionLabel}
                     cancelText="取消"
-                    onConfirm={() => updateRoleMutation.mutate(m.userId)}
+                    onConfirm={() => updateRoleMutation.mutate({ userId: m.userId, role: nextRole })}
                   >
-                    <Button size="small" type="link" loading={updateRoleMutation.isPending}>
-                      设为管理员
+                    <Button
+                      size="small"
+                      type="link"
+                      loading={updateRoleMutation.isPending
+                        && updateRoleMutation.variables?.userId === m.userId}
+                    >
+                      {actionLabel}
                     </Button>
                   </Popconfirm>
-                  <Button
-                    size="small"
-                    danger
-                    type="link"
-                    loading={removeMutation.isPending}
-                    onClick={() => confirmRemove(m)}
-                  >
-                    移除
-                  </Button>
+                  {!isSelf && (
+                    <Button
+                      size="small"
+                      danger
+                      type="link"
+                      loading={removeMutation.isPending}
+                      onClick={() => confirmRemove(m)}
+                    >
+                      移除
+                    </Button>
+                  )}
                 </Space>
               )
             },
@@ -214,6 +231,13 @@ export function ProjectMembers() {
           </Button>
         )}
       </div>
+
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message="团队所有者始终拥有本项目管理员权限（继承），无需出现在项目成员列表中。"
+      />
 
       <Table
         rowKey="userId"

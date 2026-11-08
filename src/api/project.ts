@@ -1,6 +1,6 @@
 import { request, requestPage } from './client'
 import { withQuery } from './requestHelpers'
-import type { CreateProjectPayload, Project, ProjectMember, UpdateProjectPayload } from '@/types'
+import type { CreateProjectPayload, Project, ProjectMember, ProjectRole, UpdateProjectPayload } from '@/types'
 
 /**
  * 项目管理 API —— 当前接口
@@ -89,7 +89,7 @@ export const projectApi = {
   },
 
   /** PATCH /projects/{projectId}/members/{userId} — 调整项目成员角色 */
-  updateMemberRole(projectId: string, userId: string, role: string) {
+  updateMemberRole(projectId: string, userId: string, role: ProjectRole) {
     return request<void>(`/projects/${projectId}/members/${userId}`, {
       method: 'PATCH',
       body: { role },
