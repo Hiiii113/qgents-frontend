@@ -103,10 +103,11 @@ export const identityHandlers = [
 
   http.post('/api/auth/password-resets', async ({ request }) => {
     const body = (await request.json()) as { email?: string; token?: string; newPassword?: string }
-    if (!body.email?.includes('@') || !body.token?.trim() || !body.newPassword) {
+    // 与注册一致：邮箱 + 6 位数字验证码，校验失败返回 422
+    if (!body.email?.includes('@') || !/^\d{6}$/.test(body.token?.trim() ?? '') || !body.newPassword) {
       return HttpResponse.json(
-        { error: { code: 'INVALID_RESET_TOKEN', message: '验证码无效或已过期' } },
-        { status: 400 },
+        { error: { code: 'INVALID_VERIFICATION_CODE', message: '验证码无效或已过期' } },
+        { status: 422 },
       )
     }
     return HttpResponse.json({ data: { reset: true } })

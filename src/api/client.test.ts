@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { AUTH_EXPIRED_EVENT, request } from './client'
+import {
+  AUTH_EXPIRED_EVENT,
+  beginLogout,
+  endLogout,
+  getLogoutRefreshToken,
+  refreshAccessToken,
+  request,
+} from './client'
 import { skillApi } from './skill'
 
 function response(status: number, body: unknown): Response {
@@ -60,6 +67,27 @@ Body`], 'SKILL.md')
     expect(preview.headers).not.toHaveProperty('Content-Type')
     expect(create.headers).not.toHaveProperty('Content-Type')
     expect(patch.body).toBe(JSON.stringify({ content: 'new content', tags: ['updated'] }))
+  })
+
+  it('keeps the rotated refresh token for logout instead of restoring the session', async () => {
+    localStorage.setItem('qgents_access_token', 'old-access-token')
+    localStorage.setItem('qgents_refresh_token', 'old-refresh-token')
+    let respond: (value: Response) => void = () => {}
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockImplementation(() => new Promise<Response>((resolve) => { respond = resolve }))
+
+    const refreshing = refreshAccessToken()
+    beginLogout()
+    respond(response(200, { data: { accessToken: 'new-access-token', refreshToken: 'rotated-refresh-token' } }))
+
+    await expect(refreshing).resolves.toBeNull()
+    // 登出后不写回登录态，但轮换出的新令牌要留给服务端撤销
+    expect(localStorage.getItem('qgents_access_token')).toBe('old-access-token')
+    expect(getLogoutRefreshToken()).toBe('rotated-refresh-token')
+    // 登出期间不再启动新的刷新
+    expect(await refreshAccessToken()).toBeNull()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    endLogout()
   })
 
   it('clears the session only after refresh fails', async () => {

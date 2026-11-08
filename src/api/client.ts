@@ -59,12 +59,37 @@ function getStoredRefreshToken(): string | null {
 
 /** 刷新 access token 的单例 Promise —— 并发请求同时 401 时只发一次 refresh */
 let refreshPromise: Promise<string | null> | null = null
+/** 登出流程标记：期间不启动新刷新，刷新结果也不写回登录态 */
+let loggingOut = false
+/** 登出期间的会话代号，变化后旧刷新的响应不得写回 */
+let sessionEpoch = 0
+/** 登出期间刷新成功轮换到的新 refresh token，仅供服务端撤销使用 */
+let logoutRefreshToken: string | null = null
+
+/** 进入登出状态：阻止新刷新，并让在途刷新的结果不写回登录态。 */
+export function beginLogout(): void {
+  loggingOut = true
+  sessionEpoch += 1
+}
+
+export function endLogout(): void {
+  loggingOut = false
+  logoutRefreshToken = null
+}
+
+/** 退出时需要撤销的 refresh token：优先使用登出期间轮换到的最新值。 */
+export function getLogoutRefreshToken(): string | null {
+  return logoutRefreshToken ?? getStoredRefreshToken()
+}
 
 /** 刷新 access token（供 SSE 等不走 rawRequest 的路径复用）。成功返回新 access token，失败返回 null。 */
 export async function refreshAccessToken(): Promise<string | null> {
+  // 已有刷新在途时等待它：登出也需要它轮换后的 refresh token
+  if (refreshPromise) return refreshPromise
+  if (loggingOut) return null
+  const epoch = sessionEpoch
   const refreshToken = getStoredRefreshToken()
   if (!refreshToken) return null
-  if (refreshPromise) return refreshPromise
 
   refreshPromise = (async () => {
     try {
@@ -81,6 +106,11 @@ export async function refreshAccessToken(): Promise<string | null> {
       }
       const data = json?.data
       if (data?.accessToken) {
+        if (epoch !== sessionEpoch) {
+          // 已进入登出：不写回登录态，只保留令牌用于撤销
+          logoutRefreshToken = data.refreshToken ?? null
+          return null
+        }
         localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken)
         // refresh token 可能轮换，有则更新
         if (data.refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken)
@@ -150,8 +180,8 @@ async function rawRequest(path: string, options: RequestOptions = {}): Promise<u
     const newToken = await refreshAccessToken()
     if (newToken) {
       ; ({ res, json } = await doFetch(path, options))
-    } else {
-      // 刷新也失败 → 清 token，派发事件让 AuthContext 踢回登录页
+    } else if (!loggingOut) {
+      // 刷新也失败 → 清 token，派发事件让 AuthContext 踢回登录页；登出流程自行清理
       localStorage.removeItem(ACCESS_TOKEN_KEY)
       localStorage.removeItem(REFRESH_TOKEN_KEY)
       window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))

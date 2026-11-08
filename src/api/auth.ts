@@ -85,11 +85,15 @@ export const authApi = {
     })
   },
 
-  /** POST /auth/logout — 登出，使当前 refreshToken 失效 */
-  logout(refreshToken?: string) {
+  /**
+   * POST /auth/logout — 按 refresh token 撤销服务端登录态。
+   * 不携带 Bearer：退出时 access token 可能已过期，且不应进入通用 401 自动刷新。
+   */
+  logout(refreshToken: string) {
     return request<void>('/auth/logout', {
       method: 'POST',
-      body: refreshToken ? { refreshToken } : undefined,
+      body: { refreshToken },
+      skipAuth: true,
     })
   },
 

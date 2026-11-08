@@ -1,16 +1,11 @@
 import { AuthContext, type AuthSession, type AuthContextValue } from './AuthContext'
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { message } from 'antd'
 import type { User } from '@/types'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAppUiStore } from '@/store/appUiStore'
 import { authApi } from '@/api'
-import { AUTH_EXPIRED_EVENT } from '@/api/client'
+import { AUTH_EXPIRED_EVENT, beginLogout, endLogout, getLogoutRefreshToken, refreshAccessToken } from '@/api/client'
 import { RSA_KEY_ID, encryptPassword } from '@/utils/rsaConfig'
 
 /** localStorage key */
@@ -128,18 +123,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ──── 退出 ────
   const logout = useCallback(async () => {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY) ?? undefined
+    beginLogout()
     try {
-      await authApi.logout(refreshToken)
-    } catch {
-      // 即使接口失败也要清除本地状态
+      // 等待本页面已在途的刷新，用轮换后的最新 refresh token 去撤销
+      await refreshAccessToken()
+      const refreshToken = getLogoutRefreshToken()
+      setUser(null)
+      setHasTeam(false)
+      localStorage.removeItem(ACCESS_TOKEN_KEY)
+      localStorage.removeItem(REFRESH_TOKEN_KEY)
+      useAppUiStore.getState().clearContext()
+      queryClient.clear()
+      try {
+        if (refreshToken) await authApi.logout(refreshToken)
+      } catch {
+        // 网络失败仍已完成本地退出，但服务端撤销未确认
+        void message.warning('已退出登录，但服务端未能确认撤销')
+      }
+    } finally {
+      endLogout()
     }
-    setUser(null)
-    setHasTeam(false)
-    localStorage.removeItem(ACCESS_TOKEN_KEY)
-    localStorage.removeItem(REFRESH_TOKEN_KEY)
-    useAppUiStore.getState().clearContext()
-    queryClient.clear()
   }, [queryClient])
 
   // ──── 把登录/注册结果一次性写入 state，供 LoginPage 在 navigate 的同一同步块内调用 ────

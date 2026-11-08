@@ -81,6 +81,10 @@ export default function ForgotPasswordPage() {
   async function handleReset(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    if (!/^\d{6}$/.test(token.trim())) {
+      setError('请输入 6 位数字验证码')
+      return
+    }
     if (newPassword !== confirmPassword) {
       setError('两次输入的新密码不一致')
       return
@@ -160,9 +164,11 @@ export default function ForgotPasswordPage() {
                 </span>
                 <input
                   type="text"
-                  placeholder="邮箱中的验证码 / 重置令牌"
+                  placeholder="邮箱中的验证码"
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
+                  inputMode="numeric"
+                  maxLength={6}
                   autoComplete="one-time-code"
                   required
                 />

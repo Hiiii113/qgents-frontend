@@ -58,7 +58,7 @@ describe('ForgotPasswordPage', () => {
       expect(authApiMock.resetPasswordRequest).toHaveBeenCalledWith('user@example.com')
       expect(screen.getByText(/验证码已发送至/)).toBeInTheDocument()
     })
-    expect(screen.getByPlaceholderText('邮箱中的验证码 / 重置令牌')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('邮箱中的验证码')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('新密码')).toBeInTheDocument()
   })
 
@@ -70,7 +70,7 @@ describe('ForgotPasswordPage', () => {
     await user.click(screen.getByRole('button', { name: '获取验证码' }))
     await waitFor(() => expect(screen.getByPlaceholderText('新密码')).toBeInTheDocument())
 
-    await user.type(screen.getByPlaceholderText('邮箱中的验证码 / 重置令牌'), '123456')
+    await user.type(screen.getByPlaceholderText('邮箱中的验证码'), '123456')
     await user.type(screen.getByPlaceholderText('新密码'), 'password-1')
     await user.type(screen.getByPlaceholderText('确认新密码'), 'password-2')
     await user.click(screen.getByRole('button', { name: '重置密码' }))
@@ -87,7 +87,7 @@ describe('ForgotPasswordPage', () => {
     await user.click(screen.getByRole('button', { name: '获取验证码' }))
     await waitFor(() => expect(screen.getByPlaceholderText('新密码')).toBeInTheDocument())
 
-    await user.type(screen.getByPlaceholderText('邮箱中的验证码 / 重置令牌'), '123456')
+    await user.type(screen.getByPlaceholderText('邮箱中的验证码'), '123456')
     await user.type(screen.getByPlaceholderText('新密码'), 'password-1')
     await user.type(screen.getByPlaceholderText('确认新密码'), 'password-1')
     await user.click(screen.getByRole('button', { name: '重置密码' }))
