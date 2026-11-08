@@ -89,7 +89,7 @@ export default function TeamDetailPage() {
                 onChange={(event) => setSearch(event.target.value)}
                 allowClear
               />
-              {team.data.role === 'TEAM_OWNER' && (
+              {(team.data.role === 'TEAM_OWNER' || team.data.role === 'TEAM_ADMIN') && (
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
                   创建项目
                 </Button>

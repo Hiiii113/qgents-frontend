@@ -29,13 +29,20 @@ import type { TableProps } from 'antd'
 
 const { Title, Text } = Typography
 
-const ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
-  // Owner 只能在创建团队时产生，邀请接口目前仅支持 TEAM_MEMBER。
+const INVITE_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
+  // 邀请接口目前仅创建普通成员；管理员由团队所有者后续任命。
+  { value: 'TEAM_MEMBER', label: '成员' },
+]
+
+const MEMBER_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
+  { value: 'TEAM_ADMIN', label: '管理员' },
   { value: 'TEAM_MEMBER', label: '成员' },
 ]
 
 function getRoleLabel(role: TeamRole): string {
-  return role === 'TEAM_OWNER' ? '管理员' : '成员'
+  if (role === 'TEAM_OWNER') return '所有者'
+  if (role === 'TEAM_ADMIN') return '管理员'
+  return '成员'
 }
 
 function formatCreatedAt(iso?: string): string {
@@ -72,6 +79,7 @@ export default function TeamSettingsPage() {
   })
 
   const isOwner = team?.role === 'TEAM_OWNER'
+  const canManage = isOwner || team?.role === 'TEAM_ADMIN'
 
   const disbandTeam = useMutation({
     mutationFn: () => teamApi.disband(teamId),
@@ -141,12 +149,12 @@ export default function TeamSettingsPage() {
             {
               key: 'basic',
               label: '基本信息',
-              children: <BasicInfoTab team={team} teamId={teamId} isOwner={isOwner} />,
+              children: <BasicInfoTab team={team} teamId={teamId} canManage={canManage} />,
             },
             {
               key: 'members',
               label: '成员管理',
-              children: <MembersTab teamId={teamId} members={members} isOwner={isOwner} />,
+              children: <MembersTab teamId={teamId} members={members} canManage={canManage} isOwner={isOwner} />,
             },
           ]}
         />
@@ -155,7 +163,7 @@ export default function TeamSettingsPage() {
 }
 
 /** ──── Tab 1：基本信息 ──── */
-function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; isOwner: boolean }) {
+function BasicInfoTab({ team, teamId, canManage }: { team: Team; teamId: string; canManage: boolean }) {
   const [form] = Form.useForm<CreateTeamPayload>()
   const queryClient = useQueryClient()
   const [avatarUploading, setAvatarUploading] = useState(false)
@@ -173,9 +181,9 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
     form.setFieldsValue({ name: team.name, description: team.description ?? '' })
   }, [team, form])
 
-  /** 团队头像：签发凭证 → 直传 OSS → 确认，确认接口直接写入团队头像（仅 Owner） */
+  /** 团队头像：签发凭证 → 直传 OSS → 确认，确认接口直接写入团队头像（所有者或管理员） */
   async function handleAvatarUpload(file: File): Promise<boolean> {
-    if (!isOwner || avatarUploading) return false
+    if (!canManage || avatarUploading) return false
     setAvatarUploading(true)
     try {
       await teamApi.uploadAvatar(teamId, file)
@@ -202,7 +210,7 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
     <Form
       form={form}
       layout="vertical"
-      disabled={!isOwner}
+      disabled={!canManage}
       onFinish={handleFinish}
       style={{ maxWidth: 480, margin: '0 auto' }}
     >
@@ -232,7 +240,7 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
       <Form.Item label="成立时间">
         <Text type="secondary">{formatCreatedAt(team.createdAt)}</Text>
       </Form.Item>
-      {isOwner && (
+      {canManage && (
         <div style={{display:'flex', justifyContent:'center'}}>
           <Button type="primary" htmlType="submit" loading={updateTeam.isPending}> 
             保存修改
@@ -244,7 +252,12 @@ function BasicInfoTab({ team, teamId, isOwner }: { team: Team; teamId: string; i
 }
 
 /** ──── Tab 2：成员管理 ──── */
-function MembersTab({ teamId, members, isOwner }: { teamId: string; members: TeamMember[]; isOwner: boolean }) {
+function MembersTab({ teamId, members, canManage, isOwner }: {
+  teamId: string
+  members: TeamMember[]
+  canManage: boolean
+  isOwner: boolean
+}) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [inviteEmail, setInviteEmail] = useState('')
@@ -253,7 +266,7 @@ function MembersTab({ teamId, members, isOwner }: { teamId: string; members: Tea
   const { data: invitations = [] } = useQuery({
     queryKey: ['teams', teamId, 'invitations'],
     queryFn: () => teamApi.listInvitations(teamId),
-    enabled: !!teamId && isOwner,
+    enabled: !!teamId && canManage,
   })
 
   const inviteMutation = useMutation({
@@ -282,9 +295,29 @@ function MembersTab({ teamId, members, isOwner }: { teamId: string; members: Tea
     onSuccess: () => {
       message.success('成员已移除')
       queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'members'] })
+      queryClient.invalidateQueries({ queryKey: ['teams', teamId] })
     },
     onError: (err) => message.error(formatApiError(err)),
   })
+
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: TeamRole }) =>
+      teamApi.updateMemberRole(teamId, userId, role),
+    onSuccess: () => {
+      message.success('成员角色已更新')
+      queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'members'] })
+    },
+    onError: (err) => message.error(formatApiError(err)),
+  })
+
+  function canRemove(member: TeamMember): boolean {
+    if (member.role === 'TEAM_OWNER' || member.userId === user?.id) return false
+    return isOwner || member.role === 'TEAM_MEMBER'
+  }
+
+  function canChangeRole(member: TeamMember): boolean {
+    return isOwner && member.role !== 'TEAM_OWNER' && member.userId !== user?.id
+  }
 
   function confirmRemove(member: TeamMember) {
     const name = member.displayName || member.userId
@@ -312,37 +345,43 @@ function MembersTab({ teamId, members, isOwner }: { teamId: string; members: Tea
     {
       title: '角色',
       key: 'role',
-      width: 160,
-      render: (_, m) => (
-        <Tag color={m.role === 'TEAM_OWNER' ? 'gold' : 'default'}>{getRoleLabel(m.role)}</Tag>
+      width: 180,
+      render: (_, m) => canChangeRole(m) ? (
+        <Select
+          size="small"
+          aria-label={`调整 ${m.displayName || m.userId} 的团队角色`}
+          value={m.role}
+          options={MEMBER_ROLE_OPTIONS}
+          loading={updateRoleMutation.isPending && updateRoleMutation.variables?.userId === m.userId}
+          onChange={(role) => updateRoleMutation.mutate({ userId: m.userId, role })}
+        />
+      ) : (
+        <Tag color={m.role === 'TEAM_OWNER' ? 'gold' : m.role === 'TEAM_ADMIN' ? 'blue' : 'default'}>
+          {getRoleLabel(m.role)}
+        </Tag>
       ),
     },
-    ...(isOwner
+    ...(canManage
       ? [
           {
             title: '操作',
             key: 'action',
             width: 120,
-            render: (_: unknown, m: TeamMember) => {
-              const isSelf = m.userId === user?.id
-              // 角色不可在页面直接调整（Owner 不可降级自己；成员角色由邀请/移除管理），
-              // 这里只保留「移除成员」操作；自己不可移除。
-              return !isSelf ? (
-                <Button
-                  size="small"
-                  danger
-                  type="link"
-                  loading={removeMutation.isPending}
-                  onClick={() => confirmRemove(m)}
-                >
-                  移除
-                </Button>
-              ) : (
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  —
-                </Text>
-              )
-            },
+            render: (_: unknown, m: TeamMember) => canRemove(m) ? (
+              <Button
+                size="small"
+                danger
+                type="link"
+                loading={removeMutation.isPending}
+                onClick={() => confirmRemove(m)}
+              >
+                移除
+              </Button>
+            ) : (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                —
+              </Text>
+            ),
           },
         ]
       : []),
@@ -378,7 +417,7 @@ function MembersTab({ teamId, members, isOwner }: { teamId: string; members: Tea
       key: 'createdAt',
       render: (v: string) => formatCreatedAt(v),
     },
-    ...(isOwner
+    ...(canManage
       ? [
           {
             title: '操作',
@@ -413,7 +452,13 @@ function MembersTab({ teamId, members, isOwner }: { teamId: string; members: Tea
         />
       </div>
 
-      {isOwner && (
+      {!isOwner && canManage && (
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          团队管理员可以邀请和移除普通成员，不能调整管理员或所有者。
+        </Text>
+      )}
+
+      {canManage && (
         <div>
           <Title level={5}>邀请成员</Title>
           <Space.Compact style={{ width: '100%', maxWidth: 480 }}>
@@ -425,7 +470,7 @@ function MembersTab({ teamId, members, isOwner }: { teamId: string; members: Tea
             />
             <Select
               value={inviteRole}
-              options={ROLE_OPTIONS}
+              options={INVITE_ROLE_OPTIONS}
               style={{ width: 120 }}
               onChange={(v) => setInviteRole(v)}
             />

@@ -28,3 +28,12 @@ it('welcomes the user and requests projects only for the selected team', async (
   expect(screen.queryByRole('link', { name: /设计讨论/ })).not.toBeInTheDocument()
   expect(screen.getByRole('link', { name: /研发协作/ })).toBeInTheDocument()
 })
+
+it('shows the create project action to team admins', async () => {
+  const list = vi.spyOn(projectApi, 'listByTeam').mockResolvedValue([])
+  renderWorkspace(<TeamDetailPage />, '/app/teams/t2', '/app/teams/:teamId', client => {
+    client.setQueryData(['teams', 't2'], { id: 't2', name: '团队', role: 'TEAM_ADMIN' })
+  })
+  expect(await screen.findByRole('button', { name: /创建项目/ })).toBeInTheDocument()
+  expect(list).toHaveBeenCalledWith('t2')
+})

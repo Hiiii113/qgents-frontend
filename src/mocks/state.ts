@@ -1,4 +1,4 @@
-import type { MyTeamInvitation, Project, Team } from '@/types'
+import type { MyTeamInvitation, Project, Team, TeamRole } from '@/types'
 import { MOCK_CURRENT_USER } from './currentUser'
 export const MOCK_USER: { id: string; email: string; displayName: string; avatarChar: string; avatarUrl?: string } = {
   ...MOCK_CURRENT_USER,
@@ -24,9 +24,11 @@ export const MOCK_TEAMS: Team[] = [
   },
 ]
 
-export const MOCK_TEAM_MEMBERS = [
+type MockTeamMember = { userId: string; displayName: string; email: string; role: TeamRole; avatarUrl?: string }
+
+export const MOCK_TEAM_MEMBERS: MockTeamMember[] = [
   { userId: '1', displayName: '陈同学', email: 'demo@qgents.dev', role: 'TEAM_OWNER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=陈同学' },
-  { userId: '2', displayName: '张工', email: 'zhang@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=张工' },
+  { userId: '2', displayName: '张工', email: 'zhang@example.com', role: 'TEAM_ADMIN' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=张工' },
   { userId: '3', displayName: '李设计', email: 'li@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=李设计' },
   { userId: '4', displayName: '王测试', email: 'wang@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=王测试' },
   { userId: '5', displayName: '赵架构', email: 'zhao@example.com', role: 'TEAM_MEMBER' as const, avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=赵架构' },

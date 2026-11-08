@@ -276,6 +276,20 @@ export const identityHandlers = [
     return HttpResponse.json({ data: members })
   }),
 
+  http.patch('/api/teams/:teamId/members/:userId', async ({ params, request }) => {
+    const member = MOCK_TEAM_MEMBERS.find(item => item.userId === params.userId)
+    if (!member) return HttpResponse.json({ error: { code: 'NOT_FOUND', message: '成员不存在' } }, { status: 404 })
+    const { role } = await request.json() as { role: 'TEAM_ADMIN' | 'TEAM_MEMBER' }
+    member.role = role
+    return HttpResponse.json({ data: member })
+  }),
+
+  http.delete('/api/teams/:teamId/members/:userId', ({ params }) => {
+    const index = MOCK_TEAM_MEMBERS.findIndex(item => item.userId === params.userId)
+    if (index >= 0) MOCK_TEAM_MEMBERS.splice(index, 1)
+    return HttpResponse.json({ data: null })
+  }),
+
   http.post('/api/teams/:teamId/invitations', async ({ request }) => {
     const body = (await request.json()) as { email?: string; role?: string }
     return HttpResponse.json({

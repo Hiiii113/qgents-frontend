@@ -3,7 +3,7 @@
  */
 
 // 团队角色
-export type TeamRole = 'TEAM_OWNER' | 'TEAM_MEMBER'
+export type TeamRole = 'TEAM_OWNER' | 'TEAM_ADMIN' | 'TEAM_MEMBER'
 
 export interface Team {
   id: string

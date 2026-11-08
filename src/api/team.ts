@@ -7,6 +7,7 @@ import type {
   TeamInvitation,
   AcceptInvitationResponse,
   MyTeamInvitation,
+  TeamRole,
 } from '@/types'
 
 export const teamApi = {
@@ -84,7 +85,7 @@ export const teamApi = {
 
 
   /** PATCH /teams/{teamId}/members/{userId} — 调整团队角色（仅 Team Owner） */
-  updateMemberRole(teamId: string, userId: string, role: string) {
+  updateMemberRole(teamId: string, userId: string, role: TeamRole) {
     return request<void>(`/teams/${teamId}/members/${userId}`, {
       method: 'PATCH',
       body: { role },
