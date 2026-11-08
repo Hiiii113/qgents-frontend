@@ -109,33 +109,39 @@ export default function JoinTeamPage() {
           <p className="join-team__placeholder">暂无待处理邀请</p>
         ) : (
           <ul className="join-team__invite-list">
-            {myInvitations.map((inv) => (
-              <li key={inv.id} className="join-team__invite-item">
-                <div className="join-team__invite-main">
-                  <div className="join-team__invite-left">
-                    <div className="join-team__invite-title">
-                      <strong>{inv.teamName}</strong>
-                      <Tag color={inv.role === 'TEAM_OWNER' ? 'gold' : 'default'}>
-                        {inv.role === 'TEAM_OWNER' ? '管理员' : '成员'}
-                      </Tag>
+            {myInvitations.map((inv) => {
+              // 过期状态由后端按 expires_at 计算，不落库
+              const expired = inv.status === 'EXPIRED'
+              return (
+                <li key={inv.id} className="join-team__invite-item">
+                  <div className="join-team__invite-main">
+                    <div className="join-team__invite-left">
+                      <div className="join-team__invite-title">
+                        <strong>{inv.teamName}</strong>
+                        <Tag color={inv.role === 'TEAM_OWNER' ? 'gold' : 'default'}>
+                          {inv.role === 'TEAM_OWNER' ? '管理员' : '成员'}
+                        </Tag>
+                        {expired && <Tag color="red">已过期</Tag>}
+                      </div>
+                      <div className="join-team__invite-meta">
+                        <span>邀请人：{inv.inviterDisplayName}</span>
+                        <span className="join-team__invite-dot">·</span>
+                        <span>{inv.createdAt}</span>
+                      </div>
                     </div>
-                    <div className="join-team__invite-meta">
-                      <span>邀请人：{inv.inviterDisplayName}</span>
-                      <span className="join-team__invite-dot">·</span>
-                      <span>{inv.createdAt}</span>
-                    </div>
+                    <Button
+                      type="primary"
+                      size="middle"
+                      loading={acceptMutation.isPending}
+                      disabled={expired}
+                      onClick={() => acceptMutation.mutate(inv)}
+                    >
+                      {expired ? '已过期' : '接受邀请'}
+                    </Button>
                   </div>
-                  <Button
-                    type="primary"
-                    size="middle"
-                    loading={acceptMutation.isPending}
-                    onClick={() => acceptMutation.mutate(inv)}
-                  >
-                    接受邀请
-                  </Button>
-                </div>
-              </li>
-            ))}
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>
