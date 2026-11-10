@@ -4,12 +4,14 @@
 
 ## 项目与聊天
 
-每个项目自动拥有一个默认群聊并包含固定 Qgent；项目成员可创建新群，按需邀请项目成员及 Qgent。默认群对项目成员开放，新群仅向群成员开放。群聊无独立简介字段，创建、修改、群响应和执行上下文均不携带简介；群名通过 `title` 修改。聊天协议保留 `AGENT` 成员类型，固定 Qgent ID 为 `00000000-0000-0000-0000-000000000001`；创建或邀请请求的 `agentIds` 只能包含该 ID。创建项目只传 `name`、`description`、可选 `memberIds`，仓库随后按需导入。项目读写、成员增删和角色调整、头像、归档与恢复使用 `ProjectController` 接口；`PATCH /projects/{projectId}` 只更新 `name`、`description`、`avatarUrl`，三者都不传时返回 422；不存在项目 `/settings` 配置接口，也不再通过退出群聊退出项目。
+每个项目创建时生成自己的默认 Agent（名称 Qgent，ID 自增，项目之间互不复用），并自动拥有一个包含该默认 Agent 的默认群聊；项目成员可创建新群，按需邀请项目成员及本项目已启用的 Agent。默认群对项目成员开放，新群仅向群成员开放。群聊无独立简介字段，创建、修改、群响应和执行上下文均不携带简介；群名通过 `title` 修改。聊天协议保留 `AGENT` 成员类型，成员 ID 为用户 ID 或该项目的 Agent ID；创建或邀请请求的 `agentIds` 只能包含本项目已启用的 Agent。创建项目只传 `name`、`description`、可选 `memberIds`，仓库随后按需导入。项目读写、成员增删和角色调整、头像、归档与恢复使用 `ProjectController` 接口；`PATCH /projects/{projectId}` 只更新 `name`、`description`、`avatarUrl`，三者都不传时返回 422；不存在项目 `/settings` 配置接口，也不再通过退出群聊退出项目。
 
 | 操作 | 接口 |
 | --- | --- |
 | 项目群聊 | `GET /projects/{projectId}/groups` |
 | 创建群聊 | `POST /projects/{projectId}/groups`，只传 `title`、`userIds`、`agentIds` |
+| 项目已启用 Agent | `GET /projects/{projectId}/agents`，返回 `id`、`name`、`description`、`avatarUrl`、`defaultAgent`、`status`，只含 `ACTIVE` |
+| 提交 Agent 申请 | `POST /projects/{projectId}/agents/applications`，传 `name`、`systemPrompt`，可选 `description`、`avatarUrl`；返回 `status: PENDING` |
 | 邀请群成员 | `POST /projects/{projectId}/groups/{groupId}/members` |
 | 群聊成员 | `GET /projects/{projectId}/groups/{groupId}/members` |
 | 历史消息 | `GET .../messages?cursor=&limit=30`，倒序返回 |
@@ -20,13 +22,13 @@
 | 已读 | `POST .../read`，返回 `lastReadSequenceNo` |
 | 置顶 | `PUT .../pin`，请求 `{ pinned: boolean }` |
 
-公开发送类型为 `TEXT/CODE/IMAGE/FILE`，响应还包含 `SYSTEM`。请求使用结构化 `content`、可选 `mentions`、可选 `replyToId` 和 `clientMessageId`。回复保持原类型，使用 `replyToId + content`，不发送 QUOTE、replyText 或 Task 配置。普通消息不触发工作；明确的 `{ type: 'AGENT', id: '00000000-0000-0000-0000-000000000001' }` 提及才触发固定 Qgent。Qgent 消息响应使用 `senderType: 'AGENT'` 与固定 `senderId`。停止权限由后端校验，前端提供给原发送者及项目管理员。
+公开发送类型为 `TEXT/CODE/IMAGE/FILE`，响应还包含 `SYSTEM`。请求使用结构化 `content`、可选 `mentions`、可选 `replyToId` 和 `clientMessageId`。回复保持原类型，使用 `replyToId + content`，不发送 QUOTE、replyText 或 Task 配置。普通消息不触发工作；明确的 `{ type: 'AGENT', id }` 提及才触发该 Agent，且被提及的 Agent 必须是当前群成员，否则返回 422 `AGENT_NOT_IN_GROUP`。Agent 消息响应使用 `senderType: 'AGENT'`、真实 `senderId` 与 `senderName`。停止权限由后端校验，前端提供给原发送者及项目管理员。
 
 消息使用同一请求链路。发送重试复用客户端消息 ID（clientMessageId），服务端据此去重；增量同步按服务端 sequence 去重。WebSocket 只提供刷新信号；断线恢复和可见页面轮询通过 REST 补齐。当前没有公开 Agent 执行进度或 token 流接口，前端不虚构运行状态。
 
-## 固定 Qgent 与知识
+## 项目 Agent 与知识
 
-前端不提供团队 Agent 创建、审核、编辑、头像和身份配置接口；用户只与固定身份 Qgent 对话。聊天中按当前群成员展示可提及对象，名称固定为 Qgent，不使用后端可变昵称或头像。
+Agent 属于项目：每个项目有独立默认 Agent，任一项目成员可申请自定义 Agent（名称、描述、系统提示词、可选头像），申请在项目默认群公布，项目管理员回复并 `@Agent` 后由服务端核验审批人和申请状态并启用。前端只展示申请状态，不自行审批，也没有独立 Agent 管理页；群设置只能邀请本项目已启用的 Agent，Agent 与人在成员列表、`@` 补全和消息渲染中按成员类型与真实 ID 区分，名称与头像使用后端返回的值。
 
 Skill 与项目记忆在项目层维护。Skill 保留编辑、提交审核、批准、拒绝和归档：创建者或管理员可编辑未归档内容，发布内容修改立即生效。项目记忆是项目目录下的单个 `memory.md`，用 `GET /projects/{projectId}/memory` 读取全文、`version` 和 `updatedAt`，用 `PUT /projects/{projectId}/memory` 带上读取到的 `version` 整篇保存；版本不一致返回 409 `MEMORY_VERSION_CONFLICT`，超出上下文字符预算返回 409 `MEMORY_CONTEXT_LIMIT_EXCEEDED`。项目成员均可读写，没有草稿、审核或归档状态。Qgent 通过 `read_project_memory` 和 `write_project_memory` 读写同一个文件，写入前先用普通文字征得用户同意。
 
@@ -38,7 +40,7 @@ Skill 与项目记忆在项目层维护。Skill 保留编辑、提交审核、�
 
 授权仓库：`GET /teams/{teamId}/integrations/github/repositories`，返回 `installationId`、数字 `repositoryId`、`fullName/defaultBranch/htmlUrl/privateRepository`。项目仓库使用 `GET/POST /projects/{projectId}/repositories`；导入仅传 `{ installationId, repositoryId }`。已导入记录的本地 `id` 与数字 `providerRepositoryId` 不混用。移除使用本地记录 ID，不删除 GitHub 仓库。
 
-前端不调用团队 Agent 管理、个人 OAuth、自动新建仓库、工作分支、Task、Diff、MR、Testset、DryRun、质量门禁或群归档接口。代码协作由聊天里的 Qgent 处理，成果链接可直接打开 GitHub。
+前端不调用团队 Agent 管理、Agent 审批接口、个人 OAuth、自动新建仓库、工作分支、Task、Diff、MR、Testset、DryRun、质量门禁或群归档接口。代码协作由聊天里的 Qgent 处理，成果链接可直接打开 GitHub。
 
 ## 保留的通用能力
 

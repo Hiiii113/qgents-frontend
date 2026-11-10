@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { Alert, App, Button, Checkbox, Form, Input, Modal, Select } from 'antd'
+import { Alert, App, Button, Form, Input, Modal, Select } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { agentApi } from '@/api/agent'
 import { chatApi } from '@/api/chat'
 import { projectApi } from '@/api/project'
 import { teamApi } from '@/api/team'
 import { useAuth } from '@/context/AuthContext'
 import { formatApiError } from '@/utils/formatApiError'
 import { chatKeys } from './useChatMessages'
-import { QGENT_ID, QGENT_NAME, type ChatGroup, type QgentId } from '@/types/chat'
+import type { ChatGroup } from '@/types/chat'
 
 /** 建群与追加邀请共用成员选择；只提交选择的 ID，创建者由服务端自动入群。 */
 export function GroupMembersModal({
@@ -26,7 +27,7 @@ export function GroupMembersModal({
   const [form] = Form.useForm<{
     title: string
     userIds: string[]
-    includeQgent: boolean
+    agentIds: string[]
   }>()
   const [error, setError] = useState('')
   const { user } = useAuth()
@@ -45,15 +46,19 @@ export function GroupMembersModal({
     queryFn: () => chatApi.members(projectId, group!.id),
     enabled: Boolean(group),
   })
+  // 只有本项目已启用的 Agent 能邀请入群；待审批申请不在列表接口中。
+  const agents = useQuery({
+    queryKey: ['projects', projectId, 'agents'],
+    queryFn: () => agentApi.list(projectId),
+  })
   const existing = new Set(current.data?.map((member) => member.id))
   const mutation = useMutation({
     mutationFn: async () => {
       const values = await form.validateFields()
-      const agentIds: QgentId[] = values.includeQgent ? [QGENT_ID] : []
       const body = {
         title: values.title?.trim(),
         userIds: values.userIds ?? [],
-        agentIds,
+        agentIds: values.agentIds ?? [],
       }
       return group
         ? chatApi.invite(projectId, group.id, body)
@@ -81,8 +86,9 @@ export function GroupMembersModal({
   const loading =
     members.isPending ||
     teamMembers.isPending ||
+    agents.isPending ||
     (Boolean(group) && current.isPending)
-  const failed = members.isError || teamMembers.isError || current.isError
+  const failed = members.isError || teamMembers.isError || agents.isError || current.isError
   const users = (members.data ?? [])
     .filter((member) => member.userId !== user?.id && !existing.has(member.userId))
     .map((member) => {
@@ -92,6 +98,9 @@ export function GroupMembersModal({
         label: detail?.displayName || member.displayName || detail?.email || member.userId,
       }
     })
+  const agentOptions = (agents.data ?? [])
+    .filter((agent) => !existing.has(agent.id))
+    .map((agent) => ({ value: agent.id, label: agent.name }))
   return (
     <Modal
       open
@@ -111,7 +120,7 @@ export function GroupMembersModal({
     >
       <p className="group-modal__intro">
         {group
-          ? '邀请项目成员或 Qgent，继续一起讨论。'
+          ? '邀请项目成员或项目 Agent，继续一起讨论。'
           : '给这次讨论一个名字，邀请合适的伙伴。你会自动加入群聊。'}
       </p>
       {(error || failed) && (
@@ -125,6 +134,7 @@ export function GroupMembersModal({
                 onClick={() => {
                   void members.refetch()
                   void teamMembers.refetch()
+                  void agents.refetch()
                   if (group) void current.refetch()
                 }}
               >
@@ -137,7 +147,7 @@ export function GroupMembersModal({
       <Form
         form={form}
         layout="vertical"
-        initialValues={{ userIds: [], includeQgent: false }}
+        initialValues={{ userIds: [], agentIds: [] }}
         disabled={mutation.isPending}
       >
         {!group && (
@@ -162,8 +172,17 @@ export function GroupMembersModal({
             />
           </Form.Item>
         )}
-        {!existing.has(QGENT_ID) && <Form.Item name="includeQgent" valuePropName="checked"><Checkbox>{QGENT_NAME}</Checkbox></Form.Item>}
-        <p className="group-modal__hint">加入群聊后可通过 @Qgent 发起工作，普通消息不会触发执行。</p>
+        <Form.Item name="agentIds" label="Agent">
+          <Select
+            mode="multiple"
+            loading={loading}
+            options={agentOptions}
+            optionFilterProp="label"
+            placeholder="选择要邀请的项目 Agent"
+            notFoundContent="暂无可邀请的 Agent"
+          />
+        </Form.Item>
+        <p className="group-modal__hint">只有已启用的项目 Agent 可以邀请；加入后可通过 @Agent 发起工作，普通消息不会触发执行。</p>
       </Form>
     </Modal>
   )

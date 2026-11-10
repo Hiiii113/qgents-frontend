@@ -3,7 +3,7 @@ import { Avatar, Button, Tag, Tooltip } from 'antd'
 import { FileOutlined, RobotOutlined, StopOutlined } from '@ant-design/icons'
 import { AuthedImage } from '@/components/AuthedImage'
 import { attachmentApi } from '@/api/attachment'
-import { chatMessageText, messageField, QGENT_NAME, type ChatMember, type ChatMessage } from '@/types/chat'
+import { chatMessageText, messageField, type ChatMember, type ChatMessage } from '@/types/chat'
 
 interface Props {
   item: ChatMessage
@@ -28,16 +28,16 @@ export const ChatMessageRow = memo(function ChatMessageRow({ item, projectId, se
   if (item.senderType === 'SYSTEM') return <div className="chat-system-message">{chatMessageText(item)}</div>
   const agent = item.senderType === 'AGENT'
   const own = item.senderId === currentUserId
-  const name = agent ? QGENT_NAME : sender?.displayName || item.senderName || '成员'
+  const name = sender?.displayName || item.senderName || (agent ? 'Agent' : '成员')
   const timestamp = new Date(item.createdAt)
   const time = Number.isNaN(timestamp.getTime()) ? '' : timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   const attachmentId = messageField(item, 'attachmentId')
   // 不信任消息内容里的 url：用当前项目与附件 ID 重建内容地址，避免把 Bearer 发到外部地址。
   const imageUrl = projectId && attachmentId ? attachmentApi.contentUrl(projectId, attachmentId) : null
   return <article className={`chat-message${agent ? ' chat-message--agent' : ''}${own ? ' chat-message--own' : ''}`} aria-label={`${name}的消息`}>
-    <Avatar className="chat-message__avatar" src={agent ? undefined : sender?.avatarUrl} icon={agent ? <RobotOutlined /> : undefined}>{agent ? undefined : name.slice(0, 1)}</Avatar>
+    <Avatar className="chat-message__avatar" src={sender?.avatarUrl} icon={agent ? <RobotOutlined /> : undefined}>{agent ? undefined : name.slice(0, 1)}</Avatar>
     <div className="chat-message__main">
-      <div className="chat-message__meta"><strong>{name}</strong>{agent && <Tag bordered={false}>Qgent</Tag>}<time dateTime={item.createdAt} title={Number.isNaN(timestamp.getTime()) ? '' : timestamp.toLocaleString('zh-CN')}>{time}</time></div>
+      <div className="chat-message__meta"><strong>{name}</strong>{agent && <Tag bordered={false}>Agent</Tag>}<time dateTime={item.createdAt} title={Number.isNaN(timestamp.getTime()) ? '' : timestamp.toLocaleString('zh-CN')}>{time}</time></div>
       {item.replyToId && <button className="chat-message__reply" onClick={() => onLocate(item.replyToId ?? '')}>
         <strong>{reply?.senderName || '回复消息'}</strong><span>{reply ? chatMessageText(reply).slice(0, 160) : '点击查看原消息'}</span>
       </button>}
@@ -53,7 +53,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({ item, projectId, se
       </div>
       <div className="chat-message__actions">
         <Button type="text" size="small" onClick={() => onReply(item)}>回复</Button>
-        {canStop && <Tooltip title="停止这条消息启动的 Qgent 工作"><Button type="text" size="small" loading={stopping} icon={<StopOutlined />} onClick={() => onStop(item)}>停止执行</Button></Tooltip>}
+        {canStop && <Tooltip title="停止这条消息启动的 Agent 工作"><Button type="text" size="small" loading={stopping} icon={<StopOutlined />} onClick={() => onStop(item)}>停止执行</Button></Tooltip>}
       </div>
     </div>
   </article>

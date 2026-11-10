@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ChatComposer } from './ChatComposer'
 import type { ChatMember, ChatMessage, SendChatMessage } from '@/types/chat'
-import { QGENT_ID } from '@/types/chat'
 afterEach(() => { cleanup(); sessionStorage.clear(); vi.restoreAllMocks() })
-const agent = { id: QGENT_ID, displayName: 'Qgent', memberType: 'AGENT' as const }
+// 每个项目有独立的 Agent ID，前端只使用群成员返回的真实 ID。
+const agent = { id: '101', displayName: 'Qgent', memberType: 'AGENT' as const }
 function show(send = vi.fn<(body: SendChatMessage) => Promise<unknown>>().mockResolvedValue({}), reply: ChatMessage | null = null, recipients: ChatMember[] = [agent]) {
   render(<App><ChatComposer projectId="p1" recipients={recipients} reply={reply} onSend={send} onClearReply={vi.fn()} /></App>)
   return send
@@ -60,7 +60,7 @@ describe('chat composition', () => {
     expect(send).not.toHaveBeenCalled()
   })
 
-  it('searches group recipients after typing @ and sends the selected Qgent id', async () => {
+  it('searches group recipients after typing @ and sends the selected agent id', async () => {
     const send = show(undefined, null, [agent, { id: 'u2', displayName: '张工', memberType: 'USER' }])
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('消息内容'), '@Q')
@@ -69,7 +69,7 @@ describe('chat composition', () => {
     await user.type(screen.getByLabelText('消息内容'), '分析一下')
     await user.click(screen.getByRole('button', { name: /发送/ }))
     await waitFor(() => expect(send).toHaveBeenCalledOnce())
-    expect(send.mock.calls[0][0]).toMatchObject({ content: { text: '@Qgent 分析一下' }, mentions: [{ type: 'AGENT', id: QGENT_ID }] })
+    expect(send.mock.calls[0][0]).toMatchObject({ content: { text: '@Qgent 分析一下' }, mentions: [{ type: 'AGENT', id: '101' }] })
   })
 
   it('uses arrows and Enter to choose a mention without sending the message', async () => {
@@ -85,7 +85,7 @@ describe('chat composition', () => {
     expect(screen.getByLabelText('消息内容')).toHaveValue('@Qgent ')
     fireEvent.keyDown(input, { key: 'Enter', which: 13, keyCode: 13 })
     await waitFor(() => expect(send).toHaveBeenCalledOnce())
-    expect(send.mock.calls[0][0].mentions).toEqual([{ type: 'AGENT', id: QGENT_ID }])
+    expect(send.mock.calls[0][0].mentions).toEqual([{ type: 'AGENT', id: '101' }])
   })
 
   it('does not select a candidate on Shift Enter or IME confirmation', async () => {
@@ -100,7 +100,7 @@ describe('chat composition', () => {
     expect(send).not.toHaveBeenCalled()
   })
 
-  it('distinguishes a member from Qgent when selecting a mention', async () => {
+  it('distinguishes a member from an agent when selecting a mention', async () => {
     const send = show(undefined, null, [agent, { id: 'u2', displayName: '助手', memberType: 'USER' }])
     const user = userEvent.setup()
     await user.type(screen.getByLabelText('消息内容'), '@')
@@ -110,7 +110,7 @@ describe('chat composition', () => {
     expect(send.mock.calls[0][0].mentions).toEqual([{ type: 'USER', id: 'u2' }])
   })
 
-  it('does not trigger Qgent from typed or removed mention text', async () => {
+  it('does not trigger an agent from typed or removed mention text', async () => {
     const send = show()
     const user = userEvent.setup()
     const input = screen.getByLabelText('消息内容')
@@ -124,5 +124,16 @@ describe('chat composition', () => {
     await user.click(screen.getByRole('button', { name: /发送/ }))
     await waitFor(() => expect(send).toHaveBeenCalledTimes(2))
     expect(send.mock.calls[1][0].mentions).toEqual([])
+  })
+
+  it('mentions every invited agent by its own id', async () => {
+    const send = show(undefined, null, [agent, { id: '102', displayName: '前端助手', memberType: 'AGENT' }])
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('消息内容'), '@前端')
+    await user.click(await screen.findByRole('menuitem', { name: /前端助手/ }))
+    await user.type(screen.getByLabelText('消息内容'), '看一下')
+    await user.click(screen.getByRole('button', { name: /发送/ }))
+    await waitFor(() => expect(send).toHaveBeenCalledOnce())
+    expect(send.mock.calls[0][0].mentions).toEqual([{ type: 'AGENT', id: '102' }])
   })
 })

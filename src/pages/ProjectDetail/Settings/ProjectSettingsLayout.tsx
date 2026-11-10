@@ -14,6 +14,7 @@ export function ProjectSettingsLayout() {
   const tabs = [
     { key: 'basic', label: '基本信息', path: PATHS.projectSettings(projectId) },
     { key: 'members', label: '成员管理', path: PATHS.projectSettings(projectId) },
+    { key: 'agents', label: 'Agent', path: PATHS.projectAgents(projectId) },
     { key: 'skills', label: 'Skill', path: PATHS.projectSkills(projectId) },
     { key: 'memory', label: '共享知识', path: PATHS.projectMemory(projectId) },
     { key: 'code', label: '项目仓库', path: PATHS.projectCode(projectId) },

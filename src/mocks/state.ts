@@ -84,7 +84,7 @@ export const MOCK_PROJECT_MEMBERS: Record<string, MockProjectMember[]> = {
   ],
 }
 
-// 新群成员按群隔离；默认群成员从项目成员和固定 Qgent 生成。
+// 新群成员按群隔离；默认群成员从项目成员和项目默认 Agent 生成。
 
 
 

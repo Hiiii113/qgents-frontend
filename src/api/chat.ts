@@ -1,5 +1,4 @@
 import { request, requestPage } from './client'
-import type { QgentId } from '@/types/chat'
 import type { ChatGroup, ChatMember, ChatMessage, SendChatMessage } from '@/types/chat'
 
 const groupPath = (projectId: string, groupId: string) =>
@@ -7,9 +6,9 @@ const groupPath = (projectId: string, groupId: string) =>
 
 export const chatApi = {
   groups: (projectId: string) => request<ChatGroup[]>(`/projects/${encodeURIComponent(projectId)}/groups`),
-  createGroup: (projectId: string, body: { title: string; userIds: string[]; agentIds: QgentId[] }) =>
+  createGroup: (projectId: string, body: { title: string; userIds: string[]; agentIds: string[] }) =>
     request<ChatGroup>(`/projects/${encodeURIComponent(projectId)}/groups`, { method: 'POST', body }),
-  invite: (projectId: string, groupId: string, body: { userIds: string[]; agentIds: QgentId[] }) =>
+  invite: (projectId: string, groupId: string, body: { userIds: string[]; agentIds: string[] }) =>
     request<ChatMember[]>(`${groupPath(projectId, groupId)}/members`, { method: 'POST', body }),
   members: (projectId: string, groupId: string) => request<ChatMember[]>(`${groupPath(projectId, groupId)}/members`),
   messages(projectId: string, groupId: string, cursor?: string, signal?: AbortSignal) {

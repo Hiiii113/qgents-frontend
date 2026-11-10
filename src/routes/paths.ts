@@ -10,6 +10,7 @@ export const PATHS = {
     if (groupId) params.set('groupId', groupId)
     return `/app/projects/${encodeURIComponent(projectId)}/chat${params.size ? '?' + params : ''}`
   },
+  projectAgents: (id: string) => `/app/projects/${encodeURIComponent(id)}/agents`,
   projectSkills: (id: string) => `/app/projects/${encodeURIComponent(id)}/skills`,
   projectMemory: (id: string) => `/app/projects/${encodeURIComponent(id)}/memory`,
   projectCode: (id: string) => `/app/projects/${encodeURIComponent(id)}/code`,

@@ -15,11 +15,8 @@ export interface ChatGroup {
   latestMessage?: { senderName?: string | null; text?: string | null; type?: string } | null
 }
 
-export const QGENT_ID = '0'
-export const QGENT_NAME = 'Qgent'
-export type QgentId = typeof QGENT_ID
-
-export type ChatMention = { type: 'USER'; id: string } | { type: 'AGENT'; id: QgentId }
+// 成员和提及都按成员类型与真实 ID 表达；Agent ID 由项目内 Agent 记录提供。
+export type ChatMention = { type: 'USER' | 'AGENT'; id: string }
 export interface ChatMember {
   id: string
   displayName: string

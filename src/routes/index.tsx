@@ -18,6 +18,7 @@ const TeamSettingsPage = lazy(() => import('@/pages/TeamDetail/TeamSettingsPage'
 const ProjectDetailLayout = lazy(() => import('@/pages/ProjectDetail/ProjectDetailLayout'))
 const ProjectChatPage = lazy(() => import('@/pages/ProjectDetail/Chat/ProjectChatPage'))
 const CodePage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Code/CodePage')).CodePage }))
+const AgentsPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Settings/ProjectAgents')).ProjectAgents }))
 const SkillPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Skill/SkillPage')).SkillPage }))
 const MemoryPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Memory/MemoryPage')).MemoryPage }))
 const SettingsPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Settings/SettingsPage')).SettingsPage }))
@@ -41,6 +42,7 @@ export function AppRouter() {
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<ProjectChatPage />} />
             <Route element={<ProjectSettingsLayout />}>
+              <Route path="agents" element={<AgentsPage />} />
               <Route path="skills" element={<SkillPage />} />
               <Route path="memory" element={<MemoryPage />} />
               <Route path="code" element={<CodePage />} />

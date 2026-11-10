@@ -1,19 +1,33 @@
 import { http, HttpResponse } from 'msw'
-import { chatMessageText, QGENT_ID, QGENT_NAME, type ChatGroup, type ChatMember, type ChatMessage, type SendChatMessage } from '@/types/chat'
+import { chatMessageText, type ChatGroup, type ChatMember, type ChatMessage, type SendChatMessage } from '@/types/chat'
 import type { Project } from '@/types/project'
+import type { ProjectAgent } from '@/types/agent'
 import { MOCK_PROJECTS, MOCK_PROJECT_MEMBERS, MOCK_TEAM_MEMBERS, MOCK_USER } from './state'
+import { activeAgents, projectAgents } from './agents'
 import { nextMockId } from './ids'
 
 const groups = new Map<string, ChatGroup>()
 const groupMembers = new Map<string, ChatMember[]>()
 const messages = new Map<string, ChatMessage[]>()
 const sent = new Map<string, ChatMessage>()
-const pending = new Map<string, ReturnType<typeof setTimeout>>()
+// 触发消息 -> 还在生成回复的 Agent；停止执行按触发消息清理这些定时器。
+const pending = new Map<string, Set<string>>()
+const pendingTimers = new Map<string, ReturnType<typeof setTimeout>[]>()
 const projects = () => Object.values(MOCK_PROJECTS).flat()
 let nextGroupId = 100
 const defaultGroupIds = new Map<string, string>()
+const agentReplyDelayMs = 300
 const findProject = (id: unknown) => projects().find(project => project.id === id)
 const notFound = () => HttpResponse.json({ error: { code: 'NOT_FOUND', message: '资源不存在' } }, { status: 404 })
+const invalidAgent = (code: string, message: string) =>
+  HttpResponse.json({ error: { code, message } }, { status: 422 })
+function agentMember(agent: ProjectAgent): ChatMember {
+  return { id: agent.id, displayName: agent.name, avatarUrl: agent.avatarUrl, memberType: 'AGENT' }
+}
+function defaultAgentMember(projectId: string) {
+  const agent = projectAgents(projectId).find(item => item.defaultAgent)
+  return agent ? [agentMember(agent)] : []
+}
 function groupFor(project: Project) {
   let group = [...groups.values()].find(item => item.projectId === project.id && item.defaultGroup)
   if (!group) {
@@ -21,8 +35,8 @@ function groupFor(project: Project) {
     defaultGroupIds.set(project.id, id)
     group = { defaultGroup: true, id, projectId: project.id, title: project.name, createdAt: project.createdAt ?? new Date().toISOString(), memberCount: (project.memberCount ?? 1) + 1, unreadCount: 0, pinned: false }
     groups.set(group.id, group)
-    groupMembers.set(group.id, [{ id: QGENT_ID, displayName: QGENT_NAME, memberType: 'AGENT' }])
-    messages.set(group.id, [{ id: '1', groupId: group.id, sequence: 1, type: 'SYSTEM', content: { text: '欢迎来到项目聊天。分享想法，或 @Qgent 一起开展工作。' }, senderId: '', senderName: 'Qgents', senderType: 'SYSTEM', createdAt: group.createdAt ?? new Date().toISOString() }])
+    groupMembers.set(group.id, defaultAgentMember(project.id))
+    messages.set(group.id, [{ id: '1', groupId: group.id, sequence: 1, type: 'SYSTEM', content: { text: '欢迎来到项目聊天。分享想法，或 @Agent 一起开展工作。' }, senderId: '', senderName: 'Qgents', senderType: 'SYSTEM', createdAt: group.createdAt ?? new Date().toISOString() }])
   }
   return group
 }
@@ -34,11 +48,21 @@ function append(group: ChatGroup, body: Omit<ChatMessage, 'id' | 'sequence' | 'c
   group.latestMessage = { type: item.type, text: chatMessageText(item), senderName: item.senderName }
   return item
 }
-function inviteMembers(projectId: string, userIds: string[], agentIds: string[]): ChatMember[] {
-  return [
-    ...MOCK_TEAM_MEMBERS.filter(member => userIds.includes(member.userId) && (MOCK_PROJECT_MEMBERS[projectId] ?? []).some(item => item.userId === member.userId)).map(member => ({ id: member.userId, displayName: member.displayName, email: member.email, avatarUrl: member.avatarUrl, memberType: 'USER' as const })),
-    ...(agentIds.includes(QGENT_ID) ? [{ id: QGENT_ID, displayName: QGENT_NAME, memberType: 'AGENT' as const }] : []),
-  ]
+function userMembers(projectId: string, userIds: string[]): ChatMember[] {
+  return MOCK_TEAM_MEMBERS.filter(member => userIds.includes(member.userId) && (MOCK_PROJECT_MEMBERS[projectId] ?? []).some(item => item.userId === member.userId))
+    .map(member => ({ id: member.userId, displayName: member.displayName, email: member.email, avatarUrl: member.avatarUrl, memberType: 'USER' as const }))
+}
+/** 邀请名单里的 Agent 必须属于本项目且已启用；未通过审批的申请不能入群。 */
+function invitedAgents(projectId: string, agentIds: string[]): ChatMember[] | null {
+  const available = new Map(activeAgents(projectId).map(agent => [agent.id, agent]))
+  const agents = agentIds.map(id => available.get(id))
+  return agents.every((agent): agent is ProjectAgent => Boolean(agent)) ? agents.map(agentMember) : null
+}
+/** 默认群用户随项目同步，其他群只含邀请名单；两类群都可能已有 Agent。 */
+function membersOf(group: ChatGroup): ChatMember[] {
+  const stored = groupMembers.get(group.id) ?? []
+  const synced = group.defaultGroup ? userMembers(group.projectId, (MOCK_PROJECT_MEMBERS[group.projectId] ?? []).map(member => member.userId)) : []
+  return [...new Map([...synced, ...stored].map(member => [member.id, member])).values()]
 }
 const path = '/api/projects/:projectId/groups/:groupId'
 export const projectChatHandlers = [
@@ -83,23 +107,24 @@ export const projectChatHandlers = [
   http.post('/api/projects/:projectId/groups', async ({ params, request }) => {
     const project = findProject(params.projectId); if (!project) return notFound()
     const body = await request.json() as { title: string; userIds: string[]; agentIds: string[] }
+    const agents = invitedAgents(project.id, body.agentIds)
+    if (!agents) return invalidAgent('INVALID_GROUP_AGENT', '只能邀请本项目已启用的 Agent')
     const group: ChatGroup = { id: nextMockId(), projectId: project.id, title: body.title.trim(), defaultGroup: false, createdBy: MOCK_USER.id, createdAt: new Date().toISOString(), unreadCount: 0 }
     groups.set(group.id, group); messages.set(group.id, [])
-    groupMembers.set(group.id, inviteMembers(project.id, [MOCK_USER.id, ...body.userIds], body.agentIds))
+    groupMembers.set(group.id, [...userMembers(project.id, [MOCK_USER.id, ...body.userIds]), ...agents])
     group.memberCount = groupMembers.get(group.id)?.length
     return HttpResponse.json({ data: group }, { status: 201 })
   }),
   http.get(`${path}/members`, ({ params }) => {
     const group = groups.get(String(params.groupId)); if (!group) return notFound()
-    const members = group.defaultGroup ? [...inviteMembers(group.projectId, (MOCK_PROJECT_MEMBERS[group.projectId] ?? []).map(member => member.userId), []), { id: QGENT_ID, displayName: QGENT_NAME, memberType: 'AGENT' as const }] : groupMembers.get(group.id) ?? []
-    const all = new Map([...members, ...(groupMembers.get(group.id) ?? [])].map(member => [member.id, member]))
-    return HttpResponse.json({ data: [...all.values()] })
+    return HttpResponse.json({ data: membersOf(group) })
   }),
   http.post(`${path}/members`, async ({ params, request }) => {
     const group = groups.get(String(params.groupId)); if (!group) return notFound()
     const body = await request.json() as { userIds: string[]; agentIds: string[] }
-    const existing = group.defaultGroup ? inviteMembers(group.projectId, (MOCK_PROJECT_MEMBERS[group.projectId] ?? []).map(member => member.userId), []) : []
-    const members = new Map([...existing, ...(groupMembers.get(group.id) ?? []), ...inviteMembers(group.projectId, body.userIds, body.agentIds)].map(member => [member.id, member]))
+    const agents = invitedAgents(group.projectId, body.agentIds)
+    if (!agents) return invalidAgent('INVALID_GROUP_AGENT', '只能邀请本项目已启用的 Agent')
+    const members = new Map([...membersOf(group), ...userMembers(group.projectId, body.userIds), ...agents].map(member => [member.id, member]))
     groupMembers.set(group.id, [...members.values()]); group.memberCount = members.size
     return HttpResponse.json({ data: [...members.values()] })
   }),
@@ -121,23 +146,30 @@ export const projectChatHandlers = [
     const existing = sent.get(key); if (existing) return HttpResponse.json({ data: existing })
     const project = findProject(params.projectId); if (!project) return notFound()
     const group = groups.get(String(params.groupId)); if (!group || group.projectId !== project.id) return notFound()
-    const agentMentions = (body.mentions ?? []) as Array<{ type: string; id: string }>
-    if (agentMentions.some(mention => mention.type === 'AGENT' && mention.id !== QGENT_ID)
-      || (agentMentions.some(mention => mention.type === 'AGENT') && !(groupMembers.get(group.id) ?? []).some(member => member.id === QGENT_ID))) {
-      return HttpResponse.json({ error: { code: 'INVALID_QGENT_MENTION', message: '请只在已邀请 Qgent 的群聊中提及 Qgent。' } }, { status: 422 })
-    }
+    const members = membersOf(group)
+    const mentioned = [...new Set((body.mentions ?? []).filter(mention => mention.type === 'AGENT').map(mention => mention.id))]
+    const agents = mentioned.map(id => members.find(member => member.memberType === 'AGENT' && member.id === id))
+    if (agents.some(agent => !agent)) return invalidAgent('AGENT_NOT_IN_GROUP', 'Agent 未加入当前群聊')
     const item = append(group, { type: body.type, content: body.content, replyToId: body.replyToId, mentions: body.mentions, senderId: MOCK_USER.id, senderName: MOCK_USER.displayName, senderType: 'USER' })
     sent.set(key, item)
-    const agent = body.mentions?.find(mention => mention.type === 'AGENT')
-    if (agent) pending.set(item.id, setTimeout(() => {
-      append(group, { type: 'TEXT', content: { text: '收到，我可以协助梳理方案和处理项目工作。当前为演示环境，真实执行结果由后端返回。' }, replyToId: item.id, senderId: QGENT_ID, senderName: QGENT_NAME, senderType: 'AGENT' })
-      pending.delete(item.id)
-    }, 2000))
+    if (agents.length) {
+      const runs = new Set(agents.map(agent => agent?.id ?? ''))
+      pending.set(item.id, runs)
+      pendingTimers.set(item.id, agents.map(agent => setTimeout(() => {
+        append(group, { type: 'TEXT', content: { text: '收到，我会按这个方向跟进。当前为演示环境，真实执行结果由后端返回。' }, replyToId: item.id, senderId: agent?.id ?? '', senderName: agent?.displayName ?? '', senderType: 'AGENT' })
+        runs.delete(agent?.id ?? '')
+        if (!runs.size) { pending.delete(item.id); pendingTimers.delete(item.id) }
+      }, agentReplyDelayMs)))
+    }
     return HttpResponse.json({ data: item }, { status: 201 })
   }),
   http.post(`${path}/messages/:messageId/cancel-agent`, ({ params }) => {
-    const timer = pending.get(String(params.messageId)); if (timer) clearTimeout(timer)
-    pending.delete(String(params.messageId)); return HttpResponse.json({ data: { cancelledRuns: timer ? 1 : 0 } })
+    const id = String(params.messageId)
+    const runs = pending.get(id)
+    pendingTimers.get(id)?.forEach(clearTimeout)
+    pendingTimers.delete(id)
+    pending.delete(id)
+    return HttpResponse.json({ data: { cancelledRuns: runs?.size ?? 0 } })
   }),
   http.post(`${path}/read`, ({ params }) => {
     const group = groups.get(String(params.groupId)); if (group) group.unreadCount = 0
