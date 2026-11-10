@@ -84,11 +84,7 @@ export const MOCK_PROJECT_MEMBERS: Record<string, MockProjectMember[]> = {
   ],
 }
 
-// 新群成员按群隔离；默认群成员从项目成员和项目默认 Agent 生成。
-
-
-
-
+// 未单独配置成员的项目按团队前 3 名成员补齐，并同步项目成员数。
 for (const project of Object.values(MOCK_PROJECTS).flat()) {
   MOCK_PROJECT_MEMBERS[project.id] ??= MOCK_TEAM_MEMBERS.slice(0, 3).map(member => ({ ...member, role: member.userId === MOCK_USER.id ? project.role ?? 'PROJECT_MEMBER' : 'PROJECT_MEMBER' }))
   project.memberCount = MOCK_PROJECT_MEMBERS[project.id].length

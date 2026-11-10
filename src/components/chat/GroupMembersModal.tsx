@@ -48,7 +48,7 @@ export function GroupMembersModal({
   })
   // 只有本项目已启用的 Agent 能邀请入群；待审批申请不在列表接口中。
   const agents = useQuery({
-    queryKey: ['projects', projectId, 'agents'],
+    queryKey: chatKeys.agents(projectId),
     queryFn: () => agentApi.list(projectId),
   })
   const existing = new Set(current.data?.map((member) => member.id))

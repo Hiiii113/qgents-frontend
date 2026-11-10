@@ -21,7 +21,7 @@ it('creates a group with a trimmed name and member IDs without asking for a desc
   renderWorkspace(<GroupMembersModal projectId="p1" teamId="t1" onClose={vi.fn()} onCreated={onCreated} />, '/app', '/app', client => {
     client.setQueryData(['projects', 'p1', 'members'], [])
     client.setQueryData(['teams', 't1', 'members'], [])
-    client.setQueryData(['projects', 'p1', 'agents'], [])
+    client.setQueryData(chatKeys.agents('p1'), [])
   })
   expect(screen.queryByLabelText(/简介/)).not.toBeInTheDocument()
   fireEvent.change(screen.getByLabelText('群聊名称'), { target: { value: '  方案讨论  ' } })
@@ -36,7 +36,7 @@ it('offers the project enabled agents and sends the chosen agent ids', async () 
   renderWorkspace(<GroupMembersModal projectId="p1" teamId="t1" onClose={vi.fn()} />, '/app', '/app', client => {
     client.setQueryData(['projects', 'p1', 'members'], [])
     client.setQueryData(['teams', 't1', 'members'], [])
-    client.setQueryData(['projects', 'p1', 'agents'], agents)
+    client.setQueryData(chatKeys.agents('p1'), agents)
   })
   await user.type(screen.getByLabelText('群聊名称'), '设计')
   await user.click(await screen.findByRole('combobox', { name: 'Agent' }))
@@ -50,7 +50,7 @@ it('does not offer agents that already joined the group', async () => {
   renderWorkspace(<GroupMembersModal projectId="p1" teamId="t1" group={{ id: 'g1', projectId: 'p1', title: '讨论' }} onClose={vi.fn()} />, '/app', '/app', client => {
     client.setQueryData(['projects', 'p1', 'members'], [])
     client.setQueryData(['teams', 't1', 'members'], [])
-    client.setQueryData(['projects', 'p1', 'agents'], agents)
+    client.setQueryData(chatKeys.agents('p1'), agents)
     client.setQueryData(chatKeys.members('p1', 'g1'), [{ id: '101', displayName: 'Qgent', memberType: 'AGENT' }])
   })
   await user.click(await screen.findByRole('combobox', { name: 'Agent' }))

@@ -8,7 +8,7 @@ import { projectApi } from '@/api/project'
 import { useAuth } from '@/context/AuthContext'
 import { formatApiError } from '@/utils/formatApiError'
 import type { Page } from '@/types/api'
-import { messageField, type ChatMember, type ChatMessage, type SendChatMessage } from '@/types/chat'
+import { messageField, type ChatMessage, type SendChatMessage } from '@/types/chat'
 import { PATHS } from '@/routes/paths'
 import { GroupMembersModal } from './GroupMembersModal'
 import { AttachmentPreviewModal } from './AttachmentPreviewModal'
@@ -44,8 +44,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   const chat = useChatMessages(projectId, groupId, readingLatest)
   const sendAsync = chat.send.mutateAsync
   const isAdmin = project.data?.role === 'PROJECT_ADMIN'
-  const participants = useMemo<ChatMember[]>(() => members.data ?? [], [members.data])
-  const recipients = useMemo(() => participants.filter(member => member.memberType !== 'USER' || member.id !== user?.id), [participants, user?.id])
+  const recipients = useMemo(() => members.data?.filter(member => member.memberType !== 'USER' || member.id !== user?.id) ?? [], [members.data, user?.id])
   const stop = useMutation({
     mutationFn: (item: ChatMessage) => chatApi.cancel(projectId, groupId, item.id),
     onSuccess: (result, item) => {
@@ -92,7 +91,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
     </header>
     {chat.query.isError && <Alert showIcon type="error" message={formatApiError(chat.query.error)} action={<Button onClick={() => void chat.query.refetch()}>重试</Button>} />}
     {chat.syncError && <Alert type="warning" showIcon message="消息同步暂时中断，恢复连接后会自动补齐" />}
-    <ChatMessageList messages={chat.messages} projectId={projectId} participants={participants} loading={chat.query.isPending} hasMore={chat.query.hasNextPage} loadingOlder={chat.query.isFetchingNextPage}
+    <ChatMessageList messages={chat.messages} projectId={projectId} participants={members.data} loading={chat.query.isPending} hasMore={chat.query.hasNextPage} loadingOlder={chat.query.isFetchingNextPage}
       currentUserId={user?.id} isAdmin={isAdmin} stoppedIds={stoppedIds} stoppingId={stop.isPending ? stop.variables?.id : undefined}
       targetId={targetId} onReadingLatestChange={setReadingLatest} onLoadOlder={loadOlder} onReply={handleReply} onStop={handleStop} onPreview={handlePreview} onLocate={onLocate} />
     {project.data?.status === 'ARCHIVED' && <Alert type="info" showIcon message="项目已归档，可以查看历史消息，恢复项目后可继续聊天。" />}

@@ -4,6 +4,7 @@ import { Alert, App, Avatar, Button, Form, Input, List, Modal, Tag } from 'antd'
 import { PlusOutlined, RobotOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { agentApi } from '@/api/agent'
+import { chatKeys } from '@/query/chatKeys'
 import { formatApiError } from '@/utils/formatApiError'
 import type { AgentApplication, AgentStatus, ProjectAgent } from '@/types/agent'
 
@@ -18,7 +19,7 @@ export function ProjectAgents() {
   const [open, setOpen] = useState(false)
   const [application, setApplication] = useState<ProjectAgent | null>(null)
   const agents = useQuery({
-    queryKey: ['projects', projectId, 'agents'],
+    queryKey: chatKeys.agents(projectId),
     queryFn: () => agentApi.list(projectId),
     enabled: Boolean(projectId),
   })
@@ -28,7 +29,7 @@ export function ProjectAgents() {
       setApplication(created)
       setOpen(false)
       form.resetFields()
-      void client.invalidateQueries({ queryKey: ['projects', projectId, 'agents'] })
+      void client.invalidateQueries({ queryKey: chatKeys.agents(projectId) })
     },
     onError: (error) => void message.error(formatApiError(error)),
   })

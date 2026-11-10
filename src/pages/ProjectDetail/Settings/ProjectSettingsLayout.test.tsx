@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { Route, Routes, useLocation } from 'react-router-dom'
+import { chatKeys } from '@/query/chatKeys'
 import { renderWorkspace } from '@/test/renderWorkspace'
 import { CodePage } from '../Code/CodePage'
 import { MemoryPage } from '../Memory/MemoryPage'
@@ -30,7 +31,7 @@ function openSettings(path: string) {
     client.setQueryData(['projects', 'p1', 'members'], [{ userId: 'u1', displayName: '创建者', role: 'PROJECT_ADMIN' }])
     client.setQueryData(['teams', 't1', 'members'], [])
     client.setQueryData(['skills', 'p1'], [])
-    client.setQueryData(['projects', 'p1', 'agents'], [])
+    client.setQueryData(chatKeys.agents('p1'), [])
     client.setQueryData(['memory', 'p1'], { projectId: 'p1', content: '', version: '1', updatedAt: new Date().toISOString() })
     client.setQueryData(['repositories', 'p1'], [])
   })
