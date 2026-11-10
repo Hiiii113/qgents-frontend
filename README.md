@@ -1,6 +1,6 @@
 # Qgents 前端
 
-React 19 + TypeScript strict + Ant Design 6。以项目聊天组织团队与固定 Qgent 协作，按需维护 Skill、Memory 和 GitHub 仓库；GitHub 能力由项目管理员在项目设置中控制，默认开启。
+React 19 + TypeScript strict + Ant Design 6。以项目聊天组织团队协作，每个项目拥有自己 ID 的默认 Agent 并可按需申请自定义 Agent，只有显式 @ 已启用的 Agent 才触发工作；按需维护 Skill、Memory 和 GitHub 仓库。GitHub 能力由项目管理员在项目设置中控制，默认开启。
 
 ## 开发
 
