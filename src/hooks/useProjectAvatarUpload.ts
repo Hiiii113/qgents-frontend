@@ -25,7 +25,10 @@ export function useProjectAvatarUpload(teamId?: string) {
         mediaType: file.type,
         sizeBytes: file.size,
       })
-      const putRes = await fetch(credential.uploadUrl, { method: 'PUT', body: await file.arrayBuffer() })
+      const putRes = await fetch(credential.uploadUrl, {
+        method: 'PUT',
+        body: await file.arrayBuffer(),
+      })
       if (!putRes.ok) throw new Error(`头像上传失败（${putRes.status}）`)
       await projectApi.avatarConfirm(projectId, credential.objectKey)
       // 同步刷新所有展示项目头像的查询：项目详情/群聊、团队首页-项目列表（key 不同，需分别失效）

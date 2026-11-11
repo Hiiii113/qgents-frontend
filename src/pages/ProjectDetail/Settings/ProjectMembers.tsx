@@ -97,8 +97,7 @@ export function ProjectMembers() {
   const teamMemberById = new Map(teamMembers.map((tm) => [tm.userId, tm]))
   const resolveDisplayName = (m: ProjectMember) =>
     m.displayName || teamMemberById.get(m.userId)?.displayName || m.userId
-  const resolveEmail = (m: ProjectMember) =>
-    m.email || teamMemberById.get(m.userId)?.email || '—'
+  const resolveEmail = (m: ProjectMember) => m.email || teamMemberById.get(m.userId)?.email || '—'
 
   function confirmRemove(member: ProjectMember) {
     Modal.confirm({
@@ -136,13 +135,14 @@ export function ProjectMembers() {
       title: '角色',
       key: 'role',
       width: 150,
-      render: (_, m) => isTeamOwnerRow(m) ? (
-        <Tag color="gold">继承管理员</Tag>
-      ) : (
-        <Tag color={m.role === 'PROJECT_ADMIN' ? 'gold' : 'default'}>
-          {m.role === 'PROJECT_ADMIN' ? '管理员' : '成员'}
-        </Tag>
-      ),
+      render: (_, m) =>
+        isTeamOwnerRow(m) ? (
+          <Tag color="gold">继承管理员</Tag>
+        ) : (
+          <Tag color={m.role === 'PROJECT_ADMIN' ? 'gold' : 'default'}>
+            {m.role === 'PROJECT_ADMIN' ? '管理员' : '成员'}
+          </Tag>
+        ),
     },
     ...(isAdmin
       ? [
@@ -165,18 +165,24 @@ export function ProjectMembers() {
                 <Space size={4}>
                   <Popconfirm
                     title={actionLabel}
-                    description={m.role === 'PROJECT_ADMIN'
-                      ? '该成员将失去项目管理员权限。'
-                      : '该成员将获得项目管理权限。'}
+                    description={
+                      m.role === 'PROJECT_ADMIN'
+                        ? '该成员将失去项目管理员权限。'
+                        : '该成员将获得项目管理权限。'
+                    }
                     okText={actionLabel}
                     cancelText="取消"
-                    onConfirm={() => updateRoleMutation.mutate({ userId: m.userId, role: nextRole })}
+                    onConfirm={() =>
+                      updateRoleMutation.mutate({ userId: m.userId, role: nextRole })
+                    }
                   >
                     <Button
                       size="small"
                       type="link"
-                      loading={updateRoleMutation.isPending
-                        && updateRoleMutation.variables?.userId === m.userId}
+                      loading={
+                        updateRoleMutation.isPending &&
+                        updateRoleMutation.variables?.userId === m.userId
+                      }
                     >
                       {actionLabel}
                     </Button>
@@ -239,12 +245,7 @@ export function ProjectMembers() {
         message="团队所有者始终拥有本项目管理员权限（继承），无需出现在项目成员列表中。"
       />
 
-      <Table
-        rowKey="userId"
-        columns={columns}
-        dataSource={members}
-        pagination={false}
-      />
+      <Table rowKey="userId" columns={columns} dataSource={members} pagination={false} />
 
       {/* 添加成员弹窗：从团队现有成员里选（已在项目里的不显示） */}
       <Modal

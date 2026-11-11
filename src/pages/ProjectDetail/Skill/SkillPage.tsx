@@ -67,30 +67,34 @@ export function SkillPage() {
   const [editTarget, setEditTarget] = useState<Skill | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
 
-  const { data: skills = [], isLoading, isError, refetch } = useQuery({
+  const {
+    data: skills = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['skills', projectId],
     queryFn: () => skillApi.list(projectId),
     enabled: !!projectId,
   })
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ['skills', projectId] })
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['skills', projectId] })
 
   const filtered = useMemo(() => {
     const normalized = keyword.trim().toLowerCase()
     return skills.filter((skill) => {
       const matchesFilter = filter === 'ALL' || skill.status === filter
-      const searchable = [skill.name, skill.description, skill.content, ...(skill.tags ?? [])].join(' ').toLowerCase()
+      const searchable = [skill.name, skill.description, skill.content, ...(skill.tags ?? [])]
+        .join(' ')
+        .toLowerCase()
       return matchesFilter && (!normalized || searchable.includes(normalized))
     })
   }, [skills, filter, keyword])
 
   const detail = skills.find((s) => s.id === detailId) ?? null
 
-
   return (
     <>
-
       <div className="skill-page__toolbar">
         <Segmented
           options={FILTERS.map((f) => ({ label: f.label, value: f.key }))}
@@ -111,7 +115,9 @@ export function SkillPage() {
         </Space>
       </div>
 
-      {isLoading ? <Spin delay={180} size="large" /> : isError ? (
+      {isLoading ? (
+        <Spin delay={180} size="large" />
+      ) : isError ? (
         <EmptyState
           icon="⚠️"
           title="Skill 加载失败"
@@ -122,7 +128,11 @@ export function SkillPage() {
         <EmptyState
           icon="🛠️"
           title={keyword.trim() || filter !== 'ALL' ? '没有匹配的 Skill' : '暂无共享 Skill'}
-          description={keyword.trim() || filter !== 'ALL' ? '可以更换关键词或状态筛选' : '新建私有 Skill，或创建项目共享 Skill'}
+          description={
+            keyword.trim() || filter !== 'ALL'
+              ? '可以更换关键词或状态筛选'
+              : '新建私有 Skill，或创建项目共享 Skill'
+          }
         />
       ) : (
         <div className="skill-page__list">
@@ -164,7 +174,15 @@ export function SkillPage() {
 }
 
 /** 列表卡片 */
-function SkillCard({ skill, index, onClick }: { skill: Skill; index: number; onClick: () => void }) {
+function SkillCard({
+  skill,
+  index,
+  onClick,
+}: {
+  skill: Skill
+  index: number
+  onClick: () => void
+}) {
   const meta = STATUS_META[skill.status] ?? { color: 'default', label: skill.status }
   const vis = VISIBILITY_META[skill.visibility] ?? { color: 'default', label: skill.visibility }
   return (
@@ -188,9 +206,7 @@ function SkillCard({ skill, index, onClick }: { skill: Skill; index: number; onC
               {meta.label}
             </Tag>
           </Space>
-          <Text className="skill-card__creator">
-            {skill.creator?.displayName ?? '未知'}
-          </Text>
+          <Text className="skill-card__creator">{skill.creator?.displayName ?? '未知'}</Text>
         </div>
       </div>
       {(skill.tags ?? []).length > 0 && (
@@ -243,7 +259,9 @@ function SkillDetail({
           )}
         </div>
 
-        <Paragraph style={{ color: 'var(--qg-text-primary)', whiteSpace: 'pre-wrap', marginBottom: 0 }}>
+        <Paragraph
+          style={{ color: 'var(--qg-text-primary)', whiteSpace: 'pre-wrap', marginBottom: 0 }}
+        >
           {skill.content}
         </Paragraph>
 
@@ -259,8 +277,22 @@ function SkillDetail({
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 16 }}>
-          <SkillActions projectId={skill.projectId} id={skill.id} creatorId={skill.creator.id} status={skill.status} onEdit={onEdit} />
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            flexWrap: 'wrap',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            paddingTop: 16,
+          }}
+        >
+          <SkillActions
+            projectId={skill.projectId}
+            id={skill.id}
+            creatorId={skill.creator.id}
+            status={skill.status}
+            onEdit={onEdit}
+          />
         </div>
       </Space>
     </Drawer>
@@ -269,7 +301,11 @@ function SkillDetail({
 
 /** 新建 / 编辑弹窗 */
 function CreateSkillModal({
-  projectId, open, editTarget, onClose, onCreated,
+  projectId,
+  open,
+  editTarget,
+  onClose,
+  onCreated,
 }: {
   projectId: string
   open: boolean
@@ -286,7 +322,11 @@ function CreateSkillModal({
   useEffect(() => {
     if (!open) return
     form.resetFields()
-    form.setFieldsValue({ content: editTarget?.content, tags: editTarget?.tags.join(',') ?? '', visibility: editTarget?.visibility ?? 'PRIVATE' })
+    form.setFieldsValue({
+      content: editTarget?.content,
+      tags: editTarget?.tags.join(',') ?? '',
+      visibility: editTarget?.visibility ?? 'PRIVATE',
+    })
     setFile(null)
     setPreview(null)
     setError('')
@@ -299,14 +339,23 @@ function CreateSkillModal({
   })
   const save = useMutation({
     mutationFn: (values: { content: string; tags: string; visibility: SkillVisibility }) => {
-      const tags = (values.tags ?? '').split(',').map((tag) => tag.trim()).filter(Boolean)
+      const tags = (values.tags ?? '')
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
       return editTarget
         ? skillApi.patch(projectId, editTarget.id, { content: values.content, tags })
         : skillApi.create(projectId, { file: file!, visibility: values.visibility, tags })
     },
     onSuccess: (saved) => {
       onCreated()
-      message.success(editTarget ? 'Skill 已更新' : saved.status === 'PUBLISHED' ? 'Skill 已创建并发布' : 'Skill 草稿已创建，提交审核后即可共享')
+      message.success(
+        editTarget
+          ? 'Skill 已更新'
+          : saved.status === 'PUBLISHED'
+            ? 'Skill 已创建并发布'
+            : 'Skill 草稿已创建，提交审核后即可共享',
+      )
     },
     onError: (err) => setError(err.message),
   })
@@ -315,7 +364,9 @@ function CreateSkillModal({
     <Modal
       title={editTarget ? '编辑 Skill' : '导入 Skill'}
       open={open}
-      onCancel={() => { if (!previewMutation.isPending && !save.isPending) onClose() }}
+      onCancel={() => {
+        if (!previewMutation.isPending && !save.isPending) onClose()
+      }}
       closable={!previewMutation.isPending && !save.isPending}
       cancelButtonProps={{ disabled: previewMutation.isPending || save.isPending }}
       onOk={() => form.submit()}
@@ -329,28 +380,53 @@ function CreateSkillModal({
         {editTarget ? (
           <>
             <Text>可见性：{VISIBILITY_META[editTarget.visibility].label}</Text>
-            <Form.Item name="content" label="SKILL.md 完整内容" rules={[{ required: true, message: '请输入完整文件内容' }]}>
+            <Form.Item
+              name="content"
+              label="SKILL.md 完整内容"
+              rules={[{ required: true, message: '请输入完整文件内容' }]}
+            >
               <Input.TextArea autoSize={{ minRows: 8, maxRows: 18 }} />
             </Form.Item>
           </>
         ) : (
           <>
-            <Paragraph>仅导入单个 SKILL.md。文件中提到的文件、脚本、外部工具或其他 Skill 不会随之安装，宿主特有字段也未必生效。</Paragraph>
+            <Paragraph>
+              仅导入单个 SKILL.md。文件中提到的文件、脚本、外部工具或其他 Skill
+              不会随之安装，宿主特有字段也未必生效。
+            </Paragraph>
             <Form.Item label="选择 SKILL.md">
-              <input type="file" accept=".md" disabled={previewMutation.isPending} onChange={(event) => {
-                const selected = event.target.files?.[0]
-                setFile(null)
-                setPreview(null)
-                setError('')
-                if (!selected) return
-                setFile(selected)
-                previewMutation.mutate(selected)
-              }} />
+              <input
+                type="file"
+                accept=".md"
+                disabled={previewMutation.isPending}
+                onChange={(event) => {
+                  const selected = event.target.files?.[0]
+                  setFile(null)
+                  setPreview(null)
+                  setError('')
+                  if (!selected) return
+                  setFile(selected)
+                  previewMutation.mutate(selected)
+                }}
+              />
             </Form.Item>
             {previewMutation.isPending && <Spin />}
-            {preview && <div><Text strong>{preview.name}</Text><Paragraph>{preview.description}</Paragraph><Paragraph style={{ whiteSpace: 'pre-wrap', maxHeight: 240, overflow: 'auto' }}>{preview.content}</Paragraph></div>}
+            {preview && (
+              <div>
+                <Text strong>{preview.name}</Text>
+                <Paragraph>{preview.description}</Paragraph>
+                <Paragraph style={{ whiteSpace: 'pre-wrap', maxHeight: 240, overflow: 'auto' }}>
+                  {preview.content}
+                </Paragraph>
+              </div>
+            )}
             <Form.Item name="visibility" label="可见性" rules={[{ required: true }]}>
-              <Select options={[{ value: 'PRIVATE', label: '私有（仅自己可用）' }, { value: 'PROJECT_SHARED', label: '项目共享' }]} />
+              <Select
+                options={[
+                  { value: 'PRIVATE', label: '私有（仅自己可用）' },
+                  { value: 'PROJECT_SHARED', label: '项目共享' },
+                ]}
+              />
             </Form.Item>
           </>
         )}

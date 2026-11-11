@@ -85,7 +85,8 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
       void queryClient.invalidateQueries({ queryKey: ['teams', teamId, 'members'] })
     }
     if (type.startsWith('project.member.')) {
-      const projectId = typeof frame.payload.projectId === 'string' ? frame.payload.projectId : frame.resourceId
+      const projectId =
+        typeof frame.payload.projectId === 'string' ? frame.payload.projectId : frame.resourceId
       if (projectId) {
         void queryClient.invalidateQueries({ queryKey: ['chat', 'projects', projectId, 'members'] })
         void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
@@ -97,19 +98,30 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
   const projectId = typeof frame.projectId === 'string' && frame.projectId ? frame.projectId : null
   if (!projectId) return
   if (type === 'message.created' || type === 'message.updated') {
-    const groupId = frame.groupId || (typeof frame.payload.groupId === 'string' ? frame.payload.groupId : null)
+    const groupId =
+      frame.groupId || (typeof frame.payload.groupId === 'string' ? frame.payload.groupId : null)
     void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
-    if (groupId && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('qgents:message-event', { detail: { ...frame.payload, projectId, groupId } }))
+    if (groupId && typeof window !== 'undefined')
+      window.dispatchEvent(
+        new CustomEvent('qgents:message-event', {
+          detail: { ...frame.payload, projectId, groupId },
+        }),
+      )
     return
   }
-  if (type.startsWith('memory.')) void queryClient.invalidateQueries({ queryKey: ['memory', projectId] })
-  if (type.startsWith('skill.')) void queryClient.invalidateQueries({ queryKey: ['skills', projectId] })
-  if (type.startsWith('repository.')) void queryClient.invalidateQueries({ queryKey: ['repositories', projectId] })
+  if (type.startsWith('memory.'))
+    void queryClient.invalidateQueries({ queryKey: ['memory', projectId] })
+  if (type.startsWith('skill.'))
+    void queryClient.invalidateQueries({ queryKey: ['skills', projectId] })
+  if (type.startsWith('repository.'))
+    void queryClient.invalidateQueries({ queryKey: ['repositories', projectId] })
   if (type.startsWith('group.')) {
     void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
-    if (type === 'group.member.updated') void queryClient.invalidateQueries({ queryKey: ['chat', 'projects', projectId, 'members'] })
+    if (type === 'group.member.updated')
+      void queryClient.invalidateQueries({ queryKey: ['chat', 'projects', projectId, 'members'] })
   }
-  if (type.startsWith('project.')) void queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
+  if (type.startsWith('project.'))
+    void queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
 }
 
 export class RealtimeClient {
@@ -214,7 +226,11 @@ export class RealtimeClient {
     } catch {
       return // 非 JSON 文本帧（心跳等控制帧）忽略
     }
-    if (typeof raw === 'object' && raw !== null && (raw as Record<string, unknown>).type === 'hello') {
+    if (
+      typeof raw === 'object' &&
+      raw !== null &&
+      (raw as Record<string, unknown>).type === 'hello'
+    ) {
       const wasReconnecting = this.retryAttempt > 0
       this.retryAttempt = 0
       setConnectionStatus('connected')

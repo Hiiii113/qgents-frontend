@@ -30,47 +30,83 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   const [readingLatest, setReadingLatest] = useState(true)
   const [targetId, setTargetId] = useState<string | null>(params.get('messageId'))
   const [stoppedIds, setStoppedIds] = useState<ReadonlySet<string>>(new Set())
-  const project = useQuery({ queryKey: ['projects', projectId], queryFn: () => projectApi.getById(projectId), enabled: Boolean(projectId) })
-  const groups = useQuery({ queryKey: chatKeys.groups(projectId), queryFn: () => chatApi.groups(projectId), enabled: Boolean(projectId) })
-  const members = useQuery({ queryKey: chatKeys.members(projectId, groupId), queryFn: () => chatApi.members(projectId, groupId), enabled: Boolean(groupId) })
-  const group = groups.data?.find(item => item.id === groupId)
+  const project = useQuery({
+    queryKey: ['projects', projectId],
+    queryFn: () => projectApi.getById(projectId),
+    enabled: Boolean(projectId),
+  })
+  const groups = useQuery({
+    queryKey: chatKeys.groups(projectId),
+    queryFn: () => chatApi.groups(projectId),
+    enabled: Boolean(projectId),
+  })
+  const members = useQuery({
+    queryKey: chatKeys.members(projectId, groupId),
+    queryFn: () => chatApi.members(projectId, groupId),
+    enabled: Boolean(groupId),
+  })
+  const group = groups.data?.find((item) => item.id === groupId)
   const pin = useMutation({
     mutationFn: () => chatApi.pin(projectId, groupId, !group?.pinned),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
     },
-    onError: error => void message.error(formatApiError(error)),
+    onError: (error) => void message.error(formatApiError(error)),
   })
   const chat = useChatMessages(projectId, groupId, readingLatest)
   const sendAsync = chat.send.mutateAsync
   const isAdmin = project.data?.role === 'PROJECT_ADMIN'
-  const recipients = useMemo(() => members.data?.filter(member => member.memberType !== 'USER' || member.id !== user?.id) ?? [], [members.data, user?.id])
+  const recipients = useMemo(
+    () =>
+      members.data?.filter((member) => member.memberType !== 'USER' || member.id !== user?.id) ??
+      [],
+    [members.data, user?.id],
+  )
   const stop = useMutation({
     mutationFn: (item: ChatMessage) => chatApi.cancel(projectId, groupId, item.id),
     onSuccess: (result, item) => {
-      setStoppedIds(current => new Set([...current, item.id]))
+      setStoppedIds((current) => new Set([...current, item.id]))
       void message.success(result.cancelledRuns ? '已请求停止执行' : '这条消息的执行已结束')
     },
-    onError: error => void message.error(formatApiError(error)),
+    onError: (error) => void message.error(formatApiError(error)),
   })
   const stopMessage = stop.mutate
   const handleStop = useCallback((item: ChatMessage) => stopMessage(item), [stopMessage])
   const handleReply = useCallback((item: ChatMessage) => setReply(item), [])
   const clearReply = useCallback(() => setReply(null), [])
-  const handlePreview = useCallback((item: ChatMessage) => {
-    if (!messageField(item, 'attachmentId')) { void message.info('附件暂时无法预览'); return }
-    setPreview(item)
-  }, [message])
-  const locate = useCallback(async (id: string) => {
-    if (!id) return
-    setTargetId(null)
-    try {
-      const item = await chatApi.message(projectId, groupId, id)
-      client.setQueryData<InfiniteData<Page<ChatMessage>, string | undefined>>(chatKeys.messages(projectId, groupId), current => mergeChatMessages(current, [item]))
-      setTargetId(id)
-    } catch (error) { void message.error(formatApiError(error)) }
-  }, [client, projectId, groupId, message])
-  const onLocate = useCallback((id: string) => { void locate(id) }, [locate])
+  const handlePreview = useCallback(
+    (item: ChatMessage) => {
+      if (!messageField(item, 'attachmentId')) {
+        void message.info('附件暂时无法预览')
+        return
+      }
+      setPreview(item)
+    },
+    [message],
+  )
+  const locate = useCallback(
+    async (id: string) => {
+      if (!id) return
+      setTargetId(null)
+      try {
+        const item = await chatApi.message(projectId, groupId, id)
+        client.setQueryData<InfiniteData<Page<ChatMessage>, string | undefined>>(
+          chatKeys.messages(projectId, groupId),
+          (current) => mergeChatMessages(current, [item]),
+        )
+        setTargetId(id)
+      } catch (error) {
+        void message.error(formatApiError(error))
+      }
+    },
+    [client, projectId, groupId, message],
+  )
+  const onLocate = useCallback(
+    (id: string) => {
+      void locate(id)
+    },
+    [locate],
+  )
   const handleSend = useCallback((body: SendChatMessage) => sendAsync(body), [sendAsync])
   const loadOlder = chat.query.fetchNextPage
   const linkedMessageId = params.get('messageId')
@@ -79,32 +115,138 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
     if (linkedMessageId && ready) void locate(linkedMessageId)
   }, [linkedMessageId, ready, locate])
 
-  return <section className="chat-panel">
-    <header className="chat-panel__header">
-      <div className="chat-panel__identity"><span className="chat-panel__project-icon"><TeamOutlined /></span><div>
-        <h1>{group?.title || project.data?.name || '项目聊天'}</h1><p>{group?.defaultGroup ? '默认群 · 全体项目成员' : '一起讨论，必要时 @Agent 开展工作'}</p>
-      </div></div>
-      <div className="chat-panel__header-actions">
-        <Tooltip title={group?.pinned ? '取消置顶' : '置顶聊天'}><Button type="text" icon={<PushpinOutlined />} aria-label={group?.pinned ? '取消置顶' : '置顶聊天'} loading={pin.isPending} onClick={() => pin.mutate()} /></Tooltip>
-        <Button type="text" icon={<TeamOutlined />} onClick={() => setMembersOpen(true)}>{group?.memberCount ?? members.data?.length ?? 0} 位成员</Button>
-      </div>
-    </header>
-    {chat.query.isError && <Alert showIcon type="error" message={formatApiError(chat.query.error)} action={<Button onClick={() => void chat.query.refetch()}>重试</Button>} />}
-    {chat.syncError && <Alert type="warning" showIcon message="消息同步暂时中断，恢复连接后会自动补齐" />}
-    <ChatMessageList messages={chat.messages} projectId={projectId} participants={members.data} loading={chat.query.isPending} hasMore={chat.query.hasNextPage} loadingOlder={chat.query.isFetchingNextPage}
-      currentUserId={user?.id} isAdmin={isAdmin} stoppedIds={stoppedIds} stoppingId={stop.isPending ? stop.variables?.id : undefined}
-      targetId={targetId} onReadingLatestChange={setReadingLatest} onLoadOlder={loadOlder} onReply={handleReply} onStop={handleStop} onPreview={handlePreview} onLocate={onLocate} />
-    {project.data?.status === 'ARCHIVED' && <Alert type="info" showIcon message="项目已归档，可以查看历史消息，恢复项目后可继续聊天。" />}
-    <ChatComposer key={groupId} draftKey={`qgents:chat-draft:${user?.id}:${projectId}:${groupId}`} projectId={projectId} reply={reply} recipients={recipients} onSend={handleSend} onClearReply={clearReply} disabled={!ready || project.data?.status === 'ARCHIVED'} />
-    <Drawer title="群聊成员" open={membersOpen} onClose={() => setMembersOpen(false)}>
-      <p className="chat-members__hint">{group?.defaultGroup ? '默认群的用户与项目成员同步。' : '这个群聊中的成员与 Agent。'}</p>
-      <Button type="primary" block onClick={() => setInviteOpen(true)} disabled={project.data?.status === 'ARCHIVED'}>邀请成员 / Agent</Button>
-      <List dataSource={members.data ?? []} renderItem={member => <List.Item><List.Item.Meta
-        avatar={<Avatar src={member.avatarUrl} icon={member.memberType === 'AGENT' ? <RobotOutlined /> : undefined}>{member.memberType === 'USER' ? member.displayName.slice(0, 1) : undefined}</Avatar>}
-        title={<>{member.displayName} {member.memberType === 'AGENT' && <Tag>Agent</Tag>}</>} description={member.memberType === 'USER' ? member.email || undefined : undefined} /></List.Item>} />
-      <Link to={PATHS.projectSettings(projectId)}><Button block>项目设置</Button></Link>
-    </Drawer>
-    {inviteOpen && group && project.data && <GroupMembersModal projectId={projectId} teamId={project.data.teamId} group={group} onClose={() => setInviteOpen(false)} />}
-    {preview && <AttachmentPreviewModal open projectId={projectId} attachmentId={messageField(preview, 'attachmentId')} fileName={messageField(preview, 'name') || undefined} onClose={() => setPreview(null)} />}
-  </section>
+  return (
+    <section className="chat-panel">
+      <header className="chat-panel__header">
+        <div className="chat-panel__identity">
+          <span className="chat-panel__project-icon">
+            <TeamOutlined />
+          </span>
+          <div>
+            <h1>{group?.title || project.data?.name || '项目聊天'}</h1>
+            <p>
+              {group?.defaultGroup ? '默认群 · 全体项目成员' : '一起讨论，必要时 @Agent 开展工作'}
+            </p>
+          </div>
+        </div>
+        <div className="chat-panel__header-actions">
+          <Tooltip title={group?.pinned ? '取消置顶' : '置顶聊天'}>
+            <Button
+              type="text"
+              icon={<PushpinOutlined />}
+              aria-label={group?.pinned ? '取消置顶' : '置顶聊天'}
+              loading={pin.isPending}
+              onClick={() => pin.mutate()}
+            />
+          </Tooltip>
+          <Button type="text" icon={<TeamOutlined />} onClick={() => setMembersOpen(true)}>
+            {group?.memberCount ?? members.data?.length ?? 0} 位成员
+          </Button>
+        </div>
+      </header>
+      {chat.query.isError && (
+        <Alert
+          showIcon
+          type="error"
+          message={formatApiError(chat.query.error)}
+          action={<Button onClick={() => void chat.query.refetch()}>重试</Button>}
+        />
+      )}
+      {chat.syncError && (
+        <Alert type="warning" showIcon message="消息同步暂时中断，恢复连接后会自动补齐" />
+      )}
+      <ChatMessageList
+        messages={chat.messages}
+        projectId={projectId}
+        participants={members.data}
+        loading={chat.query.isPending}
+        hasMore={chat.query.hasNextPage}
+        loadingOlder={chat.query.isFetchingNextPage}
+        currentUserId={user?.id}
+        isAdmin={isAdmin}
+        stoppedIds={stoppedIds}
+        stoppingId={stop.isPending ? stop.variables?.id : undefined}
+        targetId={targetId}
+        onReadingLatestChange={setReadingLatest}
+        onLoadOlder={loadOlder}
+        onReply={handleReply}
+        onStop={handleStop}
+        onPreview={handlePreview}
+        onLocate={onLocate}
+      />
+      {project.data?.status === 'ARCHIVED' && (
+        <Alert
+          type="info"
+          showIcon
+          message="项目已归档，可以查看历史消息，恢复项目后可继续聊天。"
+        />
+      )}
+      <ChatComposer
+        key={groupId}
+        draftKey={`qgents:chat-draft:${user?.id}:${projectId}:${groupId}`}
+        projectId={projectId}
+        reply={reply}
+        recipients={recipients}
+        onSend={handleSend}
+        onClearReply={clearReply}
+        disabled={!ready || project.data?.status === 'ARCHIVED'}
+      />
+      <Drawer title="群聊成员" open={membersOpen} onClose={() => setMembersOpen(false)}>
+        <p className="chat-members__hint">
+          {group?.defaultGroup ? '默认群的用户与项目成员同步。' : '这个群聊中的成员与 Agent。'}
+        </p>
+        <Button
+          type="primary"
+          block
+          onClick={() => setInviteOpen(true)}
+          disabled={project.data?.status === 'ARCHIVED'}
+        >
+          邀请成员 / Agent
+        </Button>
+        <List
+          dataSource={members.data ?? []}
+          renderItem={(member) => (
+            <List.Item>
+              <List.Item.Meta
+                avatar={
+                  <Avatar
+                    src={member.avatarUrl}
+                    icon={member.memberType === 'AGENT' ? <RobotOutlined /> : undefined}
+                  >
+                    {member.memberType === 'USER' ? member.displayName.slice(0, 1) : undefined}
+                  </Avatar>
+                }
+                title={
+                  <>
+                    {member.displayName} {member.memberType === 'AGENT' && <Tag>Agent</Tag>}
+                  </>
+                }
+                description={member.memberType === 'USER' ? member.email || undefined : undefined}
+              />
+            </List.Item>
+          )}
+        />
+        <Link to={PATHS.projectSettings(projectId)}>
+          <Button block>项目设置</Button>
+        </Link>
+      </Drawer>
+      {inviteOpen && group && project.data && (
+        <GroupMembersModal
+          projectId={projectId}
+          teamId={project.data.teamId}
+          group={group}
+          onClose={() => setInviteOpen(false)}
+        />
+      )}
+      {preview && (
+        <AttachmentPreviewModal
+          open
+          projectId={projectId}
+          attachmentId={messageField(preview, 'attachmentId')}
+          fileName={messageField(preview, 'name') || undefined}
+          onClose={() => setPreview(null)}
+        />
+      )}
+    </section>
+  )
 }

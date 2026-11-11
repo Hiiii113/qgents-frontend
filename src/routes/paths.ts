@@ -1,6 +1,10 @@
 export const PATHS = {
-  LOGIN: '/login', FORGOT_PASSWORD: '/forgot-password', WELCOME: '/welcome', APP: '/app',
-  CREATE_TEAM: '/app/teams/create', JOIN_TEAM: '/app/teams/join',
+  LOGIN: '/login',
+  FORGOT_PASSWORD: '/forgot-password',
+  WELCOME: '/welcome',
+  APP: '/app',
+  CREATE_TEAM: '/app/teams/create',
+  JOIN_TEAM: '/app/teams/join',
   teamDetail: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}`,
   teamSettings: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}/settings`,
   projectDetail: (projectId: string) => `/app/projects/${encodeURIComponent(projectId)}`,
@@ -16,5 +20,6 @@ export const PATHS = {
   projectCode: (id: string) => `/app/projects/${encodeURIComponent(id)}/code`,
   projectSettings: (id: string) => `/app/projects/${encodeURIComponent(id)}/settings`,
   GITHUB_INTEGRATION: '/app/integrations/github',
-  githubIntegration: (teamId: string) => `/app/integrations/github?teamId=${encodeURIComponent(teamId)}`,
+  githubIntegration: (teamId: string) =>
+    `/app/integrations/github?teamId=${encodeURIComponent(teamId)}`,
 } as const

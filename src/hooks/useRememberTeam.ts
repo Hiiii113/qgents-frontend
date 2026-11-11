@@ -10,9 +10,16 @@ export function useRememberTeam(teamId?: string) {
   useEffect(() => {
     if (!teamId || useAppUiStore.getState().currentTeamId === teamId) return
     let cancelled = false
-    authApi.selectTeam(teamId).then(() => {
-      if (!cancelled) useAppUiStore.getState().setCurrentTeam(teamId)
-    }).catch(error => { if (!cancelled) message.error(formatApiError(error)) })
-    return () => { cancelled = true }
+    authApi
+      .selectTeam(teamId)
+      .then(() => {
+        if (!cancelled) useAppUiStore.getState().setCurrentTeam(teamId)
+      })
+      .catch((error) => {
+        if (!cancelled) message.error(formatApiError(error))
+      })
+    return () => {
+      cancelled = true
+    }
   }, [teamId, message])
 }

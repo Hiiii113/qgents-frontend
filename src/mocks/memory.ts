@@ -16,14 +16,26 @@ const SEED = `# 项目约定
 function document(projectId: string) {
   let doc = documents.get(projectId)
   if (!doc) {
-    doc = { content: projectId === '2' ? SEED : '', revision: 1, updatedAt: new Date().toISOString() }
+    doc = {
+      content: projectId === '2' ? SEED : '',
+      revision: 1,
+      updatedAt: new Date().toISOString(),
+    }
     documents.set(projectId, doc)
   }
   return doc
 }
 
-function response(projectId: string, doc: { content: string; revision: number; updatedAt: string }): ProjectMemory {
-  return { projectId, content: doc.content, version: String(doc.revision), updatedAt: doc.updatedAt }
+function response(
+  projectId: string,
+  doc: { content: string; revision: number; updatedAt: string },
+): ProjectMemory {
+  return {
+    projectId,
+    content: doc.content,
+    version: String(doc.revision),
+    updatedAt: doc.updatedAt,
+  }
 }
 
 export const memoryHandlers = [
@@ -38,7 +50,12 @@ export const memoryHandlers = [
     const current = document(projectId)
     if (body.version !== String(current.revision)) {
       return HttpResponse.json(
-        { error: { code: 'MEMORY_VERSION_CONFLICT', message: '项目记忆已被修改，请重新读取后再保存' } },
+        {
+          error: {
+            code: 'MEMORY_VERSION_CONFLICT',
+            message: '项目记忆已被修改，请重新读取后再保存',
+          },
+        },
         { status: 409 },
       )
     }

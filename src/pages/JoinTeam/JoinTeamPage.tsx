@@ -37,7 +37,7 @@ export default function JoinTeamPage() {
       setSuccess(`已成功加入「${inv.teamName}」`)
       queryClient.invalidateQueries({ queryKey: ['team-invitations', 'mine'] })
       queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
-      queryClient.invalidateQueries({queryKey:['teams',inv.teamId,'projects']})
+      queryClient.invalidateQueries({ queryKey: ['teams', inv.teamId, 'projects'] })
       void message.success(`已加入「${inv.teamName}」`)
       navigate(PATHS.teamDetail(inv.teamId), { replace: true })
     },
@@ -72,9 +72,7 @@ export default function JoinTeamPage() {
         ← 返回首页
       </Link>
       <h1>加入已有团队</h1>
-      <p className="join-team__desc">
-        输入团队邀请邮件中的邀请令牌，即可加入团队
-      </p>
+      <p className="join-team__desc">输入团队邀请邮件中的邀请令牌，即可加入团队</p>
 
       <form className="join-team__card" onSubmit={handleSubmit}>
         {error && (
@@ -118,8 +116,20 @@ export default function JoinTeamPage() {
                     <div className="join-team__invite-left">
                       <div className="join-team__invite-title">
                         <strong>{inv.teamName}</strong>
-                        <Tag color={inv.role === 'TEAM_OWNER' ? 'gold' : inv.role === 'TEAM_ADMIN' ? 'blue' : 'default'}>
-                          {inv.role === 'TEAM_OWNER' ? '所有者' : inv.role === 'TEAM_ADMIN' ? '管理员' : '成员'}
+                        <Tag
+                          color={
+                            inv.role === 'TEAM_OWNER'
+                              ? 'gold'
+                              : inv.role === 'TEAM_ADMIN'
+                                ? 'blue'
+                                : 'default'
+                          }
+                        >
+                          {inv.role === 'TEAM_OWNER'
+                            ? '所有者'
+                            : inv.role === 'TEAM_ADMIN'
+                              ? '管理员'
+                              : '成员'}
                         </Tag>
                         {expired && <Tag color="red">已过期</Tag>}
                       </div>

@@ -19,29 +19,57 @@ function Address() {
 }
 
 function openSettings(path: string) {
-  return renderWorkspace(<><Routes><Route element={<ProjectSettingsLayout />}>
-    <Route path="settings" element={<SettingsPage />} />
-    <Route path="agents" element={<ProjectAgents />} />
-    <Route path="skills" element={<SkillPage />} />
-    <Route path="memory" element={<MemoryPage />} />
-    <Route path="code" element={<CodePage />} />
-  </Route></Routes><Address /></>, path, '/app/projects/:projectId/*', client => {
-    client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目', role: 'PROJECT_ADMIN' })
-    client.setQueryData(['teams', 't1'], { id: 't1', role: 'TEAM_OWNER' })
-    client.setQueryData(['projects', 'p1', 'members'], [{ userId: 'u1', displayName: '创建者', role: 'PROJECT_ADMIN' }])
-    client.setQueryData(['teams', 't1', 'members'], [])
-    client.setQueryData(['skills', 'p1'], [])
-    client.setQueryData(chatKeys.agents('p1'), [])
-    client.setQueryData(['memory', 'p1'], { projectId: 'p1', content: '', version: '1', updatedAt: new Date().toISOString() })
-    client.setQueryData(['repositories', 'p1'], [])
-  })
+  return renderWorkspace(
+    <>
+      <Routes>
+        <Route element={<ProjectSettingsLayout />}>
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="agents" element={<ProjectAgents />} />
+          <Route path="skills" element={<SkillPage />} />
+          <Route path="memory" element={<MemoryPage />} />
+          <Route path="code" element={<CodePage />} />
+        </Route>
+      </Routes>
+      <Address />
+    </>,
+    path,
+    '/app/projects/:projectId/*',
+    (client) => {
+      client.setQueryData(['projects', 'p1'], {
+        id: 'p1',
+        teamId: 't1',
+        name: '项目',
+        role: 'PROJECT_ADMIN',
+      })
+      client.setQueryData(['teams', 't1'], { id: 't1', role: 'TEAM_OWNER' })
+      client.setQueryData(
+        ['projects', 'p1', 'members'],
+        [{ userId: 'u1', displayName: '创建者', role: 'PROJECT_ADMIN' }],
+      )
+      client.setQueryData(['teams', 't1', 'members'], [])
+      client.setQueryData(['skills', 'p1'], [])
+      client.setQueryData(chatKeys.agents('p1'), [])
+      client.setQueryData(['memory', 'p1'], {
+        projectId: 'p1',
+        content: '',
+        version: '1',
+        updatedAt: new Date().toISOString(),
+      })
+      client.setQueryData(['repositories', 'p1'], [])
+    },
+  )
 }
 
 it('opens every management capability from the same horizontal tabs and preserves the chat group', async () => {
   openSettings('/app/projects/p1/settings?groupId=g2')
   const heading = screen.getByRole('heading', { name: '项目设置' })
-  expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual([
-    '基本信息', '成员管理', 'Agent', 'Skill', '共享知识', '项目仓库',
+  expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+    '基本信息',
+    '成员管理',
+    'Agent',
+    'Skill',
+    '共享知识',
+    '项目仓库',
   ])
   for (const [label, path, control] of [
     ['Agent', 'agents', '申请新 Agent'],

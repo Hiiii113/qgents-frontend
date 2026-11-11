@@ -50,7 +50,10 @@ describe('LoginPage 注册验证码', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     authApiMock.sendRegisterCode.mockResolvedValue({ message: '验证码已发送到邮箱，10 分钟内有效' })
-    registerMock.mockResolvedValue({ user: { id: 'u1', email: 'u@example.com', displayName: 'U' }, hasTeam: false })
+    registerMock.mockResolvedValue({
+      user: { id: 'u1', email: 'u@example.com', displayName: 'U' },
+      hasTeam: false,
+    })
   })
 
   it('shows the verification-code field and button only on the register tab', async () => {

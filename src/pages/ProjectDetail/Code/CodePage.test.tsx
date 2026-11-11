@@ -4,10 +4,15 @@ import { renderWorkspace } from '@/test/renderWorkspace'
 import { CodePage } from './CodePage'
 afterEach(cleanup)
 function show(role: string) {
-  renderWorkspace(<CodePage />, '/app/projects/p1/code', '/app/projects/:projectId/code', client => {
-    client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目', role })
-    client.setQueryData(['repositories', 'p1'], [])
-  })
+  renderWorkspace(
+    <CodePage />,
+    '/app/projects/p1/code',
+    '/app/projects/:projectId/code',
+    (client) => {
+      client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目', role })
+      client.setQueryData(['repositories', 'p1'], [])
+    },
+  )
 }
 describe('project repositories', () => {
   it('offers explicit import to project admins and keeps work in chat', () => {

@@ -30,30 +30,52 @@ describe('API client authentication recovery', () => {
   it('refreshes and retries on a documented 401 even without an internal error code', async () => {
     localStorage.setItem('qgents_access_token', 'expired-access-token')
     localStorage.setItem('qgents_refresh_token', 'refresh-token')
-    const fetchMock = vi.spyOn(globalThis, 'fetch')
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(response(401, { error: { message: 'Token expired' } }))
-      .mockResolvedValueOnce(response(200, { data: { accessToken: 'new-access-token', refreshToken: 'new-refresh-token' } }))
+      .mockResolvedValueOnce(
+        response(200, {
+          data: { accessToken: 'new-access-token', refreshToken: 'new-refresh-token' },
+        }),
+      )
       .mockResolvedValueOnce(response(200, { data: { id: '1' } }))
 
-    await expect(request<{ id: string }>('/projects/project-1/groups')).resolves.toEqual({ id: '1' })
+    await expect(request<{ id: string }>('/projects/project-1/groups')).resolves.toEqual({
+      id: '1',
+    })
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/auth/refresh', expect.objectContaining({
-      method: 'POST',
-      body: JSON.stringify({ refreshToken: 'refresh-token' }),
-    }))
-    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/projects/project-1/groups', expect.objectContaining({
-      headers: expect.objectContaining({ Authorization: 'Bearer new-access-token' }),
-    }))
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/auth/refresh',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ refreshToken: 'refresh-token' }),
+      }),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      '/api/projects/project-1/groups',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer new-access-token' }),
+      }),
+    )
     expect(localStorage.getItem('qgents_access_token')).toBe('new-access-token')
   })
 
   it('sends Skill preview and creation as multipart and edits as JSON', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => response(200, { data: {} }))
-    const file = new File([`---
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => response(200, { data: {} }))
+    const file = new File(
+      [
+        `---
 name: Test
 description: Demo
 ---
-Body`], 'SKILL.md')
+Body`,
+      ],
+      'SKILL.md',
+    )
     await skillApi.preview('p1', file)
     await skillApi.create('p1', { file, visibility: 'PRIVATE', tags: ['demo'] })
     await skillApi.patch('p1', 's1', { content: 'new content', tags: ['updated'] })
@@ -73,12 +95,20 @@ Body`], 'SKILL.md')
     localStorage.setItem('qgents_access_token', 'old-access-token')
     localStorage.setItem('qgents_refresh_token', 'old-refresh-token')
     let respond: (value: Response) => void = () => {}
-    const fetchMock = vi.spyOn(globalThis, 'fetch')
-      .mockImplementation(() => new Promise<Response>((resolve) => { respond = resolve }))
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(
+      () =>
+        new Promise<Response>((resolve) => {
+          respond = resolve
+        }),
+    )
 
     const refreshing = refreshAccessToken()
     beginLogout()
-    respond(response(200, { data: { accessToken: 'new-access-token', refreshToken: 'rotated-refresh-token' } }))
+    respond(
+      response(200, {
+        data: { accessToken: 'new-access-token', refreshToken: 'rotated-refresh-token' },
+      }),
+    )
 
     await expect(refreshing).resolves.toBeNull()
     // 登出后不写回登录态，但轮换出的新令牌要留给服务端撤销

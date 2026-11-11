@@ -6,21 +6,21 @@
 
 每个项目创建时生成自己的默认 Agent（名称 Qgent，ID 自增，项目之间互不复用），并自动拥有一个包含该默认 Agent 的默认群聊；项目成员可创建新群，按需邀请项目成员及本项目已启用的 Agent。默认群对项目成员开放，新群仅向群成员开放。群聊无独立简介字段，创建、修改、群响应和执行上下文均不携带简介；群名通过 `title` 修改。聊天协议保留 `AGENT` 成员类型，成员 ID 为用户 ID 或该项目的 Agent ID；创建或邀请请求的 `agentIds` 只能包含本项目已启用的 Agent。创建项目只传 `name`、`description`、可选 `memberIds`，仓库随后按需导入。项目读写、成员增删和角色调整、头像、归档与恢复使用 `ProjectController` 接口；`PATCH /projects/{projectId}` 只更新 `name`、`description`、`avatarUrl`，三者都不传时返回 422；不存在项目 `/settings` 配置接口，也不再通过退出群聊退出项目。
 
-| 操作 | 接口 |
-| --- | --- |
-| 项目群聊 | `GET /projects/{projectId}/groups` |
-| 创建群聊 | `POST /projects/{projectId}/groups`，只传 `title`、`userIds`、`agentIds` |
-| 项目已启用 Agent | `GET /projects/{projectId}/agents`，返回 `id`、`name`、`description`、`avatarUrl`、`defaultAgent`、`status`，只含 `ACTIVE` |
-| 提交 Agent 申请 | `POST /projects/{projectId}/agents/applications`，传 `name`、`systemPrompt`，可选 `description`、`avatarUrl`；返回 `status: PENDING` |
-| 邀请群成员 | `POST /projects/{projectId}/groups/{groupId}/members` |
-| 群聊成员 | `GET /projects/{projectId}/groups/{groupId}/members` |
-| 历史消息 | `GET .../messages?cursor=&limit=30`，倒序返回 |
-| 增量消息 | `GET .../messages/incremental?afterSequence=&limit=100`，序号升序返回 |
-| 定位消息 | `GET .../messages/{messageId}` |
-| 发送消息 | `POST .../messages`，返回 `data: MessageResponse` |
-| 停止 Qgent 工作 | `POST .../messages/{messageId}/cancel-agent`，返回 `cancelledRuns` |
-| 已读 | `POST .../read`，返回 `lastReadSequenceNo` |
-| 置顶 | `PUT .../pin`，请求 `{ pinned: boolean }` |
+| 操作             | 接口                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 项目群聊         | `GET /projects/{projectId}/groups`                                                                                                   |
+| 创建群聊         | `POST /projects/{projectId}/groups`，只传 `title`、`userIds`、`agentIds`                                                             |
+| 项目已启用 Agent | `GET /projects/{projectId}/agents`，返回 `id`、`name`、`description`、`avatarUrl`、`defaultAgent`、`status`，只含 `ACTIVE`           |
+| 提交 Agent 申请  | `POST /projects/{projectId}/agents/applications`，传 `name`、`systemPrompt`，可选 `description`、`avatarUrl`；返回 `status: PENDING` |
+| 邀请群成员       | `POST /projects/{projectId}/groups/{groupId}/members`                                                                                |
+| 群聊成员         | `GET /projects/{projectId}/groups/{groupId}/members`                                                                                 |
+| 历史消息         | `GET .../messages?cursor=&limit=30`，倒序返回                                                                                        |
+| 增量消息         | `GET .../messages/incremental?afterSequence=&limit=100`，序号升序返回                                                                |
+| 定位消息         | `GET .../messages/{messageId}`                                                                                                       |
+| 发送消息         | `POST .../messages`，返回 `data: MessageResponse`                                                                                    |
+| 停止 Qgent 工作  | `POST .../messages/{messageId}/cancel-agent`，返回 `cancelledRuns`                                                                   |
+| 已读             | `POST .../read`，返回 `lastReadSequenceNo`                                                                                           |
+| 置顶             | `PUT .../pin`，请求 `{ pinned: boolean }`                                                                                            |
 
 公开发送类型为 `TEXT/CODE/IMAGE/FILE`，响应还包含 `SYSTEM`。请求使用结构化 `content`、可选 `mentions`、可选 `replyToId` 和 `clientMessageId`。回复保持原类型，使用 `replyToId + content`，不发送 QUOTE、replyText 或 Task 配置。普通消息不触发工作；明确的 `{ type: 'AGENT', id }` 提及才触发该 Agent，且被提及的 Agent 必须是当前群成员，否则返回 422 `AGENT_NOT_IN_GROUP`。Agent 消息响应使用 `senderType: 'AGENT'`、真实 `senderId` 与 `senderName`。停止权限由后端校验，前端提供给原发送者及项目管理员。
 

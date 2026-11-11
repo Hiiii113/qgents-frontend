@@ -89,7 +89,14 @@ export function LoginPage() {
       // completeAuth 与 navigate 在同一同步块内，React 批处理成一次渲染，
       // 避免 setUser 先触发 RedirectIfAuthed 用残留的 location.state.from 抢跳
       completeAuth(session)
-      navigate(session.currentTeamId ? PATHS.teamDetail(session.currentTeamId) : session.hasTeam ? PATHS.APP : PATHS.WELCOME, { replace: true, state: null })
+      navigate(
+        session.currentTeamId
+          ? PATHS.teamDetail(session.currentTeamId)
+          : session.hasTeam
+            ? PATHS.APP
+            : PATHS.WELCOME,
+        { replace: true, state: null },
+      )
     } catch (err) {
       setError(formatApiError(err))
     } finally {
@@ -111,9 +118,7 @@ export function LoginPage() {
           <span>gents</span>
         </div>
 
-        <h1 className="login-page__headline">
-          团队与 Qgent，在同一个项目现场协作
-        </h1>
+        <h1 className="login-page__headline">团队与 Qgent，在同一个项目现场协作</h1>
 
         <ul className="login-page__features">
           <li>
@@ -162,11 +167,7 @@ export function LoginPage() {
         <div className="login-card">
           <header className="login-card__header">
             <h2>{tab === 'login' ? '登录 Qgents' : '注册 Qgents'}</h2>
-            <p>
-              {tab === 'login'
-                ? '使用个人账号进入你的团队'
-                : '创建账号，开始团队协作'}
-            </p>
+            <p>{tab === 'login' ? '使用个人账号进入你的团队' : '创建账号，开始团队协作'}</p>
           </header>
 
           <div className="login-card__tabs" role="tablist">
@@ -292,11 +293,7 @@ export function LoginPage() {
             )}
 
             <button type="submit" className="login-card__submit" disabled={submitting}>
-              {submitting
-                ? '请稍候…'
-                : tab === 'login'
-                  ? '登录'
-                  : '注册'}
+              {submitting ? '请稍候…' : tab === 'login' ? '登录' : '注册'}
             </button>
           </form>
 
@@ -353,7 +350,12 @@ function BotIcon() {
       <rect x="5" y="8" width="14" height="11" rx="3" stroke="currentColor" strokeWidth="1.7" />
       <circle cx="9.5" cy="13" r="1.2" fill="currentColor" />
       <circle cx="14.5" cy="13" r="1.2" fill="currentColor" />
-      <path d="M12 4v4M8 19v2M16 19v2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path
+        d="M12 4v4M8 19v2M16 19v2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -413,7 +415,12 @@ function KeyIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M11 12l8-8M15 8l3 3M17 6l2 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M11 12l8-8M15 8l3 3M17 6l2 2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }

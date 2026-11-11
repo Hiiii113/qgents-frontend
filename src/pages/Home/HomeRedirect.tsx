@@ -13,7 +13,12 @@ export function HomeRedirect() {
   const teamId = useCurrentTeamId()
   const { hasTeam, setHasTeam } = useAuth()
   const client = useQueryClient()
-  const me = useQuery({ queryKey: ['me'], queryFn: () => authApi.me(), enabled: hasTeam && !teamId, staleTime: 0 })
+  const me = useQuery({
+    queryKey: ['me'],
+    queryFn: () => authApi.me(),
+    enabled: hasTeam && !teamId,
+    staleTime: 0,
+  })
   useEffect(() => {
     if (teamId || !hasTeam || !me.data || me.isFetching) return
     client.setQueryData(['teams', 'mine'], me.data.teams)
@@ -22,6 +27,13 @@ export function HomeRedirect() {
   }, [teamId, hasTeam, me.data, me.isFetching, client, setHasTeam])
   if (teamId) return <Navigate to={PATHS.teamDetail(teamId)} replace />
   if (!hasTeam) return <Navigate to={PATHS.WELCOME} replace />
-  if (me.isError) return <Alert type="error" title="首页加载失败" action={<Button onClick={() => void me.refetch()}>重试</Button>} />
+  if (me.isError)
+    return (
+      <Alert
+        type="error"
+        title="首页加载失败"
+        action={<Button onClick={() => void me.refetch()}>重试</Button>}
+      />
+    )
   return <PageLoader />
 }

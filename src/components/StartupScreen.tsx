@@ -1,8 +1,6 @@
 import { useState } from 'react'
 
-export type StartupState =
-  | { status: 'starting' }
-  | { status: 'error'; message: string }
+export type StartupState = { status: 'starting' } | { status: 'error'; message: string }
 
 export function StartupScreen({ state, onRetry }: { state: StartupState; onRetry: () => void }) {
   const [hover, setHover] = useState(false)
@@ -69,4 +67,3 @@ const startupStyles = {
     cursor: 'pointer',
   },
 }
-

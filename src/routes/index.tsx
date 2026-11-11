@@ -17,45 +17,77 @@ const TeamDetailPage = lazy(() => import('@/pages/TeamDetail/TeamDetailPage'))
 const TeamSettingsPage = lazy(() => import('@/pages/TeamDetail/TeamSettingsPage'))
 const ProjectDetailLayout = lazy(() => import('@/pages/ProjectDetail/ProjectDetailLayout'))
 const ProjectChatPage = lazy(() => import('@/pages/ProjectDetail/Chat/ProjectChatPage'))
-const CodePage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Code/CodePage')).CodePage }))
-const AgentsPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Settings/ProjectAgents')).ProjectAgents }))
-const SkillPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Skill/SkillPage')).SkillPage }))
-const MemoryPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Memory/MemoryPage')).MemoryPage }))
-const SettingsPage = lazy(async () => ({ default: (await import('@/pages/ProjectDetail/Settings/SettingsPage')).SettingsPage }))
+const CodePage = lazy(async () => ({
+  default: (await import('@/pages/ProjectDetail/Code/CodePage')).CodePage,
+}))
+const AgentsPage = lazy(async () => ({
+  default: (await import('@/pages/ProjectDetail/Settings/ProjectAgents')).ProjectAgents,
+}))
+const SkillPage = lazy(async () => ({
+  default: (await import('@/pages/ProjectDetail/Skill/SkillPage')).SkillPage,
+}))
+const MemoryPage = lazy(async () => ({
+  default: (await import('@/pages/ProjectDetail/Memory/MemoryPage')).MemoryPage,
+}))
+const SettingsPage = lazy(async () => ({
+  default: (await import('@/pages/ProjectDetail/Settings/SettingsPage')).SettingsPage,
+}))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'))
 
 export function AppRouter() {
-  return <BrowserRouter><Suspense fallback={<PageLoader fullscreen />}><Routes>
-    <Route path={PATHS.LOGIN} element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
-    <Route path={PATHS.FORGOT_PASSWORD} element={<RedirectIfAuthed><ForgotPasswordPage /></RedirectIfAuthed>} />
-    <Route element={<RequireAuth />}>
-      <Route path={PATHS.WELCOME} element={<WelcomePage />} />
-      <Route path={PATHS.APP} element={<MainLayout />}>
-        <Route index element={<HomeRedirect />} />
-        <Route path="teams/create" element={<CreateTeamPage />} />
-        <Route path="teams/join" element={<JoinTeamPage />} />
-        <Route element={<RequireTeam />}>
-          <Route path="teams/:teamId" element={<TeamDetailPage />}><Route path="settings" element={<TeamSettingsPage />} /></Route>
-          <Route path="integrations/github" element={<GitHubIntegrationPage />} />
-          <Route path="projects/:projectId" element={<ProjectDetailLayout />}>
-            <Route index element={<Navigate to="chat" replace />} />
-            <Route path="chat" element={<ProjectChatPage />} />
-            <Route element={<ProjectSettingsLayout />}>
-              <Route path="agents" element={<AgentsPage />} />
-              <Route path="skills" element={<SkillPage />} />
-              <Route path="memory" element={<MemoryPage />} />
-              <Route path="code" element={<CodePage />} />
-              <Route path="settings" element={<SettingsPage />} />
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<PageLoader fullscreen />}>
+        <Routes>
+          <Route
+            path={PATHS.LOGIN}
+            element={
+              <RedirectIfAuthed>
+                <LoginPage />
+              </RedirectIfAuthed>
+            }
+          />
+          <Route
+            path={PATHS.FORGOT_PASSWORD}
+            element={
+              <RedirectIfAuthed>
+                <ForgotPasswordPage />
+              </RedirectIfAuthed>
+            }
+          />
+          <Route element={<RequireAuth />}>
+            <Route path={PATHS.WELCOME} element={<WelcomePage />} />
+            <Route path={PATHS.APP} element={<MainLayout />}>
+              <Route index element={<HomeRedirect />} />
+              <Route path="teams/create" element={<CreateTeamPage />} />
+              <Route path="teams/join" element={<JoinTeamPage />} />
+              <Route element={<RequireTeam />}>
+                <Route path="teams/:teamId" element={<TeamDetailPage />}>
+                  <Route path="settings" element={<TeamSettingsPage />} />
+                </Route>
+                <Route path="integrations/github" element={<GitHubIntegrationPage />} />
+                <Route path="projects/:projectId" element={<ProjectDetailLayout />}>
+                  <Route index element={<Navigate to="chat" replace />} />
+                  <Route path="chat" element={<ProjectChatPage />} />
+                  <Route element={<ProjectSettingsLayout />}>
+                    <Route path="agents" element={<AgentsPage />} />
+                    <Route path="skills" element={<SkillPage />} />
+                    <Route path="memory" element={<MemoryPage />} />
+                    <Route path="code" element={<CodePage />} />
+                    <Route path="settings" element={<SettingsPage />} />
+                  </Route>
+                  <Route path="*" element={<NotFoundPage />} />
+                </Route>
+              </Route>
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
-            <Route path="*" element={<NotFoundPage />} />
+            <Route path="/403" element={<ForbiddenPage />} />
           </Route>
-        </Route>
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
-      <Route path="/403" element={<ForbiddenPage />} />
-    </Route>
-    <Route path="/" element={<Navigate to={PATHS.LOGIN} replace />} />
-    <Route path="*" element={<NotFoundPage />} />
-  </Routes></Suspense></BrowserRouter>
+          <Route path="/" element={<Navigate to={PATHS.LOGIN} replace />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  )
 }

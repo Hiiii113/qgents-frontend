@@ -3,18 +3,43 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { agentApi } from '@/api/agent'
 import { renderWorkspace } from '@/test/renderWorkspace'
 import { ProjectAgents } from './ProjectAgents'
-afterEach(() => { cleanup(); vi.restoreAllMocks() })
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 
 function open() {
-  return renderWorkspace(<ProjectAgents />, '/app/projects/p1/agents', '/app/projects/:projectId/agents', client => {
-    client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目', role: 'PROJECT_MEMBER' })
-  })
+  return renderWorkspace(
+    <ProjectAgents />,
+    '/app/projects/p1/agents',
+    '/app/projects/:projectId/agents',
+    (client) => {
+      client.setQueryData(['projects', 'p1'], {
+        id: 'p1',
+        teamId: 't1',
+        name: '项目',
+        role: 'PROJECT_MEMBER',
+      })
+    },
+  )
 }
 
 it('lists the enabled agents of the project and marks the default one', async () => {
   vi.spyOn(agentApi, 'list').mockResolvedValue([
-    { id: '11', name: 'Qgent', description: '项目默认 Agent', defaultAgent: true, status: 'ACTIVE' },
-    { id: '12', name: '前端助手', description: '负责前端实现', defaultAgent: false, status: 'ACTIVE' },
+    {
+      id: '11',
+      name: 'Qgent',
+      description: '项目默认 Agent',
+      defaultAgent: true,
+      status: 'ACTIVE',
+    },
+    {
+      id: '12',
+      name: '前端助手',
+      description: '负责前端实现',
+      defaultAgent: false,
+      status: 'ACTIVE',
+    },
   ])
   open()
   expect(await screen.findByText('Qgent')).toBeInTheDocument()
@@ -25,16 +50,25 @@ it('lists the enabled agents of the project and marks the default one', async ()
 
 it('submits a custom agent application and shows it waits for admin approval', async () => {
   vi.spyOn(agentApi, 'list').mockResolvedValue([])
-  const apply = vi.spyOn(agentApi, 'apply').mockResolvedValue({ id: '13', name: '测试助手', defaultAgent: false, status: 'PENDING' })
+  const apply = vi
+    .spyOn(agentApi, 'apply')
+    .mockResolvedValue({ id: '13', name: '测试助手', defaultAgent: false, status: 'PENDING' })
   open()
   fireEvent.click(await screen.findByRole('button', { name: /申请新 Agent/ }))
   fireEvent.change(await screen.findByLabelText('Agent 名称'), { target: { value: '测试助手' } })
   fireEvent.change(screen.getByLabelText('职责描述'), { target: { value: '负责接口联调' } })
   fireEvent.change(screen.getByLabelText('系统提示词'), { target: { value: '你是测试助手' } })
-  fireEvent.change(screen.getByLabelText('头像地址'), { target: { value: 'https://example.com/a.png' } })
+  fireEvent.change(screen.getByLabelText('头像地址'), {
+    target: { value: 'https://example.com/a.png' },
+  })
   fireEvent.click(screen.getByRole('button', { name: '提交申请' }))
-  await waitFor(() => expect(apply).toHaveBeenCalledWith('p1', {
-    name: '测试助手', description: '负责接口联调', systemPrompt: '你是测试助手', avatarUrl: 'https://example.com/a.png',
-  }))
+  await waitFor(() =>
+    expect(apply).toHaveBeenCalledWith('p1', {
+      name: '测试助手',
+      description: '负责接口联调',
+      systemPrompt: '你是测试助手',
+      avatarUrl: 'https://example.com/a.png',
+    }),
+  )
   expect(await screen.findByText('「测试助手」申请已提交，待审批')).toBeInTheDocument()
 })

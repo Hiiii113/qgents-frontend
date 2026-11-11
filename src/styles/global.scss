@@ -1,11 +1,20 @@
 :root {
-  --qg-teal: #4f7146; --qg-teal-dark: #3d5a35; --qg-teal-bright: #14b8a6; --qg-mint: #2dd4a8;
-  --qg-bg-light: #f7f8f2; --qg-card: #ffffff; --qg-border-light: #e5e7eb;
-  --qg-text-primary: #111827; --qg-text-secondary: #6b7280; --qg-text-muted: #9ca3af;
+  --qg-teal: #4f7146;
+  --qg-teal-dark: #3d5a35;
+  --qg-teal-bright: #14b8a6;
+  --qg-mint: #2dd4a8;
+  --qg-bg-light: #f7f8f2;
+  --qg-card: #ffffff;
+  --qg-border-light: #e5e7eb;
+  --qg-text-primary: #111827;
+  --qg-text-secondary: #6b7280;
+  --qg-text-muted: #9ca3af;
   --qg-text-on-dark: #f3f4f6;
   --qg-danger: #ef4444;
   --qg-radius-sm: 8px;
-  --qg-font: 'Plus Jakarta Sans', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --qg-font:
+    'Plus Jakarta Sans', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    'Noto Sans SC', sans-serif;
   --qg-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -50,17 +59,17 @@ select {
 
 /* 隐藏浏览器原生密码可见性图标（Chrome/Edge/Firefox），避免与页面自己的「眼睛」按钮重复。
    页面密码框用自绘 EyeIcon 控制显示/隐藏，样式统一且可定制。 */
-input[type="password"]::-ms-reveal,
-input[type="password"]::-ms-clear {
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear {
   display: none;
 }
 
-input[type="password"]::-webkit-credentials-auto-fill-button,
-input[type="password"]::-webkit-textfield-decoration-container {
+input[type='password']::-webkit-credentials-auto-fill-button,
+input[type='password']::-webkit-textfield-decoration-container {
   display: none;
 }
 
-input[type="password"]::-moz-reveal {
+input[type='password']::-moz-reveal {
   display: none;
 }
 

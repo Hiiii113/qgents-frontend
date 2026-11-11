@@ -5,7 +5,9 @@ function normalizeApiBaseUrl(value: string): string {
   if (!normalized) throw new Error('VITE_API_BASE_URL must be a non-empty API base path')
 
   if (/^https?:\/\/[^/]+$/i.test(normalized)) {
-    throw new Error('VITE_API_BASE_URL must include the API path, for example https://api.example.com/api/v1')
+    throw new Error(
+      'VITE_API_BASE_URL must include the API path, for example https://api.example.com/api/v1',
+    )
   }
 
   return normalized
@@ -42,7 +44,6 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   /** 取消信号；组件卸载 / StrictMode cleanup 时 abort 可中断 in-flight 请求 */
   signal?: AbortSignal
 }
-
 
 export function getStoredToken(): string | null {
   return localStorage.getItem(ACCESS_TOKEN_KEY)
@@ -128,9 +129,13 @@ export async function refreshAccessToken(): Promise<string | null> {
 }
 
 /** 发出一次请求（构造 headers + fetch + 解析） */
-async function doFetch(path: string, options: RequestOptions): Promise<{ res: Response; json: unknown }> {
+async function doFetch(
+  path: string,
+  options: RequestOptions,
+): Promise<{ res: Response; json: unknown }> {
   const { body, skipAuth, headers, ...rest } = options
-  const finalHeaders: Record<string, string> = body instanceof FormData ? {} : { 'Content-Type': 'application/json' }
+  const finalHeaders: Record<string, string> =
+    body instanceof FormData ? {} : { 'Content-Type': 'application/json' }
 
   if (!skipAuth) {
     const token = getStoredToken()
@@ -179,7 +184,7 @@ async function rawRequest(path: string, options: RequestOptions = {}): Promise<u
   if (res.status === 401 && !skipAuth) {
     const newToken = await refreshAccessToken()
     if (newToken) {
-      ; ({ res, json } = await doFetch(path, options))
+      ;({ res, json } = await doFetch(path, options))
     } else if (!loggingOut) {
       // 刷新也失败 → 清 token，派发事件让 AuthContext 踢回登录页；登出流程自行清理
       localStorage.removeItem(ACCESS_TOKEN_KEY)
@@ -193,8 +198,7 @@ async function rawRequest(path: string, options: RequestOptions = {}): Promise<u
     let message = `Request failed: ${res.status}`
     if (json && typeof json === 'object' && 'error' in json) {
       const err = (json as Record<string, unknown>).error as
-        | { code?: string; message?: string }
-        | undefined
+        { code?: string; message?: string } | undefined
       if (err && typeof err.message === 'string' && err.message) {
         message = err.message
       }

@@ -150,7 +150,11 @@ export default function ForgotPasswordPage() {
                 />
               </label>
 
-              <button type="submit" className="forgot-card__submit" disabled={submitting || !email.trim()}>
+              <button
+                type="submit"
+                className="forgot-card__submit"
+                disabled={submitting || !email.trim()}
+              >
                 {submitting ? '发送中…' : '获取验证码'}
               </button>
             </form>
@@ -212,7 +216,11 @@ export default function ForgotPasswordPage() {
                 />
               </label>
 
-              <button type="submit" className="forgot-card__submit" disabled={submitting || !token.trim() || !newPassword || !confirmPassword}>
+              <button
+                type="submit"
+                className="forgot-card__submit"
+                disabled={submitting || !token.trim() || !newPassword || !confirmPassword}
+              >
                 {submitting ? '提交中…' : '重置密码'}
               </button>
 
@@ -271,7 +279,12 @@ function LockIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <rect x="8" y="10" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M8 10V7a4 4 0 0 1 8 0v3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -280,7 +293,12 @@ function KeyIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M11 12l8-8M15 8l3 3M17 6l2 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M11 12l8-8M15 8l3 3M17 6l2 2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -302,7 +320,13 @@ function CheckIcon() {
   return (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M8 12.5l2.5 2.5L16 9.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }

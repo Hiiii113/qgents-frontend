@@ -1,6 +1,12 @@
 import { request, requestPage } from './client'
 import { withQuery } from './requestHelpers'
-import type { CreateProjectPayload, Project, ProjectMember, ProjectRole, UpdateProjectPayload } from '@/types'
+import type {
+  CreateProjectPayload,
+  Project,
+  ProjectMember,
+  ProjectRole,
+  UpdateProjectPayload,
+} from '@/types'
 
 /**
  * 项目管理 API —— 当前接口
@@ -34,8 +40,13 @@ export const projectApi = {
 
   /** POST /projects/{projectId}/avatar/credential — 签发项目头像直传凭证（OSS 未启用时 501） */
   avatarCredential(projectId: string, input: { mediaType: string; sizeBytes: number }) {
-    return request<{ objectKey: string; uploadUrl: string; method: string; headers: Record<string, string>; expiresAt: string }>(
-      `/projects/${projectId}/avatar/credential`, { method: 'POST', body: input })
+    return request<{
+      objectKey: string
+      uploadUrl: string
+      method: string
+      headers: Record<string, string>
+      expiresAt: string
+    }>(`/projects/${projectId}/avatar/credential`, { method: 'POST', body: input })
   },
 
   /** POST /projects/{projectId}/avatar/confirm — 确认项目头像上传并返回公共读 URL */

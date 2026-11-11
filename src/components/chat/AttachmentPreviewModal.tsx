@@ -104,7 +104,7 @@ export function AttachmentPreviewModal({
     }
   }, [open, contentUrl, previewType, infoQuery.dataUpdatedAt])
 
-  const title = fileName ?? (info?.fileName ?? '附件预览')
+  const title = fileName ?? info?.fileName ?? '附件预览'
   const { icon } = attachmentTypeMeta(previewType)
 
   return (
@@ -165,10 +165,7 @@ export function AttachmentPreviewModal({
           )}
           <div style={{ marginTop: 12, textAlign: 'right' }}>
             {rawText != null ? (
-              <Button
-                size="small"
-                onClick={() => void navigator.clipboard?.writeText(rawText)}
-              >
+              <Button size="small" onClick={() => void navigator.clipboard?.writeText(rawText)}>
                 复制内容
               </Button>
             ) : null}
@@ -181,9 +178,20 @@ export function AttachmentPreviewModal({
       ) : contentUrl && previewable ? (
         <Empty description="该文件类型不支持页内预览" />
       ) : (
-        <Empty description={infoQuery.isLoading ? '正在获取预览信息…' : '该文件不支持内联预览，请下载查看'} />
+        <Empty
+          description={
+            infoQuery.isLoading ? '正在获取预览信息…' : '该文件不支持内联预览，请下载查看'
+          }
+        />
       )}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: 12,
+        }}
+      >
         <Text type="secondary">无法加载时，可刷新内容地址后重试。</Text>
         <Space>
           {fileDownloadUrl ? (
@@ -196,7 +204,11 @@ export function AttachmentPreviewModal({
               下载文件
             </Button>
           ) : null}
-          <Button size="small" loading={infoQuery.isFetching} onClick={() => void infoQuery.refetch()}>
+          <Button
+            size="small"
+            loading={infoQuery.isFetching}
+            onClick={() => void infoQuery.refetch()}
+          >
             刷新预览
           </Button>
         </Space>

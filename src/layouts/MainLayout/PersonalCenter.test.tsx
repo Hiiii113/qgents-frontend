@@ -8,15 +8,27 @@ import { renderWorkspace } from '@/test/renderWorkspace'
 import { PersonalCenter } from './PersonalCenter'
 
 const { updateUser, logout, user } = vi.hoisted(() => ({
-  updateUser: vi.fn(), logout: vi.fn(),
+  updateUser: vi.fn(),
+  logout: vi.fn(),
   user: { id: 'u1', displayName: '小林', email: 'lin@example.test' },
 }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user, updateUser, logout }) }))
-afterEach(() => { cleanup(); vi.restoreAllMocks(); updateUser.mockReset(); useAppUiStore.getState().clearContext() })
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+  updateUser.mockReset()
+  useAppUiStore.getState().clearContext()
+})
 
 function openMenu() {
-  const view = renderWorkspace(<PersonalCenter />, '/app', '/app', client => {
-    client.setQueryData(['teams', 'mine'], [{ id: 't1', name: '团队一' }, { id: 't2', name: '团队二', avatarUrl: 'https://example.test/team.png' }])
+  const view = renderWorkspace(<PersonalCenter />, '/app', '/app', (client) => {
+    client.setQueryData(
+      ['teams', 'mine'],
+      [
+        { id: 't1', name: '团队一' },
+        { id: 't2', name: '团队二', avatarUrl: 'https://example.test/team.png' },
+      ],
+    )
   })
   fireEvent.click(screen.getByRole('button', { name: '打开个人中心' }))
   return view
@@ -32,9 +44,20 @@ it('opens a profile popover with inline avatar and nickname controls', async () 
 
 it('shows team avatars on hover and saves the selected team before navigating', async () => {
   useAppUiStore.getState().setCurrentTeam('t1')
-  vi.spyOn(teamApi, 'listMine').mockResolvedValue([{ id: 't1', name: '团队一' }, { id: 't2', name: '团队二', avatarUrl: 'https://example.test/team.png' }])
+  vi.spyOn(teamApi, 'listMine').mockResolvedValue([
+    { id: 't1', name: '团队一' },
+    { id: 't2', name: '团队二', avatarUrl: 'https://example.test/team.png' },
+  ])
   const save = vi.spyOn(authApi, 'selectTeam').mockResolvedValue(undefined)
-  renderWorkspace(<Routes><Route index element={<PersonalCenter />} /><Route path="teams/:teamId" element={<div>团队项目首页</div>} /></Routes>, '/app', '/app/*', () => {})
+  renderWorkspace(
+    <Routes>
+      <Route index element={<PersonalCenter />} />
+      <Route path="teams/:teamId" element={<div>团队项目首页</div>} />
+    </Routes>,
+    '/app',
+    '/app/*',
+    () => {},
+  )
   fireEvent.click(screen.getByRole('button', { name: '打开个人中心' }))
   fireEvent.mouseEnter(await screen.findByRole('button', { name: '切换团队' }))
   const team = await screen.findByRole('button', { name: '进入团队 团队二' })
@@ -60,7 +83,9 @@ it('saves the nickname and uses the server profile response', async () => {
   const update = vi.spyOn(authApi, 'updateMe').mockResolvedValue(updated)
   openMenu()
   fireEvent.click(await screen.findByRole('button', { name: '修改昵称' }))
-  fireEvent.change(screen.getByRole('textbox', { name: '昵称' }), { target: { value: ' 新的昵称 ' } })
+  fireEvent.change(screen.getByRole('textbox', { name: '昵称' }), {
+    target: { value: ' 新的昵称 ' },
+  })
   fireEvent.click(screen.getByRole('button', { name: '保存昵称' }))
   await waitFor(() => expect(updateUser).toHaveBeenCalledWith(updated))
   expect(update).toHaveBeenCalledWith({ displayName: '新的昵称' })
@@ -72,16 +97,26 @@ it('leaves the previous avatar intact if upload credentials fail', async () => {
   await screen.findByRole('button', { name: '更换个人头像' })
   const input = document.querySelector('input[type="file"]')
   expect(input).not.toBeNull()
-  fireEvent.change(input!, { target: { files: [new File(['image'], 'avatar.png', { type: 'image/png' })] } })
+  fireEvent.change(input!, {
+    target: { files: [new File(['image'], 'avatar.png', { type: 'image/png' })] },
+  })
   expect(await screen.findByText('上传失败')).toBeInTheDocument()
   expect(updateUser).not.toHaveBeenCalled()
 })
 
 it('opens settings for the current team from the personal menu', async () => {
   useAppUiStore.getState().setCurrentTeam('t2')
-  renderWorkspace(<Routes><Route index element={<PersonalCenter />} /><Route path="teams/:teamId/settings" element={<div>当前团队设置页</div>} /></Routes>, '/app', '/app/*', client => {
-    client.setQueryData(['teams', 'mine'], [{ id: 't2', name: '团队二' }])
-  })
+  renderWorkspace(
+    <Routes>
+      <Route index element={<PersonalCenter />} />
+      <Route path="teams/:teamId/settings" element={<div>当前团队设置页</div>} />
+    </Routes>,
+    '/app',
+    '/app/*',
+    (client) => {
+      client.setQueryData(['teams', 'mine'], [{ id: 't2', name: '团队二' }])
+    },
+  )
   fireEvent.click(screen.getByRole('button', { name: '打开个人中心' }))
   fireEvent.click(await screen.findByRole('button', { name: /团队设置/ }))
   expect(await screen.findByText('当前团队设置页')).toBeInTheDocument()

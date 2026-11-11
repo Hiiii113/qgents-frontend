@@ -30,7 +30,9 @@ export function MemoryPage() {
 
   useEffect(() => {
     if (!data) return
-    setDraft((current) => (base.current === null || current === base.current ? data.content : current))
+    setDraft((current) =>
+      base.current === null || current === base.current ? data.content : current,
+    )
     base.current = data.content
     setVersion(data.version)
   }, [data])
@@ -59,7 +61,11 @@ export function MemoryPage() {
       title="项目记忆"
       extra={
         <Space>
-          <Button icon={<ReloadOutlined />} onClick={() => void refetch()} disabled={save.isPending}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => void refetch()}
+            disabled={save.isPending}
+          >
             重新加载
           </Button>
           <Button
@@ -75,8 +81,8 @@ export function MemoryPage() {
       }
     >
       <Paragraph type="secondary">
-        memory.md 是项目的长期记忆，Qgent 每次执行都会读取。Qgent 修改前会先说明拟改动的内容并征求同意；
-        你也可以直接在这里编辑。
+        memory.md 是项目的长期记忆，Qgent 每次执行都会读取。Qgent
+        修改前会先说明拟改动的内容并征求同意； 你也可以直接在这里编辑。
       </Paragraph>
       {save.isError && <Alert type="error" showIcon message={formatApiError(save.error)} />}
       <Input.TextArea

@@ -17,7 +17,9 @@ Pwyg+E3scliNZYXywo7eMWS1RjkHPcXnnwIDAQAB
 /** 使用 JSEncrypt 实现后端要求的 RSA/ECB/PKCS1Padding 加密。 */
 export async function encryptPassword(plainPassword: string): Promise<string> {
   const jsEncrypt = new JSEncrypt()
-  jsEncrypt.setPublicKey(import.meta.env.VITE_RSA_PUBLIC_KEY?.replace(/\\n/g, '\n') || DEFAULT_PUBLIC_KEY)
+  jsEncrypt.setPublicKey(
+    import.meta.env.VITE_RSA_PUBLIC_KEY?.replace(/\\n/g, '\n') || DEFAULT_PUBLIC_KEY,
+  )
   const cipher = jsEncrypt.encrypt(plainPassword)
   if (!cipher) throw new Error('RSA 加密失败：公钥无效或格式不受支持')
   return cipher

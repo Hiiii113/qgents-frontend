@@ -4,7 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { attachmentApi, type AttachmentInfo } from '@/api/attachment'
 import { AttachmentPreviewModal } from './AttachmentPreviewModal'
 
-afterEach(() => { cleanup(); vi.restoreAllMocks() })
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 
 const image: AttachmentInfo = {
   attachmentId: 'a1',
@@ -27,20 +30,37 @@ function renderModal(client: QueryClient) {
 
 describe('chat attachment preview', () => {
   it('gets a new content URL after closing and reopening the attachment', async () => {
-    const api = vi.spyOn(attachmentApi, 'info').mockResolvedValueOnce(image)
-      .mockResolvedValue({ ...image, contentUrl: '/api/v1/projects/p1/attachments/a1/content?token=second' })
+    const api = vi
+      .spyOn(attachmentApi, 'info')
+      .mockResolvedValueOnce(image)
+      .mockResolvedValue({
+        ...image,
+        contentUrl: '/api/v1/projects/p1/attachments/a1/content?token=second',
+      })
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const view = renderModal(client)
-    await waitFor(() => expect(screen.getByRole('img', { name: 'image.png' })).toHaveAttribute('src', expect.stringContaining('token=first')))
+    await waitFor(() =>
+      expect(screen.getByRole('img', { name: 'image.png' })).toHaveAttribute(
+        'src',
+        expect.stringContaining('token=first'),
+      ),
+    )
     view.unmount()
     renderModal(client)
-    await waitFor(() => expect(screen.getByRole('img', { name: 'image.png' })).toHaveAttribute('src', expect.stringContaining('token=second')))
+    await waitFor(() =>
+      expect(screen.getByRole('img', { name: 'image.png' })).toHaveAttribute(
+        'src',
+        expect.stringContaining('token=second'),
+      ),
+    )
     expect(api).toHaveBeenCalledTimes(2)
     client.clear()
   })
 
   it('allows retrying failed attachment info requests', async () => {
-    vi.spyOn(attachmentApi, 'info').mockRejectedValueOnce(new Error('网络中断')).mockResolvedValue(image)
+    vi.spyOn(attachmentApi, 'info')
+      .mockRejectedValueOnce(new Error('网络中断'))
+      .mockResolvedValue(image)
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     renderModal(client)
     await screen.findByText('预览信息加载失败')
@@ -81,7 +101,9 @@ describe('chat attachment preview', () => {
       mediaType: 'text/plain',
       previewType: 'TEXT',
     })
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('hello qwen', { status: 200 }))
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('hello qwen', { status: 200 }))
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     renderModal(client)
     expect(await screen.findByText('hello qwen')).toBeInTheDocument()

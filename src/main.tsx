@@ -22,7 +22,10 @@ function renderApp(root: Root): void {
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const timeoutId = window.setTimeout(() => reject(new Error('Mock 服务启动超时，请检查 mockServiceWorker.js。')), timeoutMs)
+    const timeoutId = window.setTimeout(
+      () => reject(new Error('Mock 服务启动超时，请检查 mockServiceWorker.js。')),
+      timeoutMs,
+    )
     promise.then(
       (value) => {
         window.clearTimeout(timeoutId)
@@ -38,7 +41,10 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 
 async function startMockWorker(): Promise<void> {
   const { worker } = await import('@/mocks/browser')
-  await withTimeout(worker.start({ onUnhandledRequest: 'error', waitUntilReady: true }), MOCK_START_TIMEOUT_MS)
+  await withTimeout(
+    worker.start({ onUnhandledRequest: 'error', waitUntilReady: true }),
+    MOCK_START_TIMEOUT_MS,
+  )
 }
 
 /**
@@ -51,8 +57,9 @@ async function removeStaleMockWorker(): Promise<boolean> {
 
   const registrations = await navigator.serviceWorker.getRegistrations()
   const mockRegistrations = registrations.filter((registration) =>
-    [registration.active, registration.waiting, registration.installing]
-      .some((worker) => worker?.scriptURL.includes('mockServiceWorker.js')),
+    [registration.active, registration.waiting, registration.installing].some((worker) =>
+      worker?.scriptURL.includes('mockServiceWorker.js'),
+    ),
   )
   if (mockRegistrations.length === 0) {
     sessionStorage.removeItem(STALE_MOCK_WORKER_RELOAD_KEY)
@@ -61,7 +68,8 @@ async function removeStaleMockWorker(): Promise<boolean> {
 
   await Promise.all(mockRegistrations.map((registration) => registration.unregister()))
 
-  const controlledByMock = navigator.serviceWorker.controller?.scriptURL.includes('mockServiceWorker.js')
+  const controlledByMock =
+    navigator.serviceWorker.controller?.scriptURL.includes('mockServiceWorker.js')
   if (controlledByMock && sessionStorage.getItem(STALE_MOCK_WORKER_RELOAD_KEY) !== '1') {
     sessionStorage.setItem(STALE_MOCK_WORKER_RELOAD_KEY, '1')
     window.location.reload()
@@ -87,7 +95,8 @@ async function bootstrap(root: Root): Promise<void> {
 
   let startupState: StartupState = { status: 'starting' }
 
-  const renderStartup = () => root.render(<StartupScreen state={startupState} onRetry={() => void initialize()} />)
+  const renderStartup = () =>
+    root.render(<StartupScreen state={startupState} onRetry={() => void initialize()} />)
   const initialize = async (): Promise<void> => {
     startupState = { status: 'starting' }
     renderStartup()

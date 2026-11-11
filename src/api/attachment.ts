@@ -63,7 +63,10 @@ export function resolvePreviewUrl(previewUrl: string): string {
   const base = getApiBaseUrl()
   const origin = /^https?:\/\//i.test(base) ? new URL(base).origin : window.location.origin
   if (previewUrl.startsWith('/api/v1/')) {
-    return new URL(`${base}${previewUrl.slice('/api/v1'.length)}`, window.location.origin).toString()
+    return new URL(
+      `${base}${previewUrl.slice('/api/v1'.length)}`,
+      window.location.origin,
+    ).toString()
   }
   return new URL(previewUrl, origin).toString()
 }
@@ -80,8 +83,8 @@ export async function uploadAttachment(projectId: string, file: File): Promise<s
   const apiBase = new URL(getApiBaseUrl(), window.location.origin)
   const target = new URL(targetUrl)
   const apiPath = apiBase.pathname.replace(/\/$/, '')
-  const isBackendUpload = target.origin === apiBase.origin
-    && target.pathname.startsWith(`${apiPath}/projects/`)
+  const isBackendUpload =
+    target.origin === apiBase.origin && target.pathname.startsWith(`${apiPath}/projects/`)
   // 保留凭证指定的 Content-Type 等上传头。
   const headers: Record<string, string> = { ...(credential.headers ?? {}) }
   if (isBackendUpload) {

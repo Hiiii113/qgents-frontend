@@ -1,27 +1,164 @@
-.personal-menu { width: min(360px, calc(100vw - 32px)); color: #263d31; }
-.personal-menu__profile { display: flex; align-items: center; gap: 16px; padding: 24px; border-bottom: 1px solid #e5eae1; }
-.personal-menu__avatar { position: relative; display: block; border: 0; padding: 0; border-radius: 50%; background: none; cursor: pointer; overflow: hidden; }
-.personal-menu__avatar .ant-avatar, .personal-menu__trigger .ant-avatar { background: #dfe8d3; color: #456339; }
-.personal-menu__avatar-mask { position: absolute; inset: 0; display: grid; place-items: center; background: #263d3170; color: white; opacity: 0; transition: opacity .15s; font-size: 22px; }
-.personal-menu__avatar:hover .personal-menu__avatar-mask, .personal-menu__avatar:focus-visible .personal-menu__avatar-mask, .personal-menu__avatar-mask.is-visible { opacity: 1; }
-.personal-menu__identity { flex: 1; min-width: 0; }
-.personal-menu__name { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px 0; border: 0; background: none; color: inherit; font-size: 18px; text-align: left; cursor: pointer; }
-.personal-menu__name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.personal-menu__name .anticon { opacity: 0; color: #4f7146; font-size: 14px; }
-.personal-menu__name:hover .anticon, .personal-menu__name:focus-visible .anticon { opacity: 1; }
-.personal-menu__name-editor { display: flex; align-items: center; margin-bottom: 4px; }
-.personal-menu__email { display: block; overflow: hidden; text-overflow: ellipsis; color: #6b786b; font-size: 13px; }
-.personal-menu__actions { padding: 8px; }
-.personal-menu__item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 16px; border: 0; border-radius: 7px; background: none; color: inherit; text-align: left; cursor: pointer; font-size: 14px; }
-.personal-menu__item:hover, .personal-menu__item:focus-visible { background: #f0f4eb; }
-.personal-menu__item--logout { color: #ad3e35; }
-.personal-menu__item--logout { margin-top: 8px; border-top: 1px solid #e5eae1; border-radius: 0 0 7px 7px; }
-.personal-menu__arrow { margin-left: auto; color: #7a8976; font-size: 12px; }
-.personal-menu__teams { width: min(260px, calc(100vw - 32px)); max-height: 360px; overflow-y: auto; }
-.personal-menu__team { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px; background: none; border: 0; border-radius: 7px; color: #263d31; text-align: left; cursor: pointer; }
-.personal-menu__team:hover, .personal-menu__team:focus-visible, .personal-menu__team.is-current { background: #edf3e7; }
-.personal-menu__team .ant-avatar { flex-shrink: 0; background: #dfe8d3; color: #456339; }
-.personal-menu__team > span:not(.ant-avatar) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.personal-menu__team > .anticon { margin-left: auto; color: #4f7146; }
-.personal-menu__team:disabled { cursor: wait; }
-.personal-menu__team-status { padding: 20px; color: #6b786b; text-align: center; }
+.personal-menu {
+  width: min(360px, calc(100vw - 32px));
+  color: #263d31;
+}
+.personal-menu__profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  border-bottom: 1px solid #e5eae1;
+}
+.personal-menu__avatar {
+  position: relative;
+  display: block;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+}
+.personal-menu__avatar .ant-avatar,
+.personal-menu__trigger .ant-avatar {
+  background: #dfe8d3;
+  color: #456339;
+}
+.personal-menu__avatar-mask {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #263d3170;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-size: 22px;
+}
+.personal-menu__avatar:hover .personal-menu__avatar-mask,
+.personal-menu__avatar:focus-visible .personal-menu__avatar-mask,
+.personal-menu__avatar-mask.is-visible {
+  opacity: 1;
+}
+.personal-menu__identity {
+  flex: 1;
+  min-width: 0;
+}
+.personal-menu__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+.personal-menu__name strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.personal-menu__name .anticon {
+  opacity: 0;
+  color: #4f7146;
+  font-size: 14px;
+}
+.personal-menu__name:hover .anticon,
+.personal-menu__name:focus-visible .anticon {
+  opacity: 1;
+}
+.personal-menu__name-editor {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.personal-menu__email {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #6b786b;
+  font-size: 13px;
+}
+.personal-menu__actions {
+  padding: 8px;
+}
+.personal-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+}
+.personal-menu__item:hover,
+.personal-menu__item:focus-visible {
+  background: #f0f4eb;
+}
+.personal-menu__item--logout {
+  color: #ad3e35;
+}
+.personal-menu__item--logout {
+  margin-top: 8px;
+  border-top: 1px solid #e5eae1;
+  border-radius: 0 0 7px 7px;
+}
+.personal-menu__arrow {
+  margin-left: auto;
+  color: #7a8976;
+  font-size: 12px;
+}
+.personal-menu__teams {
+  width: min(260px, calc(100vw - 32px));
+  max-height: 360px;
+  overflow-y: auto;
+}
+.personal-menu__team {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  color: #263d31;
+  text-align: left;
+  cursor: pointer;
+}
+.personal-menu__team:hover,
+.personal-menu__team:focus-visible,
+.personal-menu__team.is-current {
+  background: #edf3e7;
+}
+.personal-menu__team .ant-avatar {
+  flex-shrink: 0;
+  background: #dfe8d3;
+  color: #456339;
+}
+.personal-menu__team > span:not(.ant-avatar) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.personal-menu__team > .anticon {
+  margin-left: auto;
+  color: #4f7146;
+}
+.personal-menu__team:disabled {
+  cursor: wait;
+}
+.personal-menu__team-status {
+  padding: 20px;
+  color: #6b786b;
+  text-align: center;
+}

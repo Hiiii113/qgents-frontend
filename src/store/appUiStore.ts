@@ -4,9 +4,9 @@ interface AppUiStore {
   setCurrentTeam: (teamId: string | null) => void
   clearContext: () => void
 }
-export const useAppUiStore = create<AppUiStore>(set => ({
+export const useAppUiStore = create<AppUiStore>((set) => ({
   currentTeamId: null,
   setCurrentTeam: (currentTeamId) => set({ currentTeamId }),
   clearContext: () => set({ currentTeamId: null }),
 }))
-export const useCurrentTeamId = () => useAppUiStore(state => state.currentTeamId)
+export const useCurrentTeamId = () => useAppUiStore((state) => state.currentTeamId)

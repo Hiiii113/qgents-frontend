@@ -14,13 +14,36 @@ function CurrentAddress() {
 }
 
 it('opens project members inside settings and keeps the selected tab in the URL', async () => {
-  renderWorkspace(<Routes><Route element={<ProjectSettingsLayout />}>
-    <Route path="settings" element={<><SettingsPage /><CurrentAddress /></>} />
-  </Route></Routes>, '/app/projects/p1/settings?tab=members', '/app/projects/:projectId/*', client => {
-    client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目', role: 'PROJECT_ADMIN' })
-    client.setQueryData(['projects', 'p1', 'members'], [{ userId: 'u1', displayName: '项目创建者', role: 'PROJECT_ADMIN' }])
-    client.setQueryData(['teams', 't1', 'members'], [])
-  })
+  renderWorkspace(
+    <Routes>
+      <Route element={<ProjectSettingsLayout />}>
+        <Route
+          path="settings"
+          element={
+            <>
+              <SettingsPage />
+              <CurrentAddress />
+            </>
+          }
+        />
+      </Route>
+    </Routes>,
+    '/app/projects/p1/settings?tab=members',
+    '/app/projects/:projectId/*',
+    (client) => {
+      client.setQueryData(['projects', 'p1'], {
+        id: 'p1',
+        teamId: 't1',
+        name: '项目',
+        role: 'PROJECT_ADMIN',
+      })
+      client.setQueryData(
+        ['projects', 'p1', 'members'],
+        [{ userId: 'u1', displayName: '项目创建者', role: 'PROJECT_ADMIN' }],
+      )
+      client.setQueryData(['teams', 't1', 'members'], [])
+    },
+  )
   expect(await screen.findByText('项目创建者')).toBeInTheDocument()
   expect(screen.getByText('管理员')).toBeInTheDocument()
   expect(screen.queryByText('Admin')).not.toBeInTheDocument()

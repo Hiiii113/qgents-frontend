@@ -246,7 +246,9 @@
   background: #fafbfc;
   color: var(--qg-text-primary);
   outline: none;
-  transition: border-color 0.2s var(--qg-ease), box-shadow 0.2s var(--qg-ease);
+  transition:
+    border-color 0.2s var(--qg-ease),
+    box-shadow 0.2s var(--qg-ease);
 }
 
 .login-field input:focus {
@@ -292,7 +294,9 @@
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.2s var(--qg-ease), border-color 0.2s var(--qg-ease);
+  transition:
+    background 0.2s var(--qg-ease),
+    border-color 0.2s var(--qg-ease);
 }
 
 .login-field__code-btn:hover:not(:disabled) {
@@ -311,7 +315,6 @@
   justify-content: space-between;
   font-size: 13px;
 }
-
 
 .login-card__link {
   border: none;
@@ -335,7 +338,9 @@
   color: #fff;
   font-weight: 600;
   font-size: 15px;
-  transition: background 0.2s var(--qg-ease), transform 0.15s var(--qg-ease);
+  transition:
+    background 0.2s var(--qg-ease),
+    transform 0.15s var(--qg-ease);
 }
 
 .login-card__submit:hover:not(:disabled) {

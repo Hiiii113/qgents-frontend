@@ -6,23 +6,57 @@ import { useCurrentTeamId, useAppUiStore } from '@/store/appUiStore'
 import { AuthProvider } from './AuthProvider'
 import { useAuth } from './AuthContext'
 
-vi.mock('@/utils/rsaConfig', () => ({ RSA_KEY_ID: 'test', encryptPassword: async () => 'encrypted' }))
-const me = { user: { id: 'u1', email: 'u@example.test', displayName: '小林' },
-  teams: [{ id: 't1', name: '团队一' }, { id: 't2', name: '团队二' }], projects: [], currentTeamId: 't2' }
+vi.mock('@/utils/rsaConfig', () => ({
+  RSA_KEY_ID: 'test',
+  encryptPassword: async () => 'encrypted',
+}))
+const me = {
+  user: { id: 'u1', email: 'u@example.test', displayName: '小林' },
+  teams: [
+    { id: 't1', name: '团队一' },
+    { id: 't2', name: '团队二' },
+  ],
+  projects: [],
+  currentTeamId: 't2',
+}
 
-beforeEach(() => { localStorage.clear(); useAppUiStore.getState().clearContext() })
-afterEach(() => { cleanup(); vi.restoreAllMocks() })
+beforeEach(() => {
+  localStorage.clear()
+  useAppUiStore.getState().clearContext()
+})
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 
 function SessionView() {
   const auth = useAuth()
   const teamId = useCurrentTeamId()
-  return <><output>{auth.isBootstrapping ? '加载' : `${auth.user?.displayName ?? '未登录'}:${teamId ?? '无团队'}`}</output>
-    <button onClick={async () => auth.completeAuth(await auth.login('u@example.test', 'password'))}>登录</button>
-    <button onClick={() => void auth.logout()}>退出</button></>
+  return (
+    <>
+      <output>
+        {auth.isBootstrapping
+          ? '加载'
+          : `${auth.user?.displayName ?? '未登录'}:${teamId ?? '无团队'}`}
+      </output>
+      <button
+        onClick={async () => auth.completeAuth(await auth.login('u@example.test', 'password'))}
+      >
+        登录
+      </button>
+      <button onClick={() => void auth.logout()}>退出</button>
+    </>
+  )
 }
 function setup() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(<QueryClientProvider client={client}><AuthProvider><SessionView /></AuthProvider></QueryClientProvider>)
+  render(
+    <QueryClientProvider client={client}>
+      <AuthProvider>
+        <SessionView />
+      </AuthProvider>
+    </QueryClientProvider>,
+  )
   return client
 }
 
@@ -35,8 +69,13 @@ it('restores the backend selected team on a fresh browser session', async () => 
 })
 
 it('uses the backend resolved team immediately after login', async () => {
-  vi.spyOn(authApi, 'login').mockResolvedValue({ user: me.user, accessToken: 'access', refreshToken: 'refresh',
-    accessTokenExpiresIn: 900, refreshTokenExpiresIn: 3600 })
+  vi.spyOn(authApi, 'login').mockResolvedValue({
+    user: me.user,
+    accessToken: 'access',
+    refreshToken: 'refresh',
+    accessTokenExpiresIn: 900,
+    refreshTokenExpiresIn: 3600,
+  })
   vi.spyOn(authApi, 'me').mockResolvedValue(me)
   setup()
   fireEvent.click(screen.getByRole('button', { name: '登录' }))

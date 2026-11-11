@@ -63,11 +63,13 @@ export default function TeamDetailPage() {
           <h1>{user?.displayName || '用户'}，欢迎回来</h1>
           <p>从一个项目开始今天的讨论。</p>
         </div>
-        {settings && <div className="journey-actions">
-          <Link to={PATHS.teamDetail(teamId)}>
-            <Button icon={<ArrowLeftOutlined />}>返回项目</Button>
-          </Link>
-        </div>}
+        {settings && (
+          <div className="journey-actions">
+            <Link to={PATHS.teamDetail(teamId)}>
+              <Button icon={<ArrowLeftOutlined />}>返回项目</Button>
+            </Link>
+          </div>
+        )}
       </header>
       {settings ? (
         <div className="journey-settings">

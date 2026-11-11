@@ -16,20 +16,37 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterAll(() => server.close())
 
 function open(members: ChatMember[]) {
-  return renderWorkspace(<ChatPanel projectId="p1" groupId="g1" />, '/app/projects/p1/chat', '/app/projects/:projectId/chat', client => {
-    client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目', role: 'PROJECT_ADMIN' })
-    client.setQueryData(chatKeys.groups('p1'), [{ id: 'g1', projectId: 'p1', title: '讨论', defaultGroup: false }])
-    client.setQueryData(chatKeys.members('p1', 'g1'), members)
-    client.setQueryData(chatKeys.messages('p1', 'g1'), { pages: [{ data: [], page: { hasMore: false, nextCursor: null } }], pageParams: [undefined] })
-  })
+  return renderWorkspace(
+    <ChatPanel projectId="p1" groupId="g1" />,
+    '/app/projects/p1/chat',
+    '/app/projects/:projectId/chat',
+    (client) => {
+      client.setQueryData(['projects', 'p1'], {
+        id: 'p1',
+        teamId: 't1',
+        name: '项目',
+        role: 'PROJECT_ADMIN',
+      })
+      client.setQueryData(chatKeys.groups('p1'), [
+        { id: 'g1', projectId: 'p1', title: '讨论', defaultGroup: false },
+      ])
+      client.setQueryData(chatKeys.members('p1', 'g1'), members)
+      client.setQueryData(chatKeys.messages('p1', 'g1'), {
+        pages: [{ data: [], page: { hasMore: false, nextCursor: null } }],
+        pageParams: [undefined],
+      })
+    },
+  )
 }
 
 it('offers current group members without requesting team agents', async () => {
   let teamAgentLookups = 0
-  server.use(http.get('/api/teams/:teamId/agents', () => {
-    teamAgentLookups += 1
-    return HttpResponse.json({ data: [{ id: 'legacy-agent', name: '旧伙伴' }] })
-  }))
+  server.use(
+    http.get('/api/teams/:teamId/agents', () => {
+      teamAgentLookups += 1
+      return HttpResponse.json({ data: [{ id: 'legacy-agent', name: '旧伙伴' }] })
+    }),
+  )
   open([{ id: 'u2', displayName: '张工', memberType: 'USER' }])
   const user = userEvent.setup()
   await user.type(screen.getByLabelText('消息内容'), '@')

@@ -6,6 +6,9 @@ export function notificationTargetPath(n: Notification): string | null {
   if (n.kind === 'INVITED') return PATHS.JOIN_TEAM
   const projectId = n.projectId
   if (!projectId) return null
-  return PATHS.projectChat(projectId, n.kind === 'MESSAGE_MENTION' ? n.resourceId : undefined, n.groupId)
+  return PATHS.projectChat(
+    projectId,
+    n.kind === 'MESSAGE_MENTION' ? n.resourceId : undefined,
+    n.groupId,
+  )
 }
-

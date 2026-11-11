@@ -17,7 +17,9 @@
   border: 1px solid var(--qg-border-light);
   border-radius: 8px;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .skill-card:hover {
@@ -91,4 +93,16 @@
   border-top: 1px solid var(--qg-border-light);
 }
 
-@media (max-width: 700px) { .skill-page { padding: 24px 18px; } .skill-page__toolbar { flex-wrap: wrap; gap: 14px; } .skill-card__right { flex-wrap: wrap; justify-content: flex-end; } }
+@media (max-width: 700px) {
+  .skill-page {
+    padding: 24px 18px;
+  }
+  .skill-page__toolbar {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .skill-card__right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

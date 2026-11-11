@@ -20,24 +20,36 @@ export function ProjectSettingsLayout() {
     { key: 'code', label: '项目仓库', path: PATHS.projectCode(projectId) },
   ]
   const activeKey = location.pathname.endsWith('/settings')
-    ? params.get('tab') === 'members' ? 'members' : 'basic'
-    : tabs.find(tab => tab.path === location.pathname)?.key ?? 'basic'
+    ? params.get('tab') === 'members'
+      ? 'members'
+      : 'basic'
+    : (tabs.find((tab) => tab.path === location.pathname)?.key ?? 'basic')
 
-  return <WorkspacePage title="项目设置" description="维护项目资料、成员和协作能力。">
-    <Tabs activeKey={activeKey} onChange={key => {
-      const tab = tabs.find(item => item.key === key)
-      if (!tab) return
-      const next = new URLSearchParams()
-      const groupId = params.get('groupId')
-      if (groupId) next.set('groupId', groupId)
-      if (key === 'basic' || key === 'members') next.set('tab', key)
-      navigate(tab.path + (next.size ? '?' + next.toString() : ''))
-    }} items={tabs.map(tab => ({
-      key: tab.key,
-      label: tab.label,
-      children: tab.key === activeKey && <div className="workspace-page__content">
-        <Suspense fallback={<PageLoader />}><Outlet /></Suspense>
-      </div>,
-    }))} />
-  </WorkspacePage>
+  return (
+    <WorkspacePage title="项目设置" description="维护项目资料、成员和协作能力。">
+      <Tabs
+        activeKey={activeKey}
+        onChange={(key) => {
+          const tab = tabs.find((item) => item.key === key)
+          if (!tab) return
+          const next = new URLSearchParams()
+          const groupId = params.get('groupId')
+          if (groupId) next.set('groupId', groupId)
+          if (key === 'basic' || key === 'members') next.set('tab', key)
+          navigate(tab.path + (next.size ? '?' + next.toString() : ''))
+        }}
+        items={tabs.map((tab) => ({
+          key: tab.key,
+          label: tab.label,
+          children: tab.key === activeKey && (
+            <div className="workspace-page__content">
+              <Suspense fallback={<PageLoader />}>
+                <Outlet />
+              </Suspense>
+            </div>
+          ),
+        }))}
+      />
+    </WorkspacePage>
+  )
 }

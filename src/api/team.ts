@@ -23,8 +23,13 @@ export const teamApi = {
 
   /** POST /teams/{teamId}/avatar/credential — 签发团队头像直传凭证（OSS 未启用时 501） */
   avatarCredential(teamId: string, input: { mediaType: string; sizeBytes: number }) {
-    return request<{ objectKey: string; uploadUrl: string; method: string; headers: Record<string, string>; expiresAt: string }>(
-      `/teams/${teamId}/avatar/credential`, { method: 'POST', body: input })
+    return request<{
+      objectKey: string
+      uploadUrl: string
+      method: string
+      headers: Record<string, string>
+      expiresAt: string
+    }>(`/teams/${teamId}/avatar/credential`, { method: 'POST', body: input })
   },
 
   /** POST /teams/{teamId}/avatar/confirm — 确认团队头像上传并返回公共读 URL */
@@ -75,14 +80,12 @@ export const teamApi = {
     return requestPage<MyTeamInvitation>('/team-invitations')
   },
 
-
   /** DELETE /teams/{teamId}/invitations/{invitationId} — 撤销邀请 */
   revokeInvitation(teamId: string, invitationId: string) {
     return request<void>(`/teams/${teamId}/invitations/${invitationId}`, {
       method: 'DELETE',
     })
   },
-
 
   /** PATCH /teams/{teamId}/members/{userId} — 调整团队角色（仅 Team Owner） */
   updateMemberRole(teamId: string, userId: string, role: TeamRole) {

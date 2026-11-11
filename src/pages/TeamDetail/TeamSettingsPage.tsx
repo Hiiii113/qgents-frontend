@@ -125,13 +125,23 @@ export default function TeamSettingsPage() {
   return (
     <div style={{ paddingBottom: 40, minHeight: '100%' }}>
       {/* 返回项目列表由团队详情的操作入口提供。 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 8,
+        }}
+      >
         <Title level={3} style={{ margin: 0 }}>
           团队设置
         </Title>
         <Space>
           {isOwner && (
-            <Button icon={<GithubOutlined />} onClick={() => navigate(PATHS.githubIntegration(teamId))}>
+            <Button
+              icon={<GithubOutlined />}
+              onClick={() => navigate(PATHS.githubIntegration(teamId))}
+            >
               GitHub 集成
             </Button>
           )}
@@ -143,27 +153,42 @@ export default function TeamSettingsPage() {
         </Space>
       </div>
 
-        <Tabs
-          defaultActiveKey="basic"
-          items={[
-            {
-              key: 'basic',
-              label: '基本信息',
-              children: <BasicInfoTab team={team} teamId={teamId} canManage={canManage} />,
-            },
-            {
-              key: 'members',
-              label: '成员管理',
-              children: <MembersTab teamId={teamId} members={members} canManage={canManage} isOwner={isOwner} />,
-            },
-          ]}
-        />
+      <Tabs
+        defaultActiveKey="basic"
+        items={[
+          {
+            key: 'basic',
+            label: '基本信息',
+            children: <BasicInfoTab team={team} teamId={teamId} canManage={canManage} />,
+          },
+          {
+            key: 'members',
+            label: '成员管理',
+            children: (
+              <MembersTab
+                teamId={teamId}
+                members={members}
+                canManage={canManage}
+                isOwner={isOwner}
+              />
+            ),
+          },
+        ]}
+      />
     </div>
   )
 }
 
 /** ──── Tab 1：基本信息 ──── */
-function BasicInfoTab({ team, teamId, canManage }: { team: Team; teamId: string; canManage: boolean }) {
+function BasicInfoTab({
+  team,
+  teamId,
+  canManage,
+}: {
+  team: Team
+  teamId: string
+  canManage: boolean
+}) {
   const [form] = Form.useForm<CreateTeamPayload>()
   const queryClient = useQueryClient()
   const [avatarUploading, setAvatarUploading] = useState(false)
@@ -216,7 +241,12 @@ function BasicInfoTab({ team, teamId, canManage }: { team: Team; teamId: string;
     >
       <Form.Item label="团队头像">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Avatar size={56} src={team.avatarUrl} icon={<CameraOutlined />} style={{ flexShrink: 0 }} />
+          <Avatar
+            size={56}
+            src={team.avatarUrl}
+            icon={<CameraOutlined />}
+            style={{ flexShrink: 0 }}
+          />
           <Upload accept="image/*" showUploadList={false} beforeUpload={handleAvatarUpload}>
             <Button icon={<UploadOutlined />} loading={avatarUploading}>
               上传图片
@@ -241,8 +271,8 @@ function BasicInfoTab({ team, teamId, canManage }: { team: Team; teamId: string;
         <Text type="secondary">{formatCreatedAt(team.createdAt)}</Text>
       </Form.Item>
       {canManage && (
-        <div style={{display:'flex', justifyContent:'center'}}>
-          <Button type="primary" htmlType="submit" loading={updateTeam.isPending}> 
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Button type="primary" htmlType="submit" loading={updateTeam.isPending}>
             保存修改
           </Button>
         </div>
@@ -252,7 +282,12 @@ function BasicInfoTab({ team, teamId, canManage }: { team: Team; teamId: string;
 }
 
 /** ──── Tab 2：成员管理 ──── */
-function MembersTab({ teamId, members, canManage, isOwner }: {
+function MembersTab({
+  teamId,
+  members,
+  canManage,
+  isOwner,
+}: {
   teamId: string
   members: TeamMember[]
   canManage: boolean
@@ -346,20 +381,25 @@ function MembersTab({ teamId, members, canManage, isOwner }: {
       title: '角色',
       key: 'role',
       width: 180,
-      render: (_, m) => canChangeRole(m) ? (
-        <Select
-          size="small"
-          aria-label={`调整 ${m.displayName || m.userId} 的团队角色`}
-          value={m.role}
-          options={MEMBER_ROLE_OPTIONS}
-          loading={updateRoleMutation.isPending && updateRoleMutation.variables?.userId === m.userId}
-          onChange={(role) => updateRoleMutation.mutate({ userId: m.userId, role })}
-        />
-      ) : (
-        <Tag color={m.role === 'TEAM_OWNER' ? 'gold' : m.role === 'TEAM_ADMIN' ? 'blue' : 'default'}>
-          {getRoleLabel(m.role)}
-        </Tag>
-      ),
+      render: (_, m) =>
+        canChangeRole(m) ? (
+          <Select
+            size="small"
+            aria-label={`调整 ${m.displayName || m.userId} 的团队角色`}
+            value={m.role}
+            options={MEMBER_ROLE_OPTIONS}
+            loading={
+              updateRoleMutation.isPending && updateRoleMutation.variables?.userId === m.userId
+            }
+            onChange={(role) => updateRoleMutation.mutate({ userId: m.userId, role })}
+          />
+        ) : (
+          <Tag
+            color={m.role === 'TEAM_OWNER' ? 'gold' : m.role === 'TEAM_ADMIN' ? 'blue' : 'default'}
+          >
+            {getRoleLabel(m.role)}
+          </Tag>
+        ),
     },
     ...(canManage
       ? [
@@ -367,21 +407,22 @@ function MembersTab({ teamId, members, canManage, isOwner }: {
             title: '操作',
             key: 'action',
             width: 120,
-            render: (_: unknown, m: TeamMember) => canRemove(m) ? (
-              <Button
-                size="small"
-                danger
-                type="link"
-                loading={removeMutation.isPending}
-                onClick={() => confirmRemove(m)}
-              >
-                移除
-              </Button>
-            ) : (
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                —
-              </Text>
-            ),
+            render: (_: unknown, m: TeamMember) =>
+              canRemove(m) ? (
+                <Button
+                  size="small"
+                  danger
+                  type="link"
+                  loading={removeMutation.isPending}
+                  onClick={() => confirmRemove(m)}
+                >
+                  移除
+                </Button>
+              ) : (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  —
+                </Text>
+              ),
           },
         ]
       : []),

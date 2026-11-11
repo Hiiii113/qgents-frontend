@@ -5,7 +5,13 @@ import type { User } from '@/types'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAppUiStore } from '@/store/appUiStore'
 import { authApi } from '@/api'
-import { AUTH_EXPIRED_EVENT, beginLogout, endLogout, getLogoutRefreshToken, refreshAccessToken } from '@/api/client'
+import {
+  AUTH_EXPIRED_EVENT,
+  beginLogout,
+  endLogout,
+  getLogoutRefreshToken,
+  refreshAccessToken,
+} from '@/api/client'
 import { RSA_KEY_ID, encryptPassword } from '@/utils/rsaConfig'
 
 /** localStorage key */
@@ -77,32 +83,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient])
 
   // ──── 登录：只调接口 + 存 token，返回会话；state 由 completeAuth 统一写入 ────
-  const login = useCallback(async (email: string, password: string): Promise<AuthSession> => {
-    // 使用硬编码的固定 RSA 公钥加密密码（mock 阶段 encryptPassword 直传明文）
-    const encryptedPassword = await encryptPassword(password)
+  const login = useCallback(
+    async (email: string, password: string): Promise<AuthSession> => {
+      // 使用硬编码的固定 RSA 公钥加密密码（mock 阶段 encryptPassword 直传明文）
+      const encryptedPassword = await encryptPassword(password)
 
-    const result = await authApi.login({
-      email,
-      password: encryptedPassword,
-      passwordKeyId: RSA_KEY_ID,
-    })
+      const result = await authApi.login({
+        email,
+        password: encryptedPassword,
+        passwordKeyId: RSA_KEY_ID,
+      })
 
-    if (!result.accessToken || !result.refreshToken || !result.user) {
-      throw new Error('登录响应缺少 token 或用户信息')
-    }
+      if (!result.accessToken || !result.refreshToken || !result.user) {
+        throw new Error('登录响应缺少 token 或用户信息')
+      }
 
-    localStorage.setItem(ACCESS_TOKEN_KEY, result.accessToken)
-    localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken)
+      localStorage.setItem(ACCESS_TOKEN_KEY, result.accessToken)
+      localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken)
 
-    // 账户聚合校验最近团队并补齐其可用团队，页面无需再让用户选择。
-    const me = await authApi.me()
-    queryClient.setQueryData(['teams', 'mine'], me.teams)
-    return { user: me.user, hasTeam: me.teams.length > 0, currentTeamId: me.currentTeamId }
-  }, [queryClient])
+      // 账户聚合校验最近团队并补齐其可用团队，页面无需再让用户选择。
+      const me = await authApi.me()
+      queryClient.setQueryData(['teams', 'mine'], me.teams)
+      return { user: me.user, hasTeam: me.teams.length > 0, currentTeamId: me.currentTeamId }
+    },
+    [queryClient],
+  )
 
   // ──── 注册：只调接口 + 存 token，返回会话（新用户没有团队）────
   const register = useCallback(
-    async (email: string, password: string, displayName: string, verificationCode: string): Promise<AuthSession> => {
+    async (
+      email: string,
+      password: string,
+      displayName: string,
+      verificationCode: string,
+    ): Promise<AuthSession> => {
       // 使用硬编码的固定 RSA 公钥加密密码（mock 阶段 encryptPassword 直传明文）
       const encryptedPassword = await encryptPassword(password)
 

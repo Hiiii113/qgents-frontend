@@ -62,7 +62,10 @@ export default function CreateTeamPage() {
             mediaType: avatarFile.type,
             sizeBytes: avatarFile.size,
           })
-          const putRes = await fetch(credential.uploadUrl, { method: 'PUT', body: await avatarFile.arrayBuffer() })
+          const putRes = await fetch(credential.uploadUrl, {
+            method: 'PUT',
+            body: await avatarFile.arrayBuffer(),
+          })
           if (!putRes.ok) throw new Error(`头像上传失败（${putRes.status}）`)
           await teamApi.avatarConfirm(team.id, credential.objectKey)
         } catch {
@@ -96,7 +99,10 @@ export default function CreateTeamPage() {
       <form className="create-team__card" onSubmit={handleSubmit}>
         {/* 头像 —— 创建成功后回写；本地先预览 */}
         <div className="create-team__avatar-row">
-          <label className="create-team__avatar-btn" title={avatarPreview ? '点击更换头像' : '上传头像'}>
+          <label
+            className="create-team__avatar-btn"
+            title={avatarPreview ? '点击更换头像' : '上传头像'}
+          >
             {avatarPreview ? (
               <img className="create-team__avatar-preview" src={avatarPreview} alt="团队头像预览" />
             ) : (
@@ -172,7 +178,13 @@ export default function CreateTeamPage() {
 function BackIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M15 6l-6 6 6 6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }

@@ -182,7 +182,9 @@ export function GroupMembersModal({
             notFoundContent="暂无可邀请的 Agent"
           />
         </Form.Item>
-        <p className="group-modal__hint">只有已启用的项目 Agent 可以邀请；加入后可通过 @Agent 发起工作，普通消息不会触发执行。</p>
+        <p className="group-modal__hint">
+          只有已启用的项目 Agent 可以邀请；加入后可通过 @Agent 发起工作，普通消息不会触发执行。
+        </p>
       </Form>
     </Modal>
   )

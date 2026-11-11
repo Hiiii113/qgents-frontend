@@ -18,18 +18,24 @@ it('lets project admins promote, demote and remove members while protecting the 
         name: '项目',
         role: 'PROJECT_ADMIN',
       })
-      client.setQueryData(['projects', 'p1', 'members'], [
-        { userId: 'u1', displayName: '当前管理员', role: 'PROJECT_ADMIN' },
-        { userId: 'u2', displayName: '其他管理员', role: 'PROJECT_ADMIN' },
-        { userId: 'u3', displayName: '普通成员', role: 'PROJECT_MEMBER' },
-        { userId: 'u4', displayName: '所有者本人', role: 'PROJECT_ADMIN' },
-      ])
-      client.setQueryData(['teams', 't1', 'members'], [
-        { userId: 'u1', displayName: '当前管理员', role: 'TEAM_ADMIN' },
-        { userId: 'u2', displayName: '其他管理员', role: 'TEAM_MEMBER' },
-        { userId: 'u3', displayName: '普通成员', role: 'TEAM_MEMBER' },
-        { userId: 'u4', displayName: '所有者本人', role: 'TEAM_OWNER' },
-      ])
+      client.setQueryData(
+        ['projects', 'p1', 'members'],
+        [
+          { userId: 'u1', displayName: '当前管理员', role: 'PROJECT_ADMIN' },
+          { userId: 'u2', displayName: '其他管理员', role: 'PROJECT_ADMIN' },
+          { userId: 'u3', displayName: '普通成员', role: 'PROJECT_MEMBER' },
+          { userId: 'u4', displayName: '所有者本人', role: 'PROJECT_ADMIN' },
+        ],
+      )
+      client.setQueryData(
+        ['teams', 't1', 'members'],
+        [
+          { userId: 'u1', displayName: '当前管理员', role: 'TEAM_ADMIN' },
+          { userId: 'u2', displayName: '其他管理员', role: 'TEAM_MEMBER' },
+          { userId: 'u3', displayName: '普通成员', role: 'TEAM_MEMBER' },
+          { userId: 'u4', displayName: '所有者本人', role: 'TEAM_OWNER' },
+        ],
+      )
     },
   )
 
@@ -55,14 +61,20 @@ it('does not show member management actions to ordinary project members', async 
         name: '项目',
         role: 'PROJECT_MEMBER',
       })
-      client.setQueryData(['projects', 'p1', 'members'], [
-        { userId: 'u1', displayName: '普通成员', role: 'PROJECT_MEMBER' },
-        { userId: 'u2', displayName: '管理员', role: 'PROJECT_ADMIN' },
-      ])
-      client.setQueryData(['teams', 't1', 'members'], [
-        { userId: 'u1', displayName: '普通成员', role: 'TEAM_MEMBER' },
-        { userId: 'u2', displayName: '管理员', role: 'TEAM_OWNER' },
-      ])
+      client.setQueryData(
+        ['projects', 'p1', 'members'],
+        [
+          { userId: 'u1', displayName: '普通成员', role: 'PROJECT_MEMBER' },
+          { userId: 'u2', displayName: '管理员', role: 'PROJECT_ADMIN' },
+        ],
+      )
+      client.setQueryData(
+        ['teams', 't1', 'members'],
+        [
+          { userId: 'u1', displayName: '普通成员', role: 'TEAM_MEMBER' },
+          { userId: 'u2', displayName: '管理员', role: 'TEAM_OWNER' },
+        ],
+      )
     },
   )
 

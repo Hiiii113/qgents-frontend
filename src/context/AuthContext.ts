@@ -14,7 +14,12 @@ export interface AuthContextValue {
   /** 登录：只调接口 + 存 token，返回会话，不更新 state */
   login: (email: string, password: string) => Promise<AuthSession>
   /** 注册：只调接口 + 存 token，返回会话，不更新 state；verificationCode 为邮箱验证码 */
-  register: (email: string, password: string, displayName: string, verificationCode: string) => Promise<AuthSession>
+  register: (
+    email: string,
+    password: string,
+    displayName: string,
+    verificationCode: string,
+  ) => Promise<AuthSession>
   /** 把登录/注册结果一次性写入 state（与 navigate 同批调用，避免 RedirectIfAuthed 抢跳） */
   completeAuth: (session: AuthSession) => void
   /** 退出登录 */

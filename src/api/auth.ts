@@ -111,15 +111,18 @@ export const authApi = {
    * newPassword 必须为前端使用平台 RSA 公钥加密后的 Base64 密文，调用方用 encryptPassword 加密。
    * 注意：请求体字段名（token）尚未在契约中冻结，联调时以后端实际契约为准。
    */
-  resetPassword(input: { email: string; token: string; newPassword: string; passwordKeyId: string }) {
+  resetPassword(input: {
+    email: string
+    token: string
+    newPassword: string
+    passwordKeyId: string
+  }) {
     return request<void>('/auth/password-resets', {
       method: 'POST',
       body: input,
       skipAuth: true,
     })
   },
-
-
 }
 
 /**

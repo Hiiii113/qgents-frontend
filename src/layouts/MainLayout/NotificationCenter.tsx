@@ -1,12 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Drawer, Badge, Button, Typography, Space, Empty, theme } from 'antd'
-import {
-  BellOutlined,
-  CheckOutlined,
-  UserAddOutlined,
-  MessageOutlined,
-} from '@ant-design/icons'
+import { BellOutlined, CheckOutlined, UserAddOutlined, MessageOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificationApi } from '@/api'
 import { useNotificationEvents } from '@/realtime/useNotificationEvents'

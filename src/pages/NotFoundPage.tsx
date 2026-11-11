@@ -24,9 +24,7 @@ export default function NotFoundPage() {
     >
       <p style={{ fontSize: 80, fontWeight: 700, color: '#0d9b8a', margin: 0 }}>404</p>
       <p style={{ fontSize: 18, margin: 0 }}>页面未找到</p>
-      <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
-        你访问的页面不存在或已被移除
-      </p>
+      <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>你访问的页面不存在或已被移除</p>
       <button
         type="button"
         onClick={() => navigate(PATHS.APP, { replace: true })}

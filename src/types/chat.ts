@@ -39,9 +39,16 @@ export interface ChatMessage {
 }
 export interface SendChatMessage {
   type: 'TEXT' | 'CODE' | 'IMAGE' | 'FILE'
-  content: { text: string } | { code: string; language: string } | {
-    attachmentId: string; url: string; name?: string; size?: number; mediaType?: string
-  }
+  content:
+    | { text: string }
+    | { code: string; language: string }
+    | {
+        attachmentId: string
+        url: string
+        name?: string
+        size?: number
+        mediaType?: string
+      }
   mentions?: ChatMention[]
   replyToId?: string
   clientMessageId: string

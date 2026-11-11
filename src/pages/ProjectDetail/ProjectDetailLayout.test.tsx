@@ -30,7 +30,10 @@ describe('project navigation', () => {
     )
     expect(screen.queryByRole('link', { name: /仓库/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /返回项目列表/ })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /项目设置/ })).toHaveAttribute('href', '/app/projects/p1/settings')
+    expect(screen.getByRole('link', { name: /项目设置/ })).toHaveAttribute(
+      'href',
+      '/app/projects/p1/settings',
+    )
     expect(screen.queryByRole('button', { name: /项目工具/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: '项目导航' })).not.toBeInTheDocument()
     fireEvent.change(screen.getByRole('textbox', { name: '搜索群聊' }), {

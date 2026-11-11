@@ -20,15 +20,32 @@ describe('realtimeWsUrl', () => {
 describe('dispatchRealtimeFrame', () => {
   it('refreshes chat participants after Qgent joins without refetching message history', () => {
     const spy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
-    dispatchRealtimeFrame({ type: 'group.member.updated', scope: 'project', projectId: 'p1', groupId: 'g1', payload: {} })
+    dispatchRealtimeFrame({
+      type: 'group.member.updated',
+      scope: 'project',
+      projectId: 'p1',
+      groupId: 'g1',
+      payload: {},
+    })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'p1', 'members'] })
-    expect(spy).not.toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'p1', 'groups', 'g1', 'messages'] })
+    expect(spy).not.toHaveBeenCalledWith({
+      queryKey: ['chat', 'projects', 'p1', 'groups', 'g1', 'messages'],
+    })
   })
   it('refreshes chat membership when project members change', () => {
     const spy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
-    dispatchRealtimeFrame({ type: 'project.member.added', scope: 'team', teamId: 't1', resourceId: 'p1', payload: { projectId: 'p1' } })
+    dispatchRealtimeFrame({
+      type: 'project.member.added',
+      scope: 'team',
+      teamId: 't1',
+      resourceId: 'p1',
+      payload: { projectId: 'p1' },
+    })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'p1', 'members'] })
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'projects', 'p1', 'groups'], exact: true })
+    expect(spy).toHaveBeenCalledWith({
+      queryKey: ['chat', 'projects', 'p1', 'groups'],
+      exact: true,
+    })
   })
   it('refreshes the notification list for any notification-scope frame (type=kind, e.g. PROJECT_ADDED)', () => {
     const spy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
@@ -53,7 +70,9 @@ describe('dispatchRealtimeFrame', () => {
     }
     dispatchRealtimeFrame(frame)
     expect(spy).toHaveBeenCalledWith({ queryKey: ['chat', 'projects', '1', 'groups'], exact: true })
-    expect(spy).not.toHaveBeenCalledWith({ queryKey: ['chat', 'projects', '1', 'groups', '1', 'messages'] })
+    expect(spy).not.toHaveBeenCalledWith({
+      queryKey: ['chat', 'projects', '1', 'groups', '1', 'messages'],
+    })
   })
 
   it('ignores removed task event types', () => {
