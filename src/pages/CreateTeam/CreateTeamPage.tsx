@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { App } from 'antd'
+import { App, Button } from 'antd'
 import { PATHS } from '@/routes/paths'
 import { useAuth } from '@/context/AuthContext'
 import { teamApi } from '@/api'
 import { formatApiError } from '@/utils/formatApiError'
+import { WorkspacePage } from '@/components/WorkspacePage'
 import './CreateTeamPage.css'
 
 /**
@@ -86,21 +87,12 @@ export default function CreateTeamPage() {
   }
 
   return (
-    <div className="create-team">
-      <div className="create-team__top">
-        <Link to={PATHS.APP} className="create-team__back">
-          <BackIcon />
-          返回首页
-        </Link>
-      </div>
-
-      <h1 className="create-team__title">创建新团队</h1>
-
-      <form className="create-team__card" onSubmit={handleSubmit}>
+    <WorkspacePage title="创建新团队" description="为你的伙伴建一个空间，创建项目，开始讨论。">
+      <form className="create-team__form" onSubmit={handleSubmit}>
         {/* 头像 —— 创建成功后回写；本地先预览 */}
         <div className="create-team__avatar-row">
           <label
-            className="create-team__avatar-btn"
+            className="create-team__avatar"
             title={avatarPreview ? '点击更换头像' : '上传头像'}
           >
             {avatarPreview ? (
@@ -120,72 +112,57 @@ export default function CreateTeamPage() {
                 e.target.value = ''
               }}
             />
-            {!avatarPreview && <span>上传头像</span>}
           </label>
-          <p className="create-team__hint">图片不超过 5MB</p>
+          <div className="create-team__avatar-hint">
+            <span className="create-team__label">团队头像</span>
+            <p>可选，图片不超过 5MB。上传失败不影响团队创建。</p>
+          </div>
         </div>
 
-        {/* —— 错误提示 —— */}
         {error && (
-          <div className="create-team__error" role="alert">
+          <p className="create-team__error" role="alert">
             {error}
-          </div>
+          </p>
         )}
 
-        <label className="create-team__field">
-          <span className="create-team__label">
+        <div className="create-team__field">
+          <label className="create-team__label" htmlFor="create-team-name">
             团队名称 <em>*</em>
-          </span>
+          </label>
           <input
+            id="create-team-name"
+            className="create-team__input"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="例如：前端攻坚小组"
             required
           />
-        </label>
+        </div>
 
-        <label className="create-team__field">
-          <span className="create-team__label">团队简介</span>
+        <div className="create-team__field">
+          <label className="create-team__label" htmlFor="create-team-description">
+            团队简介
+          </label>
           <textarea
+            id="create-team-description"
+            className="create-team__input"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="描述团队用途、协作方向"
             rows={3}
           />
-        </label>
+        </div>
 
         <div className="create-team__actions">
-          <button
-            type="button"
-            className="create-team__btn create-team__btn--ghost"
-            onClick={() => navigate(PATHS.APP)}
-          >
+          <Button autoInsertSpace={false} onClick={() => navigate(PATHS.APP)}>
             取消
-          </button>
-          <button
-            type="submit"
-            className="create-team__btn create-team__btn--primary"
-            disabled={submitting || !name.trim()}
-          >
+          </Button>
+          <Button type="primary" htmlType="submit" disabled={submitting || !name.trim()}>
             {submitting ? '创建中…' : '创建团队'}
-          </button>
+          </Button>
         </div>
       </form>
-    </div>
-  )
-}
-
-function BackIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M15 6l-6 6 6 6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    </WorkspacePage>
   )
 }
 

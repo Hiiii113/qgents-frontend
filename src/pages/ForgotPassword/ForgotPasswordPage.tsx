@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Button } from 'antd'
 import { useAuth } from '@/context/AuthContext'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
@@ -109,80 +110,85 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="forgot-page">
-      <div className="forgot-page__panel">
-        <div className="forgot-card">
-          <header className="forgot-card__header">
-            <div className="forgot-card__logo">
-              <span className="forgot-card__q">Q</span>
-              <span>gents</span>
-            </div>
-            <h2>
-              {stage === 'request' && '找回密码'}
-              {stage === 'reset' && '设置新密码'}
-              {stage === 'done' && '密码已重置'}
-            </h2>
-            <p>
-              {stage === 'request' && '输入注册邮箱，我们将发送验证码到你的邮箱'}
-              {stage === 'reset' && `验证码已发送至 ${email}，请查收邮件`}
-              {stage === 'done' && '新密码已生效，现在可以用新密码登录了'}
-            </p>
-          </header>
+      <div className="forgot-page__col">
+        <p className="forgot-page__wordmark">
+          <span className="forgot-page__mark">Q</span>gents
+        </p>
 
-          {error && (
-            <div className="forgot-card__error" role="alert">
-              {error}
-            </div>
-          )}
+        <header className="forgot-page__header">
+          <span className="qg-eyebrow">PASSWORD RESET</span>
+          <h1 className="forgot-page__title">
+            {stage === 'request' && '找回密码'}
+            {stage === 'reset' && '设置新密码'}
+            {stage === 'done' && '密码已重置'}
+          </h1>
+          <p className="forgot-page__desc">
+            {stage === 'request' && '输入注册邮箱，我们将发送验证码到你的邮箱'}
+            {stage === 'reset' && `验证码已发送至 ${email}，请查收邮件`}
+            {stage === 'done' && '新密码已生效，现在可以用新密码登录了'}
+          </p>
+        </header>
 
-          {stage === 'request' && (
-            <form className="forgot-card__form" onSubmit={handleRequestCode}>
-              <label className="forgot-field">
-                <span className="forgot-field__icon" aria-hidden>
-                  <MailIcon />
-                </span>
-                <input
-                  type="email"
-                  placeholder="注册邮箱"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  required
-                />
+        <hr className="qg-rule" />
+
+        {error && (
+          <p className="forgot-page__error" role="alert">
+            {error}
+          </p>
+        )}
+
+        {stage === 'request' && (
+          <form className="forgot-form" onSubmit={handleRequestCode}>
+            <div className="forgot-field">
+              <label className="forgot-field__label" htmlFor="forgot-email">
+                注册邮箱
               </label>
+              <input
+                id="forgot-email"
+                className="forgot-field__input"
+                type="email"
+                placeholder="注册邮箱"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
 
-              <button
-                type="submit"
-                className="forgot-card__submit"
-                disabled={submitting || !email.trim()}
-              >
-                {submitting ? '发送中…' : '获取验证码'}
-              </button>
-            </form>
-          )}
+            <Button type="primary" htmlType="submit" block disabled={submitting || !email.trim()}>
+              {submitting ? '发送中…' : '获取验证码'}
+            </Button>
+          </form>
+        )}
 
-          {stage === 'reset' && (
-            <form className="forgot-card__form" onSubmit={handleReset}>
-              <label className="forgot-field">
-                <span className="forgot-field__icon" aria-hidden>
-                  <KeyIcon />
-                </span>
-                <input
-                  type="text"
-                  placeholder="邮箱中的验证码"
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  inputMode="numeric"
-                  maxLength={6}
-                  autoComplete="one-time-code"
-                  required
-                />
+        {stage === 'reset' && (
+          <form className="forgot-form" onSubmit={handleReset}>
+            <div className="forgot-field">
+              <label className="forgot-field__label" htmlFor="forgot-token">
+                邮箱验证码
               </label>
+              <input
+                id="forgot-token"
+                className="forgot-field__input"
+                type="text"
+                placeholder="邮箱中的验证码"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                inputMode="numeric"
+                maxLength={6}
+                autoComplete="one-time-code"
+                required
+              />
+            </div>
 
-              <label className="forgot-field">
-                <span className="forgot-field__icon" aria-hidden>
-                  <LockIcon />
-                </span>
+            <div className="forgot-field">
+              <label className="forgot-field__label" htmlFor="forgot-new-password">
+                新密码
+              </label>
+              <div className="forgot-field__row">
                 <input
+                  id="forgot-new-password"
+                  className="forgot-field__input"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="新密码"
                   value={newPassword}
@@ -193,140 +199,87 @@ export default function ForgotPasswordPage() {
                 />
                 <button
                   type="button"
-                  className="forgot-field__eye"
+                  className="forgot-field__icon-btn"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? '隐藏密码' : '显示密码'}
                 >
                   <EyeIcon />
                 </button>
-              </label>
-
-              <label className="forgot-field">
-                <span className="forgot-field__icon" aria-hidden>
-                  <LockIcon />
-                </span>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="确认新密码"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </label>
-
-              <button
-                type="submit"
-                className="forgot-card__submit"
-                disabled={submitting || !token.trim() || !newPassword || !confirmPassword}
-              >
-                {submitting ? '提交中…' : '重置密码'}
-              </button>
-
-              <div className="forgot-card__resend">
-                {countdown > 0 ? (
-                  <span>验证码已发送，{countdown}s 后可重新获取</span>
-                ) : (
-                  <button
-                    type="button"
-                    className="forgot-card__link"
-                    disabled={submitting}
-                    onClick={() => void requestCode()}
-                  >
-                    重新获取验证码
-                  </button>
-                )}
               </div>
-            </form>
-          )}
-
-          {stage === 'done' && (
-            <div className="forgot-card__done">
-              <div className="forgot-card__done-icon" aria-hidden>
-                <CheckIcon />
-              </div>
-              <Link className="forgot-card__submit forgot-card__submit--link" to={PATHS.LOGIN}>
-                返回登录
-              </Link>
             </div>
-          )}
 
-          <p className="forgot-card__footnote">
-            想起来了？
-            <Link className="forgot-card__link" to={PATHS.LOGIN}>
+            <div className="forgot-field">
+              <label className="forgot-field__label" htmlFor="forgot-confirm-password">
+                确认新密码
+              </label>
+              <input
+                id="forgot-confirm-password"
+                className="forgot-field__input"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="确认新密码"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+            </div>
+
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              disabled={submitting || !token.trim() || !newPassword || !confirmPassword}
+            >
+              {submitting ? '提交中…' : '重置密码'}
+            </Button>
+
+            <p className="forgot-form__resend">
+              {countdown > 0 ? (
+                <span>验证码已发送，{countdown}s 后可重新获取</span>
+              ) : (
+                <button
+                  type="button"
+                  className="forgot-link"
+                  disabled={submitting}
+                  onClick={() => void requestCode()}
+                >
+                  重新获取验证码
+                </button>
+              )}
+            </p>
+          </form>
+        )}
+
+        {stage === 'done' && (
+          <div className="forgot-done">
+            <p className="forgot-done__note">新密码已生效。建议使用新密码重新登录后再继续协作。</p>
+            <Link className="forgot-done__link" to={PATHS.LOGIN}>
               返回登录
             </Link>
-          </p>
-        </div>
+          </div>
+        )}
+
+        <p className="forgot-page__footnote">
+          想起来了？
+          <Link className="forgot-link" to={PATHS.LOGIN}>
+            返回登录
+          </Link>
+        </p>
       </div>
     </div>
   )
 }
 
-// ──── 图标组件（与登录页风格一致）────
-
-function MailIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M4 7l8 6 8-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function LockIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="8" y="10" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M8 10V7a4 4 0 0 1 8 0v3"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function KeyIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M11 12l8-8M15 8l3 3M17 6l2 2"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
 function EyeIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"
         stroke="currentColor"
         strokeWidth="1.6"
       />
       <circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M8 12.5l2.5 2.5L16 9.5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   )
 }
