@@ -40,15 +40,29 @@
 }
 
 /* 状态标签：12px pill，纸灰底，不填充饱和色。 */
+/* 状态 pill：靠状态点表达，不填充饱和色。 */
 .github-pill {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-1);
   padding: 2px var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--paper-sunken);
   font-size: var(--text-xs);
   color: var(--ink-700);
   white-space: nowrap;
+}
+
+.github-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.github-pill--paused::before {
+  background: var(--warning);
 }
 
 .github-empty {

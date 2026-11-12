@@ -68,6 +68,19 @@ img {
   display: block;
 }
 
+/* 浏览器自动填充会把输入框染成淡蓝，这里强制保持纸底色。 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--paper-raised) inset;
+  -webkit-text-fill-color: var(--ink-900);
+  caret-color: var(--ink-900);
+  transition: background-color 9999s ease-out;
+}
+
 /* 键盘可达性：统一 2px 环形焦点，鼠标点击不显示。 */
 :focus-visible {
   outline: 2px solid var(--accent);

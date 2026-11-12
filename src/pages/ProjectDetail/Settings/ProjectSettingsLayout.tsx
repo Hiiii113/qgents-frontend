@@ -26,7 +26,7 @@ export function ProjectSettingsLayout() {
     : (tabs.find((tab) => tab.path === location.pathname)?.key ?? 'basic')
 
   return (
-    <WorkspacePage title="项目设置" description="维护项目资料、成员和协作能力。">
+    <WorkspacePage title="项目设置" description="资料、成员、Agent、Skill、共享知识与仓库。">
       <Tabs
         activeKey={activeKey}
         onChange={(key) => {
@@ -42,11 +42,9 @@ export function ProjectSettingsLayout() {
           key: tab.key,
           label: tab.label,
           children: tab.key === activeKey && (
-            <div className="workspace-page__content">
-              <Suspense fallback={<PageLoader />}>
-                <Outlet />
-              </Suspense>
-            </div>
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
           ),
         }))}
       />

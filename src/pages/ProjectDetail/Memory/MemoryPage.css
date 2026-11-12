@@ -48,7 +48,8 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: var(--text-sm);
   line-height: 1.7;
-  padding: var(--space-3);
+  padding: var(--space-4);
+  max-width: 900px;
 }
 
 .memory-page__footer {

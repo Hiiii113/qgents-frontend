@@ -34,4 +34,3 @@ export function StartupScreen({ state, onRetry }: { state: StartupState; onRetry
     </main>
   )
 }
-

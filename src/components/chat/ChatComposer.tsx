@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Alert, App, Avatar, Button, Mentions, Tag, Upload } from 'antd'
 import { CloseOutlined, PaperClipOutlined, RobotOutlined, SendOutlined } from '@ant-design/icons'
 import type { MentionsRef } from 'antd/es/mentions'
@@ -48,16 +48,16 @@ function readDraft(key?: string): { text: string; selected: string[] } {
   }
 }
 
+export interface ChatComposerHandle {
+  /** 从消息头像等处把某人 @ 进草稿：追加 @名字 并把它记入提及列表。 */
+  mention: (member: ChatMember) => void
+}
+
 /** 输入状态留在编辑器，打字不会重新渲染历史消息列表。 */
-export function ChatComposer({
-  projectId,
-  reply,
-  recipients,
-  onSend,
-  onClearReply,
-  disabled = false,
-  draftKey,
-}: Props) {
+export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatComposer(
+  { projectId, reply, recipients, onSend, onClearReply, disabled = false, draftKey }: Props,
+  ref,
+) {
   const { message } = App.useApp()
   const [savedDraft] = useState(() => readDraft(draftKey))
   const [draft, setDraft] = useState(savedDraft.text)
@@ -67,6 +67,31 @@ export function ChatComposer({
   const [selected, setSelected] = useState<string[]>(savedDraft.selected)
   const messageId = useRef(crypto.randomUUID())
   const inputRef = useRef<MentionsRef>(null)
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      mention(member: ChatMember) {
+        const token = `@${member.displayName} `
+        setDraft((prev) => {
+          if (!prev) return token
+          return /[ \n]$/.test(prev) ? prev + token : `${prev} ${token}`
+        })
+        setSelected((prev) => {
+          const key = `${member.memberType}:${member.id}`
+          return prev.includes(key) ? prev : [...prev, key]
+        })
+        const focus = () => {
+          const textarea = inputRef.current?.nativeElement.querySelector('textarea')
+          textarea?.focus({ preventScroll: true })
+          const end = textarea?.value.length ?? 0
+          textarea?.setSelectionRange(end, end)
+        }
+        requestAnimationFrame(focus)
+      },
+    }),
+    [],
+  )
   const sending = useRef(false)
   const previousReplyId = useRef(reply?.id)
   useEffect(() => {
@@ -200,7 +225,7 @@ export function ChatComposer({
         placeholder="写下想法，输入 @ 选择 Agent 或成员…"
         value={draft}
         onChange={edit}
-        autoSize={{ minRows: 2, maxRows: 7 }}
+        autoSize={{ minRows: 1, maxRows: 7 }}
         placement="top"
         notFoundContent="没有匹配的 Agent 或成员"
         validateSearch={(text) => !/\s/.test(text)}
@@ -293,4 +318,4 @@ export function ChatComposer({
       </div>
     </div>
   )
-}
+})

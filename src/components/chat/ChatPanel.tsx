@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Alert, App, Avatar, Button, Drawer, List, Tag, Tooltip } from 'antd'
-import { PushpinOutlined, RobotOutlined } from '@ant-design/icons'
+import { PushpinOutlined, RobotOutlined, TeamOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { chatApi } from '@/api/chat'
 import { projectApi } from '@/api/project'
@@ -12,7 +12,7 @@ import { messageField, type ChatMessage, type SendChatMessage } from '@/types/ch
 import { PATHS } from '@/routes/paths'
 import { GroupMembersModal } from './GroupMembersModal'
 import { AttachmentPreviewModal } from './AttachmentPreviewModal'
-import { ChatComposer } from './ChatComposer'
+import { ChatComposer, type ChatComposerHandle } from './ChatComposer'
 import { ChatMessageList } from './ChatMessageList'
 import { chatKeys, mergeChatMessages, useChatMessages } from './useChatMessages'
 import './ChatPanel.css'
@@ -26,6 +26,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   const [reply, setReply] = useState<ChatMessage | null>(null)
   const [preview, setPreview] = useState<ChatMessage | null>(null)
   const [membersOpen, setMembersOpen] = useState(false)
+  const composerRef = useRef<ChatComposerHandle>(null)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [readingLatest, setReadingLatest] = useState(true)
   const [targetId, setTargetId] = useState<string | null>(params.get('messageId'))
@@ -134,7 +135,11 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
               onClick={() => pin.mutate()}
             />
           </Tooltip>
-          <Button type="text" onClick={() => setMembersOpen(true)}>
+          <Button
+            type="text"
+            icon={<TeamOutlined aria-hidden />}
+            onClick={() => setMembersOpen(true)}
+          >
             {group?.memberCount ?? members.data?.length ?? 0} 位成员
           </Button>
         </div>
@@ -174,6 +179,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
         onStop={handleStop}
         onPreview={handlePreview}
         onLocate={onLocate}
+        onMention={(member) => composerRef.current?.mention(member)}
       />
       {project.data?.status === 'ARCHIVED' && (
         <Alert
@@ -185,6 +191,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
       )}
       <div className="chat-panel__composer">
         <ChatComposer
+          ref={composerRef}
           key={groupId}
           draftKey={`qgents:chat-draft:${user?.id}:${projectId}:${groupId}`}
           projectId={projectId}

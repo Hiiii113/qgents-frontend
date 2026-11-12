@@ -128,9 +128,8 @@ export default function TeamSettingsPage() {
 
   return (
     <div className="team-settings__page">
-      {/* 返回项目列表由团队详情的操作入口提供。 */}
+      {/* 页头由团队详情提供；这里是分区操作，与标签同一行。 */}
       <div className="team-settings__header">
-        <h2 className="team-settings__title">团队设置</h2>
         <div className="team-settings__actions">
           {isOwner && (
             <Button
@@ -149,6 +148,7 @@ export default function TeamSettingsPage() {
       </div>
 
       <Tabs
+        className="team-settings__tabs"
         defaultActiveKey="basic"
         items={[
           {

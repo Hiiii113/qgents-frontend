@@ -49,7 +49,12 @@ export const antdTheme: ThemeConfig = {
   components: {
     Card: { borderRadiusLG: 4, paddingLG: 24, boxShadowTertiary: 'none' },
     Button: { primaryShadow: 'none', defaultShadow: 'none', dangerShadow: 'none', fontWeight: 500 },
-    Table: { headerBg: T.paperSunken, borderColor: T.rule, headerSplitColor: T.rule, rowHoverBg: T.paperSunken },
+    Table: {
+      headerBg: T.paperSunken,
+      borderColor: T.rule,
+      headerSplitColor: T.rule,
+      rowHoverBg: T.paperSunken,
+    },
     Modal: { contentBg: T.paperRaised, headerBg: T.paperRaised },
     Drawer: { colorBgElevated: T.paperRaised },
     Tag: { defaultBg: T.paperSunken, borderRadiusSM: 2 },
@@ -64,7 +69,13 @@ export const antdTheme: ThemeConfig = {
       verticalLabelPadding: '0 0 4px',
       itemMarginBottom: 16,
     },
-    Segmented: { itemSelectedBg: T.paperRaised, trackBg: T.paperSunken },
+    Segmented: {
+      trackBg: T.paperSunken,
+      itemColor: T.ink500,
+      itemHoverColor: T.ink900,
+      itemSelectedBg: T.paperRaised,
+      itemSelectedColor: T.ink900,
+    },
     Tooltip: { colorBgSpotlight: T.ink900 },
   },
 }

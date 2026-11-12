@@ -129,3 +129,15 @@
     align-items: stretch;
   }
 }
+
+/* 头像占位：浅底 + 弱图标，避免深灰块抢视觉。 */
+.settings-avatar .ant-avatar {
+  background: var(--paper-sunken);
+  color: var(--ink-300);
+}
+
+/* Agent 头像占位：浅底弱图标，和整体纸面一致。 */
+.settings-agent-list__row .ant-avatar {
+  background: var(--paper-sunken);
+  color: var(--ink-300);
+}

@@ -213,49 +213,50 @@
   }
 }
 
-/* 窄屏：侧栏折成横向条，选中态改用底部 2px 指示条。 */
-@media (max-width: 600px) {
+/* 窄屏：侧栏压成一条 48px 通道，群聊横向滚动，创建/设置收成图标。 */
+@media (max-width: 700px) {
   .project-workspace {
     flex-direction: column;
   }
 
   .project-sidebar {
     width: 100%;
-    padding: var(--space-2) var(--space-3);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
     border-right: 0;
     border-bottom: 1px solid var(--rule);
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: var(--space-2);
-    max-height: 190px;
+    max-height: none;
+    min-height: 48px;
   }
 
-  .project-sidebar__identity {
-    grid-row: 1;
-    grid-column: 1;
-    padding: 0;
-  }
-
-  .project-sidebar__identity div span,
+  .project-sidebar__identity,
   .project-sidebar__search,
   .project-sidebar__section {
     display: none;
   }
 
   .project-sidebar__groups {
-    grid-row: 2;
-    grid-column: 1 / -1;
+    flex: 1;
     flex-direction: row;
+    gap: var(--space-1);
     overflow-x: auto;
     overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .project-sidebar__groups::-webkit-scrollbar {
+    display: none;
   }
 
   .project-sidebar__group {
     flex-shrink: 0;
-    max-width: 200px;
+    max-width: 160px;
     border-left: 0;
     border-bottom: 2px solid transparent;
-    padding: var(--space-2);
+    padding: var(--space-1) var(--space-2);
   }
 
   .project-sidebar__group.is-active {
@@ -266,21 +267,32 @@
     display: none;
   }
 
-  .project-sidebar__create {
-    grid-row: 3;
-    grid-column: 1;
+  /* 图标化：只留 + 与齿轮，避免占掉一半宽度。 */
+  .project-sidebar__create,
+  .project-sidebar__settings {
+    flex-shrink: 0;
     margin: 0;
+    padding: 0 var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .project-sidebar__create.ant-btn {
+    width: auto;
+    min-width: 32px;
+  }
+
+  .project-sidebar__label {
+    display: none;
   }
 
   .project-sidebar__settings {
-    grid-row: 3;
-    grid-column: 2;
-    margin: 0;
-    padding: 0 var(--space-2);
-    border: 0;
+    display: inline-flex;
+    align-items: center;
+    min-width: 32px;
   }
 
   .project-tools__nav {
-    padding: var(--space-2) var(--space-3);
+    overflow-x: auto;
+    flex-wrap: nowrap;
   }
 }

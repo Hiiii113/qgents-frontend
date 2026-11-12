@@ -11,7 +11,7 @@
 .team-settings__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-4);
   flex-wrap: wrap;
 }
@@ -80,6 +80,12 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+/* 头像占位用浅底 + 弱图标，避免一整块深灰抢注意力。 */
+.team-settings__avatar .ant-avatar {
+  background: var(--paper-sunken);
+  color: var(--ink-300);
 }
 
 .team-settings__invite {

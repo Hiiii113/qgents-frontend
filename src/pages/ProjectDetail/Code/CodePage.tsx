@@ -94,7 +94,7 @@ export function CodePage() {
       {imported.isPending ? (
         <Spin delay={180} />
       ) : !(imported.data ?? []).length ? (
-        <p className="code-empty">项目还没有导入仓库。你也可以直接在聊天中讨论或 @Qgent。</p>
+        <p className="code-empty">还没有导入仓库。可以从 GitHub 导入，或直接在聊天里讨论。</p>
       ) : (
         <div className="workspace-page__grid">
           {(imported.data ?? [])
@@ -138,8 +138,7 @@ export function CodePage() {
         </div>
       )}
       <p className="workspace-page__note">
-        导入只添加可用仓库，不会自动克隆或启动工作。需要查看改动、提交或创建 PR 时，在聊天中 @Qgent
-        说明你的目标。
+        导入只登记可用仓库，不会自动克隆。需要查看改动、提交或创建 PR 时，在聊天里 @Qgent 说明目标。
       </p>
       <Modal
         title="导入 GitHub 仓库"

@@ -22,6 +22,7 @@ interface Props {
   onStop: (item: ChatMessage) => void
   onPreview: (item: ChatMessage) => void
   onLocate: (id: string) => void
+  onMention?: (member: ChatMember) => void
   onReadingLatestChange?: (reading: boolean) => void
 }
 
@@ -152,8 +153,10 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
           </div>
         ) : !messages.length ? (
           <div className="chat-timeline__empty">
+            <p className="chat-timeline__empty-title">还没有消息</p>
             <p className="chat-timeline__empty-text">
-              还没有消息。写下第一句，或者 @Agent 开始干活。
+              在下面写下第一句，或者用 @ 提到 Agent
+              让它开始干活。群聊内容会按天分组，长期有效的信息会自动进入群记忆。
             </p>
           </div>
         ) : (
@@ -225,6 +228,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     onStop={props.onStop}
                     onPreview={props.onPreview}
                     onLocate={props.onLocate}
+                    onMention={props.onMention}
                   />
                 </div>
               )

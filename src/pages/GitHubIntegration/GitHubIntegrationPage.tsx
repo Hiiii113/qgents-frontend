@@ -93,7 +93,9 @@ export function GitHubIntegrationPage() {
               <span className="github-connection__meta">
                 {connection.accountType === 'ORGANIZATION' ? '组织账号' : '个人账号'} · GitHub App
               </span>
-              <span className="github-pill">{connection.suspended ? '已暂停' : '已连接'}</span>
+              <span className={`github-pill${connection.suspended ? ' github-pill--paused' : ''}`}>
+                {connection.suspended ? '已暂停' : '已连接'}
+              </span>
               {owner && (
                 <Button
                   type="text"

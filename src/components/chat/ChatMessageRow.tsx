@@ -19,6 +19,8 @@ interface Props {
   onStop: (item: ChatMessage) => void
   onPreview: (item: ChatMessage) => void
   onLocate: (id: string) => void
+  /** 点击或右键头像把发送者 @ 进输入框。 */
+  onMention?: (member: ChatMember) => void
 }
 
 function LinkedText({ text }: { text: string }) {
@@ -50,6 +52,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   onStop,
   onPreview,
   onLocate,
+  onMention,
 }: Props) {
   if (item.senderType === 'SYSTEM')
     return <div className="chat-system-message">{chatMessageText(item)}</div>
@@ -60,6 +63,16 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   const time = Number.isNaN(timestamp.getTime())
     ? ''
     : timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  const mentionTarget: ChatMember | null =
+    sender ??
+    (item.senderId
+      ? {
+          id: item.senderId,
+          displayName: name,
+          memberType: agent ? 'AGENT' : 'USER',
+          avatarUrl: null,
+        }
+      : null)
   const attachmentId = messageField(item, 'attachmentId')
   const language = messageField(item, 'language')
   // 不信任消息内容里的 url：用当前项目与附件 ID 重建内容地址，避免把 Bearer 发到外部地址。
@@ -75,13 +88,25 @@ export const ChatMessageRow = memo(function ChatMessageRow({
       {continued ? (
         <span className="chat-message__avatar-slot" aria-hidden="true" />
       ) : (
-        <Avatar
-          className="chat-message__avatar"
-          src={sender?.avatarUrl}
-          icon={agent ? <RobotOutlined /> : undefined}
+        <button
+          type="button"
+          className="chat-message__avatar-hit"
+          aria-label={`在输入框里 @${name}`}
+          title={`点击或右键 @${name}`}
+          onClick={() => mentionTarget && onMention?.(mentionTarget)}
+          onContextMenu={(event) => {
+            event.preventDefault()
+            if (mentionTarget) onMention?.(mentionTarget)
+          }}
         >
-          {agent ? undefined : name.slice(0, 1)}
-        </Avatar>
+          <Avatar
+            className="chat-message__avatar"
+            src={sender?.avatarUrl}
+            icon={agent ? <RobotOutlined /> : undefined}
+          >
+            {agent ? undefined : name.slice(0, 1)}
+          </Avatar>
+        </button>
       )}
       <div className="chat-message__main">
         {!continued && (

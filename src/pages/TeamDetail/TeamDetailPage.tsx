@@ -58,19 +58,26 @@ export default function TeamDetailPage() {
   const settings = location.pathname.endsWith('/settings')
   return (
     <div className="team-page">
-      <header className="team-hero">
-        <div className="team-hero__head">
-          <h1>{user?.displayName || '用户'}，欢迎回来</h1>
-          <p>从一个项目开始今天的讨论。</p>
-        </div>
-        {settings && (
+      {settings ? (
+        <header className="team-hero team-hero--compact">
+          <div className="team-hero__head">
+            <span className="qg-eyebrow">团队设置</span>
+            <h1>{team.data?.name ?? '团队'}</h1>
+          </div>
           <div className="team-hero__actions">
             <Link to={PATHS.teamDetail(teamId)}>
               <Button icon={<ArrowLeftOutlined />}>返回项目</Button>
             </Link>
           </div>
-        )}
-      </header>
+        </header>
+      ) : (
+        <header className="team-hero">
+          <div className="team-hero__head">
+            <h1>{user?.displayName || '用户'}，欢迎回来</h1>
+            <p>从一个项目开始今天的讨论。</p>
+          </div>
+        </header>
+      )}
       {settings ? (
         <div className="team-settings">
           <Outlet />

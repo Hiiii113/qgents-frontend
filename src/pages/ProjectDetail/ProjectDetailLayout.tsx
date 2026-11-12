@@ -8,7 +8,7 @@ import {
   useSearchParams,
 } from 'react-router-dom'
 import { Alert, Avatar, Button, Input } from 'antd'
-import { ArrowLeftOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, PlusOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
 import { chatApi } from '@/api/chat'
@@ -137,13 +137,19 @@ export default function ProjectDetailLayout() {
         <Button
           className="project-sidebar__create"
           block
+          icon={<PlusOutlined aria-hidden />}
           disabled={project.data.status === 'ARCHIVED'}
           onClick={() => setCreateOpen(true)}
         >
-          创建新群聊
+          <span className="project-sidebar__label">创建新群聊</span>
         </Button>
-        <NavLink className="project-sidebar__settings" to={PATHS.projectSettings(projectId)}>
-          项目设置
+        <NavLink
+          className="project-sidebar__settings"
+          to={PATHS.projectSettings(projectId)}
+          aria-label="项目设置"
+        >
+          <SettingOutlined aria-hidden />
+          <span className="project-sidebar__label">项目设置</span>
         </NavLink>
       </aside>
       <main className="project-workspace__main">

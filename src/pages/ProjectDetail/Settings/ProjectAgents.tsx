@@ -53,7 +53,7 @@ export function ProjectAgents() {
         </Button>
       </div>
       <p className="workspace-page__note">
-        申请会公布在项目默认群，项目管理员回复并 @Agent 后生效；审批通过前不能邀请入群或参与对话。
+        提交后在项目默认群说明申请内容，项目管理员同意即可生效；审批通过前不能邀请入群或参与对话。
       </p>
       {application && (
         <div className="settings-toolbar">
