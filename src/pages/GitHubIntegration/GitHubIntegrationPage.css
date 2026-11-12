@@ -1,0 +1,67 @@
+/**
+ * GitHub 连接：行式列表 + 状态标签。行高 56、行间 1px 线，hover 只变底色。
+ */
+
+.github-connections {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.github-connection {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--rule);
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.github-connection:hover {
+  background: var(--paper-sunken);
+}
+
+.github-connection__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.github-connection__meta {
+  font-size: var(--text-xs);
+  color: var(--ink-500);
+}
+
+/* 状态标签：12px pill，纸灰底，不填充饱和色。 */
+.github-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--paper-sunken);
+  font-size: var(--text-xs);
+  color: var(--ink-700);
+  white-space: nowrap;
+}
+
+.github-empty {
+  padding: var(--space-8) 0;
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  color: var(--ink-500);
+  max-width: 76ch;
+}
+
+@media (max-width: 700px) {
+  .github-connection {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}

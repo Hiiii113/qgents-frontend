@@ -12,7 +12,6 @@ import {
   Table,
   Tabs,
   Tag,
-  Typography,
   Upload,
   message,
 } from 'antd'
@@ -21,13 +20,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { teamApi } from '@/api'
 import { useAuth } from '@/context/AuthContext'
 import { useAppUiStore } from '@/store/appUiStore'
-import { EmptyState } from '@/components/EmptyState'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
 import type { CreateTeamPayload, Team, TeamMember, TeamInvitation, TeamRole } from '@/types'
 import type { TableProps } from 'antd'
-
-const { Title, Text } = Typography
+import './TeamSettingsPage.css'
 
 const INVITE_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
   // 邀请接口目前仅创建普通成员；管理员由团队所有者后续任命。
@@ -38,6 +35,13 @@ const MEMBER_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
   { value: 'TEAM_ADMIN', label: '管理员' },
   { value: 'TEAM_MEMBER', label: '成员' },
 ]
+
+const INVITATION_STATUS_LABEL: Record<TeamInvitation['status'], string> = {
+  PENDING: '待接受',
+  ACCEPTED: '已接受',
+  REVOKED: '已撤销',
+  EXPIRED: '已过期',
+}
 
 function getRoleLabel(role: TeamRole): string {
   if (role === 'TEAM_OWNER') return '所有者'
@@ -52,8 +56,8 @@ function formatCreatedAt(iso?: string): string {
 }
 
 /**
- * 团队设置沿用团队详情的浅色背景。
- * 顶部：标题 + GitHub 集成 / 解散团队按钮
+ * 团队设置沿用团队详情的纸张底色。
+ * 顶部：标题 + GitHub 集成 / 解散团队
  * 下方 Tab：基本信息 / 成员管理
  * 路由：/app/teams/:teamId/settings
  */
@@ -108,35 +112,26 @@ export default function TeamSettingsPage() {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
-        <Spin delay={180} size="large" />
+      <div className="team-settings__loading">
+        <Spin delay={180} />
       </div>
     )
   }
 
   if (isError || !team) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
-        <EmptyState icon="🔎" title="团队未找到" description="该团队不存在，或你暂无访问权限" />
+      <div className="team-settings__page">
+        <p className="workspace-page__note">团队未找到：该团队不存在，或你暂无访问权限。</p>
       </div>
     )
   }
 
   return (
-    <div style={{ paddingBottom: 40, minHeight: '100%' }}>
+    <div className="team-settings__page">
       {/* 返回项目列表由团队详情的操作入口提供。 */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 8,
-        }}
-      >
-        <Title level={3} style={{ margin: 0 }}>
-          团队设置
-        </Title>
-        <Space>
+      <div className="team-settings__header">
+        <h2 className="team-settings__title">团队设置</h2>
+        <div className="team-settings__actions">
           {isOwner && (
             <Button
               icon={<GithubOutlined />}
@@ -146,11 +141,11 @@ export default function TeamSettingsPage() {
             </Button>
           )}
           {isOwner && (
-            <Button danger loading={disbandTeam.isPending} onClick={handleDisband}>
+            <Button type="text" danger loading={disbandTeam.isPending} onClick={handleDisband}>
               解散团队
             </Button>
           )}
-        </Space>
+        </div>
       </div>
 
       <Tabs
@@ -233,29 +228,22 @@ function BasicInfoTab({
 
   return (
     <Form
+      className="team-settings__form"
       form={form}
       layout="vertical"
       disabled={!canManage}
       onFinish={handleFinish}
-      style={{ maxWidth: 480, margin: '0 auto' }}
     >
       <Form.Item label="团队头像">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Avatar
-            size={56}
-            src={team.avatarUrl}
-            icon={<CameraOutlined />}
-            style={{ flexShrink: 0 }}
-          />
+        <div className="team-settings__avatar">
+          <Avatar size={56} src={team.avatarUrl} icon={<CameraOutlined />} />
           <Upload accept="image/*" showUploadList={false} beforeUpload={handleAvatarUpload}>
             <Button icon={<UploadOutlined />} loading={avatarUploading}>
               上传图片
             </Button>
           </Upload>
         </div>
-        <Text type="secondary" style={{ display: 'block', marginTop: 8, fontSize: 12 }}>
-          支持 JPG / PNG，建议 200×200 方形图片；上传后自动保存
-        </Text>
+        <p className="team-settings__hint">支持 JPG / PNG，建议 200×200 方形图片；上传后自动保存</p>
       </Form.Item>
       <Form.Item
         name="name"
@@ -268,14 +256,12 @@ function BasicInfoTab({
         <Input.TextArea rows={3} placeholder="描述团队用途、协作方向" />
       </Form.Item>
       <Form.Item label="成立时间">
-        <Text type="secondary">{formatCreatedAt(team.createdAt)}</Text>
+        <span className="team-settings__value">{formatCreatedAt(team.createdAt)}</span>
       </Form.Item>
       {canManage && (
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <Button type="primary" htmlType="submit" loading={updateTeam.isPending}>
-            保存修改
-          </Button>
-        </div>
+        <Button type="primary" htmlType="submit" loading={updateTeam.isPending}>
+          保存修改
+        </Button>
       )}
     </Form>
   )
@@ -384,7 +370,6 @@ function MembersTab({
       render: (_, m) =>
         canChangeRole(m) ? (
           <Select
-            size="small"
             aria-label={`调整 ${m.displayName || m.userId} 的团队角色`}
             value={m.role}
             options={MEMBER_ROLE_OPTIONS}
@@ -394,11 +379,7 @@ function MembersTab({
             onChange={(role) => updateRoleMutation.mutate({ userId: m.userId, role })}
           />
         ) : (
-          <Tag
-            color={m.role === 'TEAM_OWNER' ? 'gold' : m.role === 'TEAM_ADMIN' ? 'blue' : 'default'}
-          >
-            {getRoleLabel(m.role)}
-          </Tag>
+          <Tag>{getRoleLabel(m.role)}</Tag>
         ),
     },
     ...(canManage
@@ -410,18 +391,15 @@ function MembersTab({
             render: (_: unknown, m: TeamMember) =>
               canRemove(m) ? (
                 <Button
-                  size="small"
+                  type="text"
                   danger
-                  type="link"
                   loading={removeMutation.isPending}
                   onClick={() => confirmRemove(m)}
                 >
                   移除
                 </Button>
               ) : (
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  —
-                </Text>
+                <span className="team-settings__hint">—</span>
               ),
           },
         ]
@@ -442,15 +420,9 @@ function MembersTab({
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: TeamInvitation['status']) => {
-        const map: Record<string, string> = {
-          PENDING: 'orange',
-          ACCEPTED: 'green',
-          REVOKED: 'default',
-          EXPIRED: 'default',
-        }
-        return <Tag color={map[status] ?? 'default'}>{status}</Tag>
-      },
+      render: (status: TeamInvitation['status']) => (
+        <Tag>{INVITATION_STATUS_LABEL[status] ?? status}</Tag>
+      ),
     },
     {
       title: '邀请时间',
@@ -467,8 +439,7 @@ function MembersTab({
             render: (_: unknown, inv: TeamInvitation) =>
               inv.status === 'PENDING' ? (
                 <Button
-                  size="small"
-                  type="link"
+                  type="text"
                   danger
                   loading={revokeMutation.isPending}
                   onClick={() => revokeMutation.mutate(inv.id)}
@@ -482,37 +453,37 @@ function MembersTab({
   ]
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <div>
-        <Table
-          rowKey="userId"
-          columns={columns}
-          dataSource={members}
-          pagination={false}
-          size="middle"
-        />
-      </div>
+    <div className="team-settings__stack">
+      <Table
+        size="middle"
+        rowKey="userId"
+        columns={columns}
+        dataSource={members}
+        pagination={false}
+        scroll={{ x: 'max-content' }}
+      />
 
       {!isOwner && canManage && (
-        <Text type="secondary" style={{ fontSize: 12 }}>
+        <p className="team-settings__hint">
           团队管理员可以邀请和移除普通成员，不能调整管理员或所有者。
-        </Text>
+        </p>
       )}
 
       {canManage && (
-        <div>
-          <Title level={5}>邀请成员</Title>
-          <Space.Compact style={{ width: '100%', maxWidth: 480 }}>
+        <section className="team-settings__section">
+          <h3 className="team-settings__subtitle">邀请成员</h3>
+          <Space.Compact className="team-settings__invite">
             <Input
               placeholder="输入邮箱地址"
+              aria-label="邀请成员邮箱"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               onPressEnter={() => inviteEmail.trim() && inviteMutation.mutate()}
             />
             <Select
+              aria-label="邀请角色"
               value={inviteRole}
               options={INVITE_ROLE_OPTIONS}
-              style={{ width: 120 }}
               onChange={(v) => setInviteRole(v)}
             />
             <Button
@@ -526,18 +497,20 @@ function MembersTab({
           </Space.Compact>
 
           {invitations.length > 0 && (
-            <Table
-              rowKey="id"
-              columns={invitationColumns}
-              dataSource={invitations}
-              pagination={false}
-              size="small"
-              style={{ marginTop: 16, maxWidth: 720 }}
-              title={() => '待处理邀请'}
-            />
+            <div className="team-settings__invitations">
+              <h3 className="team-settings__subtitle">待处理邀请</h3>
+              <Table
+                size="middle"
+                rowKey="id"
+                columns={invitationColumns}
+                dataSource={invitations}
+                pagination={false}
+                scroll={{ x: 'max-content' }}
+              />
+            </div>
           )}
-        </div>
+        </section>
       )}
-    </Space>
+    </div>
   )
 }

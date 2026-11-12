@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Alert, App, Button, Empty, Input, Modal, Popconfirm, Select, Spin, Tag } from 'antd'
+import { Alert, App, Button, Input, Modal, Popconfirm, Select, Spin, Tag } from 'antd'
 import { GithubOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
@@ -8,6 +8,7 @@ import { repositoriesApi } from '@/api/repositories'
 import type { AvailableRepository } from '@/api/repositories'
 import { formatApiError } from '@/utils/formatApiError'
 import { PATHS } from '@/routes/paths'
+import './CodePage.css'
 
 export function CodePage() {
   const { projectId = '' } = useParams<{ projectId: string }>()
@@ -63,14 +64,15 @@ export function CodePage() {
     <>
       <div className="workspace-page__toolbar">
         <Input
+          className="code-search"
           prefix={<SearchOutlined />}
           placeholder="搜索仓库"
+          aria-label="搜索仓库"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          style={{ maxWidth: 320 }}
           allowClear
         />
-        <div className="workspace-card__actions" style={{ margin: 0, padding: 0, border: 0 }}>
+        <div className="code-actions">
           <Link to={PATHS.githubIntegration(teamId)}>
             <Button icon={<GithubOutlined />}>GitHub 连接</Button>
           </Link>
@@ -92,24 +94,28 @@ export function CodePage() {
       {imported.isPending ? (
         <Spin delay={180} />
       ) : !(imported.data ?? []).length ? (
-        <Empty description="项目还没有导入仓库。你也可以直接在聊天中讨论或 @Qgent。" />
+        <p className="code-empty">项目还没有导入仓库。你也可以直接在聊天中讨论或 @Qgent。</p>
       ) : (
         <div className="workspace-page__grid">
           {(imported.data ?? [])
             .filter((repo) => repo.fullName.toLowerCase().includes(search.toLowerCase()))
             .map((repo) => (
-              <article className="workspace-card" key={repo.id}>
-                <h2>
-                  <GithubOutlined /> {repo.fullName}
+              <article className="code-card" key={repo.id}>
+                <h2 className="code-card__title">
+                  <GithubOutlined aria-hidden /> {repo.fullName}
                 </h2>
-                <Tag bordered={false}>{repo.privateRepository ? '私有仓库' : '公开仓库'}</Tag>
-                <p>默认分支 · {repo.defaultBranch || '尚未设置'}</p>
-                <div className="workspace-card__actions">
-                  <a href={repo.htmlUrl} target="_blank" rel="noreferrer">
-                    <Button type="text" size="small">
-                      打开 GitHub
-                    </Button>
-                  </a>
+                <Tag>{repo.privateRepository ? '私有仓库' : '公开仓库'}</Tag>
+                <p className="code-card__meta">默认分支 · {repo.defaultBranch || '尚未设置'}</p>
+                <div className="code-card__actions">
+                  <Button
+                    type="text"
+                    size="small"
+                    href={repo.htmlUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    打开 GitHub
+                  </Button>
                   {canManage && (
                     <Popconfirm
                       title="从项目移除这个仓库？"
@@ -157,7 +163,7 @@ export function CodePage() {
         ) : (
           <Select
             mode="multiple"
-            style={{ width: '100%' }}
+            className="code-select"
             optionFilterProp="label"
             placeholder="搜索并选择仓库"
             loading={available.isPending}

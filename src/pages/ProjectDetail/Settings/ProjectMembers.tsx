@@ -1,27 +1,14 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Alert,
-  Button,
-  Modal,
-  Popconfirm,
-  Select,
-  Space,
-  Spin,
-  Table,
-  Tag,
-  Typography,
-  App,
-} from 'antd'
-import { PlusOutlined, UserOutlined } from '@ant-design/icons'
+import { App, Button, Modal, Popconfirm, Select, Table, Tag } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
 import { projectApi, teamApi } from '@/api'
 import { useAuth } from '@/context/AuthContext'
 import { formatApiError } from '@/utils/formatApiError'
 import type { ProjectMember } from '@/types'
 import type { TableProps } from 'antd'
-
-const { Text } = Typography
+import './SettingsPage.css'
 
 /** 项目成员与角色由项目接口管理；群聊成员随项目同步。 */
 export function ProjectMembers() {
@@ -120,14 +107,9 @@ export function ProjectMembers() {
       title: '成员',
       key: 'member',
       render: (_, m) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <UserOutlined style={{ color: '#8b5cf6' }} />
-          <div>
-            <div>{resolveDisplayName(m)}</div>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {resolveEmail(m)}
-            </Text>
-          </div>
+        <div className="settings-member-cell">
+          <span className="settings-member-cell__name">{resolveDisplayName(m)}</span>
+          <span className="settings-member-cell__email">{resolveEmail(m)}</span>
         </div>
       ),
     },
@@ -137,11 +119,9 @@ export function ProjectMembers() {
       width: 150,
       render: (_, m) =>
         isTeamOwnerRow(m) ? (
-          <Tag color="gold">继承管理员</Tag>
+          <Tag>继承管理员</Tag>
         ) : (
-          <Tag color={m.role === 'PROJECT_ADMIN' ? 'gold' : 'default'}>
-            {m.role === 'PROJECT_ADMIN' ? '管理员' : '成员'}
-          </Tag>
+          <Tag>{m.role === 'PROJECT_ADMIN' ? '管理员' : '成员'}</Tag>
         ),
     },
     ...(isAdmin
@@ -152,17 +132,13 @@ export function ProjectMembers() {
             width: 240,
             render: (_: unknown, m: ProjectMember) => {
               if (isTeamOwnerRow(m)) {
-                return (
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    团队所有者
-                  </Text>
-                )
+                return <span className="settings-member-cell__hint">团队所有者</span>
               }
               const isSelf = m.userId === user?.id
               const nextRole = m.role === 'PROJECT_ADMIN' ? 'PROJECT_MEMBER' : 'PROJECT_ADMIN'
               const actionLabel = m.role === 'PROJECT_ADMIN' ? '降为成员' : '设为管理员'
               return (
-                <Space size={4}>
+                <div className="settings-row-actions">
                   <Popconfirm
                     title={actionLabel}
                     description={
@@ -198,7 +174,7 @@ export function ProjectMembers() {
                       移除
                     </Button>
                   )}
-                </Space>
+                </div>
               )
             },
           },
@@ -206,25 +182,10 @@ export function ProjectMembers() {
       : []),
   ]
 
-  if (isLoading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-        <Spin delay={180} size="large" />
-      </div>
-    )
-  }
-
   return (
-    <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: 20,
-        }}
-      >
-        {isAdmin && (
+    <div className="settings-page">
+      {isAdmin && (
+        <div className="settings-toolbar">
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -235,17 +196,22 @@ export function ProjectMembers() {
           >
             添加成员
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 16 }}
-        message="团队所有者始终拥有本项目管理员权限（继承），无需出现在项目成员列表中。"
+      <p className="workspace-page__note">
+        团队所有者始终拥有本项目管理员权限（继承），无需出现在项目成员列表中。
+      </p>
+
+      <Table
+        size="middle"
+        rowKey="userId"
+        columns={columns}
+        dataSource={members}
+        pagination={false}
+        scroll={{ x: 'max-content' }}
+        loading={{ spinning: isLoading, delay: 180 }}
       />
-
-      <Table rowKey="userId" columns={columns} dataSource={members} pagination={false} />
 
       {/* 添加成员弹窗：从团队现有成员里选（已在项目里的不显示） */}
       <Modal
@@ -258,14 +224,10 @@ export function ProjectMembers() {
         confirmLoading={addMutation.isPending}
         okButtonProps={{ disabled: selectedIds.length === 0 }}
       >
-        <div style={{ marginBottom: 12 }}>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            从团队现有成员中选择，选中即加入项目（无需对方确认）
-          </Text>
-        </div>
+        <p className="settings-hint">从团队现有成员中选择，选中即加入项目（无需对方确认）</p>
         <Select
           mode="multiple"
-          style={{ width: '100%' }}
+          className="settings-select-block"
           placeholder="选择团队成员"
           value={selectedIds}
           onChange={setSelectedIds}

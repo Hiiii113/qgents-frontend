@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { Alert, App, Avatar, Button, Form, Input, Popconfirm, Skeleton, Space, Upload } from 'antd'
+import { Alert, App, Avatar, Button, Form, Input, Popconfirm, Skeleton, Upload } from 'antd'
 import { CameraOutlined, UploadOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
@@ -8,6 +8,7 @@ import { useProjectAvatarUpload } from '@/hooks/useProjectAvatarUpload'
 import { formatApiError } from '@/utils/formatApiError'
 import type { Project } from '@/types/project'
 import { ProjectMembers } from './ProjectMembers'
+import './SettingsPage.css'
 
 export function SettingsPage() {
   const { projectId = '' } = useParams()
@@ -62,53 +63,61 @@ function ProjectSettings({ project }: { project: Project }) {
     onError: (error) => setActionError(formatApiError(error)),
   })
   return (
-    <div className="workspace-card" style={{ maxWidth: 680 }}>
+    <div className="settings-page">
       {actionError && <Alert type="error" showIcon message={actionError} />}
-      <Space style={{ marginBottom: 24 }}>
-        <Avatar size={64} src={project.avatarUrl} icon={<CameraOutlined />} />
-        {editable && (
-          <Upload
-            accept="image/*"
-            showUploadList={false}
-            disabled={uploading}
-            beforeUpload={(file) => {
-              void uploadAvatar(project.id, file)
-              return false
-            }}
-          >
-            <Button icon={<UploadOutlined />} loading={uploading}>
-              更换头像
-            </Button>
-          </Upload>
-        )}
-      </Space>
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{ name: project.name, description: project.description ?? '' }}
-        onFinish={(values) => update.mutate(values)}
-        disabled={!editable || update.isPending}
-      >
-        <Form.Item
-          name="name"
-          label="项目名称"
-          rules={[{ required: true, whitespace: true, message: '请输入项目名称' }, { max: 255 }]}
+      <section className="settings-section">
+        <h2 className="settings-section__title">项目资料</h2>
+        <hr className="qg-rule" />
+        <div className="settings-avatar">
+          <Avatar size={64} src={project.avatarUrl} icon={<CameraOutlined />} />
+          {editable && (
+            <Upload
+              accept="image/*"
+              showUploadList={false}
+              disabled={uploading}
+              beforeUpload={(file) => {
+                void uploadAvatar(project.id, file)
+                return false
+              }}
+            >
+              <Button icon={<UploadOutlined />} loading={uploading}>
+                更换头像
+              </Button>
+            </Upload>
+          )}
+        </div>
+        <Form
+          className="settings-form"
+          form={form}
+          layout="vertical"
+          initialValues={{ name: project.name, description: project.description ?? '' }}
+          onFinish={(values) => update.mutate(values)}
+          disabled={!editable || update.isPending}
         >
-          <Input maxLength={255} />
-        </Form.Item>
-        <Form.Item name="description" label="项目描述" rules={[{ max: 16000 }]}>
-          <Input.TextArea autoSize={{ minRows: 3, maxRows: 8 }} maxLength={16000} />
-        </Form.Item>
-        {editable && (
-          <Button type="primary" htmlType="submit" loading={update.isPending}>
-            保存资料
-          </Button>
-        )}
-      </Form>
+          <Form.Item
+            name="name"
+            label="项目名称"
+            rules={[{ required: true, whitespace: true, message: '请输入项目名称' }, { max: 255 }]}
+          >
+            <Input maxLength={255} />
+          </Form.Item>
+          <Form.Item name="description" label="项目描述" rules={[{ max: 16000 }]}>
+            <Input.TextArea autoSize={{ minRows: 3, maxRows: 8 }} maxLength={16000} />
+          </Form.Item>
+          {editable && (
+            <Button type="primary" htmlType="submit" loading={update.isPending}>
+              保存资料
+            </Button>
+          )}
+        </Form>
+      </section>
       {editable && (
-        <div style={{ marginTop: 32, paddingTop: 20, borderTop: '1px solid #e5e9e4' }}>
-          <h3>{project.status === 'ARCHIVED' ? '恢复项目' : '归档项目'}</h3>
-          <p>
+        <section className="settings-section">
+          <h2 className="settings-section__title">
+            {project.status === 'ARCHIVED' ? '恢复项目' : '归档项目'}
+          </h2>
+          <hr className="qg-rule" />
+          <p className="settings-hint">
             {project.status === 'ARCHIVED'
               ? '恢复后可继续协作。'
               : '暂时结束项目协作时，可以归档项目。'}
@@ -119,11 +128,11 @@ function ProjectSettings({ project }: { project: Project }) {
             okText="确定"
             cancelText="取消"
           >
-            <Button danger={project.status !== 'ARCHIVED'} loading={archive.isPending}>
+            <Button type="text" danger={project.status !== 'ARCHIVED'} loading={archive.isPending}>
               {project.status === 'ARCHIVED' ? '恢复项目' : '归档项目'}
             </Button>
           </Popconfirm>
-        </div>
+        </section>
       )}
     </div>
   )
