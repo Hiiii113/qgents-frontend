@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Alert, App, Avatar, Button, Drawer, List, Tag, Tooltip } from 'antd'
-import { PushpinOutlined, RobotOutlined, TeamOutlined } from '@ant-design/icons'
+import { PushpinOutlined, RobotOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { chatApi } from '@/api/chat'
 import { projectApi } from '@/api/project'
@@ -119,15 +119,10 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
     <section className="chat-panel">
       <header className="chat-panel__header">
         <div className="chat-panel__identity">
-          <span className="chat-panel__project-icon">
-            <TeamOutlined />
-          </span>
-          <div>
-            <h1>{group?.title || project.data?.name || '项目聊天'}</h1>
-            <p>
-              {group?.defaultGroup ? '默认群 · 全体项目成员' : '一起讨论，必要时 @Agent 开展工作'}
-            </p>
-          </div>
+          <h1>{group?.title || project.data?.name || '项目聊天'}</h1>
+          <p>
+            {group?.defaultGroup ? '默认群 · 全体项目成员' : '一起讨论，必要时 @Agent 开展工作'}
+          </p>
         </div>
         <div className="chat-panel__header-actions">
           <Tooltip title={group?.pinned ? '取消置顶' : '置顶聊天'}>
@@ -139,13 +134,14 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
               onClick={() => pin.mutate()}
             />
           </Tooltip>
-          <Button type="text" icon={<TeamOutlined />} onClick={() => setMembersOpen(true)}>
+          <Button type="text" onClick={() => setMembersOpen(true)}>
             {group?.memberCount ?? members.data?.length ?? 0} 位成员
           </Button>
         </div>
       </header>
       {chat.query.isError && (
         <Alert
+          className="chat-panel__notice"
           showIcon
           type="error"
           message={formatApiError(chat.query.error)}
@@ -153,7 +149,12 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
         />
       )}
       {chat.syncError && (
-        <Alert type="warning" showIcon message="消息同步暂时中断，恢复连接后会自动补齐" />
+        <Alert
+          className="chat-panel__notice"
+          type="warning"
+          showIcon
+          message="消息同步暂时中断，恢复连接后会自动补齐"
+        />
       )}
       <ChatMessageList
         messages={chat.messages}
@@ -176,21 +177,24 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
       />
       {project.data?.status === 'ARCHIVED' && (
         <Alert
+          className="chat-panel__notice"
           type="info"
           showIcon
           message="项目已归档，可以查看历史消息，恢复项目后可继续聊天。"
         />
       )}
-      <ChatComposer
-        key={groupId}
-        draftKey={`qgents:chat-draft:${user?.id}:${projectId}:${groupId}`}
-        projectId={projectId}
-        reply={reply}
-        recipients={recipients}
-        onSend={handleSend}
-        onClearReply={clearReply}
-        disabled={!ready || project.data?.status === 'ARCHIVED'}
-      />
+      <div className="chat-panel__composer">
+        <ChatComposer
+          key={groupId}
+          draftKey={`qgents:chat-draft:${user?.id}:${projectId}:${groupId}`}
+          projectId={projectId}
+          reply={reply}
+          recipients={recipients}
+          onSend={handleSend}
+          onClearReply={clearReply}
+          disabled={!ready || project.data?.status === 'ARCHIVED'}
+        />
+      </div>
       <Drawer title="群聊成员" open={membersOpen} onClose={() => setMembersOpen(false)}>
         <p className="chat-members__hint">
           {group?.defaultGroup ? '默认群的用户与项目成员同步。' : '这个群聊中的成员与 Agent。'}

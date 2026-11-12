@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Alert, App, Button, Card, Input, Space, Spin, Typography } from 'antd'
+import { Alert, App, Button, Input } from 'antd'
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons'
 import { memoryApi } from '@/api'
 import { formatApiError } from '@/utils/formatApiError'
 import './MemoryPage.css'
-
-const { Text, Paragraph } = Typography
 
 /**
  * 项目共享知识：单个 memory.md。
@@ -51,16 +49,22 @@ export function MemoryPage() {
     },
   })
 
-  if (isLoading) return <Spin />
+  if (isLoading) return <p className="memory-page__hint">正在加载项目记忆…</p>
   if (isError) return <Alert type="error" showIcon message={formatApiError(error)} />
 
   const dirty = draft !== (data?.content ?? '')
 
   return (
-    <Card
-      title="项目记忆"
-      extra={
-        <Space>
+    <section className="memory-page">
+      <header className="memory-page__header">
+        <div className="memory-page__heading">
+          <h2 className="memory-page__title">项目记忆</h2>
+          <p className="memory-page__description">
+            memory.md 是项目的长期记忆，Qgent 每次执行都会读取。Qgent
+            修改前会先说明拟改动的内容并征求同意；你也可以直接在这里编辑。
+          </p>
+        </div>
+        <div className="memory-page__actions">
           <Button
             icon={<ReloadOutlined />}
             onClick={() => void refetch()}
@@ -77,13 +81,8 @@ export function MemoryPage() {
           >
             保存
           </Button>
-        </Space>
-      }
-    >
-      <Paragraph type="secondary">
-        memory.md 是项目的长期记忆，Qgent 每次执行都会读取。Qgent
-        修改前会先说明拟改动的内容并征求同意； 你也可以直接在这里编辑。
-      </Paragraph>
+        </div>
+      </header>
       {save.isError && <Alert type="error" showIcon message={formatApiError(save.error)} />}
       <Input.TextArea
         className="memory-page__editor"
@@ -93,11 +92,13 @@ export function MemoryPage() {
         placeholder="# 项目约定&#10;&#10;- 记录已确认、可长期复用的项目事实"
       />
       <div className="memory-page__footer">
-        <Text type="secondary">{draft.length} 字符</Text>
+        <span className="memory-page__meta">{draft.length} 字符</span>
         {data?.updatedAt && (
-          <Text type="secondary">最后修改 {new Date(data.updatedAt).toLocaleString()}</Text>
+          <span className="memory-page__meta">
+            最后修改 {new Date(data.updatedAt).toLocaleString()}
+          </span>
         )}
       </div>
-    </Card>
+    </section>
   )
 }

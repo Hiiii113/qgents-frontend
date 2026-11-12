@@ -11,6 +11,8 @@ interface Props {
   sender?: ChatMember
   reply?: ChatMessage
   currentUserId?: string
+  /** 同一发送者的连续消息：不重复作者与头像。 */
+  continued?: boolean
   canStop: boolean
   stopping: boolean
   onReply: (item: ChatMessage) => void
@@ -41,6 +43,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   sender,
   reply,
   currentUserId,
+  continued = false,
   canStop,
   stopping,
   onReply,
@@ -58,32 +61,41 @@ export const ChatMessageRow = memo(function ChatMessageRow({
     ? ''
     : timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   const attachmentId = messageField(item, 'attachmentId')
+  const language = messageField(item, 'language')
   // 不信任消息内容里的 url：用当前项目与附件 ID 重建内容地址，避免把 Bearer 发到外部地址。
   const imageUrl =
     projectId && attachmentId ? attachmentApi.contentUrl(projectId, attachmentId) : null
   return (
     <article
-      className={`chat-message${agent ? ' chat-message--agent' : ''}${own ? ' chat-message--own' : ''}`}
+      className={`chat-message${agent ? ' chat-message--agent' : ''}${
+        own ? ' chat-message--own' : ''
+      }${continued ? ' chat-message--continued' : ''}`}
       aria-label={`${name}的消息`}
     >
-      <Avatar
-        className="chat-message__avatar"
-        src={sender?.avatarUrl}
-        icon={agent ? <RobotOutlined /> : undefined}
-      >
-        {agent ? undefined : name.slice(0, 1)}
-      </Avatar>
+      {continued ? (
+        <span className="chat-message__avatar-slot" aria-hidden="true" />
+      ) : (
+        <Avatar
+          className="chat-message__avatar"
+          src={sender?.avatarUrl}
+          icon={agent ? <RobotOutlined /> : undefined}
+        >
+          {agent ? undefined : name.slice(0, 1)}
+        </Avatar>
+      )}
       <div className="chat-message__main">
-        <div className="chat-message__meta">
-          <strong>{name}</strong>
-          {agent && <Tag bordered={false}>Agent</Tag>}
-          <time
-            dateTime={item.createdAt}
-            title={Number.isNaN(timestamp.getTime()) ? '' : timestamp.toLocaleString('zh-CN')}
-          >
-            {time}
-          </time>
-        </div>
+        {!continued && (
+          <div className="chat-message__meta">
+            <strong>{name}</strong>
+            {agent && <Tag bordered={false}>Agent</Tag>}
+            <time
+              dateTime={item.createdAt}
+              title={Number.isNaN(timestamp.getTime()) ? '' : timestamp.toLocaleString('zh-CN')}
+            >
+              {time}
+            </time>
+          </div>
+        )}
         {item.replyToId && (
           <button className="chat-message__reply" onClick={() => onLocate(item.replyToId ?? '')}>
             <strong>{reply?.senderName || '回复消息'}</strong>
@@ -92,9 +104,15 @@ export const ChatMessageRow = memo(function ChatMessageRow({
         )}
         <div className="chat-message__body">
           {item.type === 'CODE' ? (
-            <pre>
-              <code>{messageField(item, 'code')}</code>
-            </pre>
+            <details className="chat-message__code" open>
+              <summary>
+                <strong>代码</strong>
+                {language && <span>{language}</span>}
+              </summary>
+              <pre>
+                <code>{messageField(item, 'code')}</code>
+              </pre>
+            </details>
           ) : item.type === 'IMAGE' ? (
             <button
               className="chat-message__image"
@@ -106,7 +124,6 @@ export const ChatMessageRow = memo(function ChatMessageRow({
                 loading="lazy"
                 src={imageUrl}
                 alt={messageField(item, 'name') || '聊天图片'}
-                style={{ maxWidth: '100%', maxHeight: 240, objectFit: 'contain' }}
               />
             </button>
           ) : item.type === 'FILE' ? (
@@ -115,7 +132,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
               onClick={() => onPreview(item)}
               disabled={!attachmentId}
             >
-              <FileOutlined />
+              <FileOutlined aria-hidden="true" />
               <span>
                 <strong>{messageField(item, 'name') || '附件'}</strong>
                 <small>点击预览或下载</small>
