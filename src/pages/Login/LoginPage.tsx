@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { App } from 'antd'
+import { App, Button } from 'antd'
 import { useAuth } from '@/context/AuthContext'
 import { authApi } from '@/api'
 import { PATHS } from '@/routes/paths'
@@ -9,9 +9,16 @@ import './LoginPage.css'
 
 type AuthTab = 'login' | 'register'
 
+/** 品牌区只放纯排版：编号 + 中文短句，不用插画和图标。 */
+const FEATURES = [
+  { title: '从项目聊天开始', description: '成员共同讨论，@Qgent 协助分析与执行' },
+  { title: '按需使用 Qgent', description: '在群聊中 @Qgent 发起协作，保留上下文与成果' },
+  { title: '知识与代码在同一处', description: '共享项目知识，可选接入 GitHub 处理代码' },
+]
+
 /**
- * 登录 / 注册页 —— 当前接口
- * 左：品牌与价值主张；右：登录卡片
+ * 登录 / 注册页：左侧品牌栏（纯排版），右侧窄栏表单。
+ * 两栏之间只用一条发丝线分隔，不做卡片与装饰。
  */
 export function LoginPage() {
   const navigate = useNavigate()
@@ -111,71 +118,44 @@ export function LoginPage() {
 
   return (
     <div className="login-page">
-      {/* ===== 左侧品牌区（不变） ===== */}
       <aside className="login-page__brand" aria-label="品牌介绍">
-        <div className="login-page__brand-logo">
-          <span className="login-page__q">Q</span>
-          <span>gents</span>
-        </div>
-
+        <p className="login-page__wordmark">
+          <span className="login-page__mark">Q</span>gents
+        </p>
+        <span className="qg-eyebrow">TEAM × AGENT</span>
         <h1 className="login-page__headline">团队与 Qgent，在同一个项目现场协作</h1>
 
         <ul className="login-page__features">
-          <li>
-            <span className="login-page__feature-icon" aria-hidden>
-              <ChatIcon />
-            </span>
-            <div>
-              <strong>从项目聊天开始</strong>
-              <p>成员共同讨论，@Qgent 协助分析与执行</p>
-            </div>
-          </li>
-          <li>
-            <span className="login-page__feature-icon" aria-hidden>
-              <BotIcon />
-            </span>
-            <div>
-              <strong>按需使用 Qgent</strong>
-              <p>在群聊中 @Qgent 发起协作，保留上下文与成果</p>
-            </div>
-          </li>
-          <li>
-            <span className="login-page__feature-icon" aria-hidden>
-              <CodeIcon />
-            </span>
-            <div>
-              <strong>知识与代码在同一处</strong>
-              <p>共享项目知识，可选接入 GitHub 处理代码</p>
-            </div>
-          </li>
+          {FEATURES.map((feature, index) => (
+            <li key={feature.title}>
+              <span className="login-page__feature-index qg-num">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <div className="login-page__feature-text">
+                <strong>{feature.title}</strong>
+                <p>{feature.description}</p>
+              </div>
+            </li>
+          ))}
         </ul>
-
-        <div className="login-page__illustration" aria-hidden>
-          <div className="login-page__illu-node">💬</div>
-          <span className="login-page__illu-arrow" />
-          <div className="login-page__illu-node login-page__illu-node--bot">🤖</div>
-          <span className="login-page__illu-arrow" />
-          <div className="login-page__illu-diff">
-            <span>diff</span>
-            <small>+12 −3</small>
-          </div>
-        </div>
       </aside>
 
-      {/* ===== 右侧登录卡片 ===== */}
       <section className="login-page__panel">
-        <div className="login-card">
-          <header className="login-card__header">
-            <h2>{tab === 'login' ? '登录 Qgents' : '注册 Qgents'}</h2>
-            <p>{tab === 'login' ? '使用个人账号进入你的团队' : '创建账号，开始团队协作'}</p>
+        <div className="login-form">
+          <header className="login-form__header">
+            <span className="qg-eyebrow">{tab === 'login' ? 'SIGN IN' : 'CREATE ACCOUNT'}</span>
+            <h2 className="login-form__title">{tab === 'login' ? '登录 Qgents' : '注册 Qgents'}</h2>
+            <p className="login-form__desc">
+              {tab === 'login' ? '使用个人账号进入你的团队' : '创建账号，开始团队协作'}
+            </p>
           </header>
 
-          <div className="login-card__tabs" role="tablist">
+          <div className="login-tabs" role="tablist">
             <button
               type="button"
               role="tab"
               aria-selected={tab === 'login'}
-              className={tab === 'login' ? 'is-active' : ''}
+              className={tab === 'login' ? 'login-tabs__tab is-active' : 'login-tabs__tab'}
               onClick={() => switchTab('login')}
             >
               登录
@@ -184,28 +164,27 @@ export function LoginPage() {
               type="button"
               role="tab"
               aria-selected={tab === 'register'}
-              className={tab === 'register' ? 'is-active' : ''}
+              className={tab === 'register' ? 'login-tabs__tab is-active' : 'login-tabs__tab'}
               onClick={() => switchTab('register')}
             >
               注册
             </button>
           </div>
 
-          {/* —— 错误提示 —— */}
-          {error && (
-            <div className="login-card__error" role="alert">
-              {error}
-            </div>
-          )}
+          <form className="login-form__body" onSubmit={handleSubmit}>
+            {error && (
+              <p className="login-form__error" role="alert">
+                {error}
+              </p>
+            )}
 
-          <form className="login-card__form" onSubmit={handleSubmit}>
-            {/* 邮箱 */}
-            <label className="login-field">
-              <span className="sr-only">邮箱地址</span>
-              <span className="login-field__icon" aria-hidden>
-                <MailIcon />
-              </span>
+            <div className="login-field">
+              <label className="login-field__label" htmlFor="login-email">
+                邮箱地址
+              </label>
               <input
+                id="login-email"
+                className="login-field__input"
                 type="email"
                 placeholder="邮箱地址"
                 value={email}
@@ -213,221 +192,127 @@ export function LoginPage() {
                 autoComplete="email"
                 required
               />
-            </label>
+            </div>
 
             {/* 昵称 —— 仅注册时显示 */}
             {tab === 'register' && (
-              <label className="login-field">
-                <span className="sr-only">昵称</span>
-                <span className="login-field__icon" aria-hidden>
-                  <UserIcon />
-                </span>
+              <div className="login-field">
+                <label className="login-field__label" htmlFor="login-display-name">
+                  昵称
+                </label>
                 <input
+                  id="login-display-name"
+                  className="login-field__input"
                   type="text"
                   placeholder="你的昵称"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   autoComplete="name"
                 />
-              </label>
+              </div>
             )}
 
             {/* 邮箱验证码 —— 仅注册时显示：先获取验证码，填写后随注册提交 */}
             {tab === 'register' && (
-              <div className="login-field login-field--code">
-                <span className="sr-only">邮箱验证码</span>
-                <span className="login-field__icon" aria-hidden>
-                  <KeyIcon />
-                </span>
+              <div className="login-field">
+                <label className="login-field__label" htmlFor="login-code">
+                  邮箱验证码
+                </label>
+                <div className="login-field__row">
+                  <input
+                    id="login-code"
+                    className="login-field__input"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="邮箱验证码"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    autoComplete="one-time-code"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="login-field__code"
+                    onClick={() => void sendVerificationCode()}
+                    disabled={codeSending || codeCountdown > 0 || !email.trim()}
+                  >
+                    {codeCountdown > 0
+                      ? `${codeCountdown}s`
+                      : codeSending
+                        ? '发送中…'
+                        : '获取验证码'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="login-field">
+              <label className="login-field__label" htmlFor="login-password">
+                密码
+              </label>
+              <div className="login-field__row">
                 <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="邮箱验证码"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  autoComplete="one-time-code"
+                  id="login-password"
+                  className="login-field__input"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="密码"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
                   required
                 />
                 <button
                   type="button"
-                  className="login-field__code-btn"
-                  onClick={() => void sendVerificationCode()}
-                  disabled={codeSending || codeCountdown > 0 || !email.trim()}
+                  className="login-field__icon-btn"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? '隐藏密码' : '显示密码'}
                 >
-                  {codeCountdown > 0 ? `${codeCountdown}s` : codeSending ? '发送中…' : '获取验证码'}
+                  <EyeIcon />
                 </button>
               </div>
-            )}
-
-            {/* 密码 */}
-            <label className="login-field">
-              <span className="sr-only">密码</span>
-              <span className="login-field__icon" aria-hidden>
-                <LockIcon />
-              </span>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="密码"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
-                required
-              />
-              <button
-                type="button"
-                className="login-field__eye"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? '隐藏密码' : '显示密码'}
-              >
-                <EyeIcon />
-              </button>
-            </label>
+            </div>
 
             {tab === 'login' && (
-              <div className="login-card__meta">
+              <div className="login-form__meta">
                 {/* 忘记密码：跳独立找回页（输入邮箱获取验证码 → 设置新密码） */}
-                <Link to={PATHS.FORGOT_PASSWORD} className="login-card__link">
+                <Link to={PATHS.FORGOT_PASSWORD} className="login-link">
                   忘记密码
                 </Link>
               </div>
             )}
 
-            <button type="submit" className="login-card__submit" disabled={submitting}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              autoInsertSpace={false}
+              disabled={submitting}
+            >
               {submitting ? '请稍候…' : tab === 'login' ? '登录' : '注册'}
-            </button>
+            </Button>
           </form>
 
-          <p className="login-card__switch">
-            {tab === 'login' ? (
-              <>
-                还没有账号？
-                <button
-                  type="button"
-                  className="login-card__link"
-                  onClick={() => switchTab('register')}
-                >
-                  立即注册
-                </button>
-              </>
-            ) : (
-              <>
-                已有账号？
-                <button
-                  type="button"
-                  className="login-card__link"
-                  onClick={() => switchTab('login')}
-                >
-                  去登录
-                </button>
-              </>
-            )}
+          <p className="login-form__switch">
+            {tab === 'login' ? '还没有账号？' : '已有账号？'}
+            <button
+              type="button"
+              className="login-link"
+              onClick={() => switchTab(tab === 'login' ? 'register' : 'login')}
+            >
+              {tab === 'login' ? '立即注册' : '去登录'}
+            </button>
           </p>
 
-          <p className="login-card__footnote">登录后可选择或创建团队</p>
+          <p className="login-form__footnote">登录后可选择或创建团队</p>
         </div>
       </section>
     </div>
   )
 }
-// ──── 图标组件（不变）────
-
-function ChatIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v6A2.5 2.5 0 0 1 16.5 15H10l-4 4v-4.2A2.5 2.5 0 0 1 5 12.5v-6z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function BotIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="5" y="8" width="14" height="11" rx="3" stroke="currentColor" strokeWidth="1.7" />
-      <circle cx="9.5" cy="13" r="1.2" fill="currentColor" />
-      <circle cx="14.5" cy="13" r="1.2" fill="currentColor" />
-      <path
-        d="M12 4v4M8 19v2M16 19v2"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function CodeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M9 7L4 12l5 5M15 7l5 5-5 5"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function MailIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M4 7l8 6 8-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function UserIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M5 20c1.2-3.5 3.8-5.5 7-5.5s5.8 2 7 5.5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function LockIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M8 10V7a4 4 0 0 1 8 0v3"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
-
-function KeyIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M11 12l8-8M15 8l3 3M17 6l2 2"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
-}
 
 function EyeIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"
         stroke="currentColor"
