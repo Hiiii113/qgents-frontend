@@ -119,14 +119,12 @@ export function SkillPage() {
         <Spin delay={180} size="large" />
       ) : isError ? (
         <EmptyState
-          icon="⚠️"
           title="Skill 加载失败"
           description="请检查网络后重试"
           action={<Button onClick={() => void refetch()}>重新加载</Button>}
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon="🛠️"
           title={keyword.trim() || filter !== 'ALL' ? '没有匹配的 Skill' : '暂无共享 Skill'}
           description={
             keyword.trim() || filter !== 'ALL'

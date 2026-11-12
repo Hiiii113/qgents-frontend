@@ -117,7 +117,7 @@ export default function TeamSettingsPage() {
   if (isError || !team) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
-        <EmptyState icon="🔎" title="团队未找到" description="该团队不存在，或你暂无访问权限" />
+        <EmptyState title="团队未找到" description="该团队不存在，或你暂无访问权限" />
       </div>
     )
   }

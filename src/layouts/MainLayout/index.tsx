@@ -19,7 +19,7 @@ export function MainLayout() {
   useRealtimeEvents()
 
   return (
-    <Layout className="qg-full-height" style={{ minHeight: '100%', background: '#f5f7f2' }}>
+    <Layout className="qg-full-height" style={{ minHeight: '100%', background: 'var(--paper)' }}>
       <Banner />
       <Content
         className={isProject ? 'qg-content-flush' : undefined}

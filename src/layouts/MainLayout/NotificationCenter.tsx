@@ -13,16 +13,16 @@ const { Text } = Typography
 
 /** 每种通知类型的图标与配色 */
 const KIND_META: Record<NotificationKind, { icon: ReactNode; color: string }> = {
-  INVITED: { icon: <UserAddOutlined />, color: '#4f7146' },
-  TEAM_JOINED: { icon: <UserAddOutlined />, color: '#4f7146' },
-  PROJECT_ADDED: { icon: <MessageOutlined />, color: '#4f7146' },
-  MESSAGE_MENTION: { icon: <MessageOutlined />, color: '#f59e0b' },
+  INVITED: { icon: <UserAddOutlined />, color: 'var(--accent)' },
+  TEAM_JOINED: { icon: <UserAddOutlined />, color: 'var(--accent)' },
+  PROJECT_ADDED: { icon: <MessageOutlined />, color: 'var(--accent)' },
+  MESSAGE_MENTION: { icon: <MessageOutlined />, color: 'var(--warning)' },
 }
 
 /** 后端可能下发未在枚举中的 kind，兜底展示，避免 meta 为 undefined 导致崩溃 */
 const FALLBACK_META: { icon: ReactNode; color: string } = {
   icon: <BellOutlined />,
-  color: '#94a3b8',
+  color: 'var(--ink-300)',
 }
 
 /** 相对时间（演示用） */
@@ -114,7 +114,6 @@ export function NotificationCenter() {
           icon={<BellOutlined />}
           aria-label="通知"
           onClick={() => setOpen(true)}
-          style={{ color: 'var(--qg-text-on-dark)' }}
         />
       </Badge>
 
@@ -158,7 +157,7 @@ export function NotificationCenter() {
                   borderBottom: `1px solid ${token.colorBorderSecondary}`,
                 }}
               >
-                <span style={{ color: meta.color, fontSize: 22, lineHeight: 1, flexShrink: 0 }}>
+                <span style={{ color: meta.color, fontSize: 18, lineHeight: 1, flexShrink: 0 }}>
                   {meta.icon}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>

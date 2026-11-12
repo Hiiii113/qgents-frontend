@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router-dom'
-import { HomeOutlined } from '@ant-design/icons'
 import { PersonalCenter } from './PersonalCenter'
 import { useCurrentTeamId } from '@/store/appUiStore'
 import { NotificationCenter } from './NotificationCenter'
@@ -19,8 +18,7 @@ export function Banner() {
       </NavLink>
       <nav aria-label="主导航">
         <NavLink to={teamId ? PATHS.teamDetail(teamId) : PATHS.APP} end>
-          <HomeOutlined />
-          <span>首页</span>
+          首页
         </NavLink>
       </nav>
       <div className="qg-banner__account">
