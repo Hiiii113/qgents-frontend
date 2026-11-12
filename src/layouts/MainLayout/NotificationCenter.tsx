@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Drawer, Badge, Button, Typography, Space, Empty, theme } from 'antd'
+import { Drawer, Badge, Button, Typography, Space, Empty } from 'antd'
 import { BellOutlined, CheckOutlined, UserAddOutlined, MessageOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificationApi } from '@/api'
 import { useNotificationEvents } from '@/realtime/useNotificationEvents'
 import { useRealtimeConnectionStatus } from '@/realtime/realtimeClient'
+import './NotificationCenter.css'
 import { notificationTargetPath } from './notificationTargetPath'
 import type { Notification, NotificationKind } from '@/types'
 
@@ -42,7 +43,6 @@ function formatRelativeTime(iso: string): string {
  */
 export function NotificationCenter() {
   const navigate = useNavigate()
-  const { token } = theme.useToken()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
 
@@ -148,35 +148,18 @@ export function NotificationCenter() {
               <div
                 key={n.id}
                 onClick={() => handleItemClick(n)}
-                style={{
-                  display: 'flex',
-                  gap: 12,
-                  padding: '12px 16px',
-                  cursor: 'pointer',
-                  background: n.isRead ? 'transparent' : token.colorPrimaryBg,
-                  borderBottom: `1px solid ${token.colorBorderSecondary}`,
-                }}
+                className={`qg-notice${n.isRead ? '' : ' qg-notice--unread'}`}
               >
-                <span style={{ color: meta.color, fontSize: 18, lineHeight: 1, flexShrink: 0 }}>
+                <span className="qg-notice__icon" style={{ color: meta.color }}>
                   {meta.icon}
                 </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="qg-notice__body">
                   <Space size={6} align="center">
                     {!n.isRead && <Badge status="processing" />}
                     <Text strong={!n.isRead}>{n.title}</Text>
                   </Space>
-                  {n.description && (
-                    <div>
-                      <Text type="secondary" style={{ fontSize: 13 }}>
-                        {n.description}
-                      </Text>
-                    </div>
-                  )}
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {formatRelativeTime(n.createdAt)}
-                    </Text>
-                  </div>
+                  {n.description && <p className="qg-notice__description">{n.description}</p>}
+                  <p className="qg-notice__time">{formatRelativeTime(n.createdAt)}</p>
                 </div>
               </div>
             )

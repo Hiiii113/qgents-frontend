@@ -1,0 +1,106 @@
+/**
+ * 团队设置：分区标题 + 发丝线 + 16 字段间距；表格 middle，操作列用文字按钮。
+ */
+
+.team-settings__page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.team-settings__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.team-settings__title {
+  font-size: var(--text-h3);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.team-settings__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.team-settings__loading {
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+}
+
+.team-settings__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.team-settings__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 62ch;
+}
+
+.team-settings__subtitle {
+  font-size: var(--text-lead);
+  font-weight: 600;
+}
+
+.team-settings__hint {
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  color: var(--ink-500);
+  max-width: 76ch;
+}
+
+.team-settings__value {
+  font-size: var(--text-base);
+  color: var(--ink-700);
+}
+
+/* 表单：label 13/600 压在控件上方，字段间距 16。 */
+.team-settings__form {
+  display: flex;
+  flex-direction: column;
+  max-width: 62ch;
+}
+
+.team-settings__form > .ant-btn {
+  align-self: flex-start;
+}
+
+.team-settings__avatar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.team-settings__invite {
+  width: 100%;
+  max-width: 62ch;
+}
+
+.team-settings__invite .ant-select {
+  flex: 0 0 auto;
+  width: 120px;
+}
+
+.team-settings__invitations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (max-width: 700px) {
+  .team-settings__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

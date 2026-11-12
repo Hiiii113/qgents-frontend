@@ -57,6 +57,13 @@ export const antdTheme: ThemeConfig = {
     Select: { optionSelectedBg: T.accentSoft },
     Menu: { itemSelectedBg: T.accentSoft, itemSelectedColor: T.accentStrong, itemBorderRadius: 2 },
     Tabs: { inkBarColor: T.accent, itemSelectedColor: T.ink900, itemColor: T.ink500 },
+    // 表单规则集中在这里，页面不必再各写一份 label / 间距 / 错误字号。
+    Form: {
+      labelColor: T.ink700,
+      labelFontSize: 13,
+      verticalLabelPadding: '0 0 4px',
+      itemMarginBottom: 16,
+    },
     Segmented: { itemSelectedBg: T.paperRaised, trackBg: T.paperSunken },
     Tooltip: { colorBgSpotlight: T.ink900 },
   },

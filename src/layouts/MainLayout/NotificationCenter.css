@@ -1,0 +1,42 @@
+/* 通知列表：行式布局，未读只靠一条左线与加粗标题区分，不用彩色底。 */
+.qg-notice {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  background: transparent;
+  border-bottom: 1px solid var(--rule);
+  border-left: 2px solid transparent;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.qg-notice:hover,
+.qg-notice:focus-visible {
+  background: var(--paper-sunken);
+}
+
+.qg-notice--unread {
+  border-left-color: var(--accent);
+}
+
+.qg-notice__icon {
+  font-size: 16px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.qg-notice__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.qg-notice__description {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--ink-500);
+}
+
+.qg-notice__time {
+  font-size: var(--text-xs);
+  color: var(--ink-300);
+}

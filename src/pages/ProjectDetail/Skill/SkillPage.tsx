@@ -2,29 +2,11 @@ import { SkillActions } from '@/components/SkillActions'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Alert,
-  App,
-  Button,
-  Card,
-  Drawer,
-  Form,
-  Input,
-  Modal,
-  Segmented,
-  Select,
-  Space,
-  Spin,
-  Tag,
-  Typography,
-} from 'antd'
+import { Alert, App, Button, Drawer, Form, Input, Modal, Segmented, Select, Spin, Tag } from 'antd'
 import { PlusOutlined, TagsOutlined, UserOutlined } from '@ant-design/icons'
 import { skillApi } from '@/api'
-import { EmptyState } from '@/components/EmptyState'
 import type { Skill, SkillPreview, SkillStatus, SkillVisibility } from '@/types'
 import './SkillPage.css'
-
-const { Text, Paragraph } = Typography
 
 /** 状态筛选维度 */
 type FilterKey = 'ALL' | SkillStatus
@@ -38,17 +20,17 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'ARCHIVED', label: '已归档' },
 ]
 
-const STATUS_META: Record<SkillStatus, { color: string; label: string }> = {
-  DRAFT: { color: 'default', label: '草稿' },
-  PENDING_REVIEW: { color: 'orange', label: '待审核' },
-  PUBLISHED: { color: 'green', label: '已发布' },
-  REJECTED: { color: 'red', label: '已拒绝' },
-  ARCHIVED: { color: 'default', label: '已归档' },
+const STATUS_LABEL: Record<SkillStatus, string> = {
+  DRAFT: '草稿',
+  PENDING_REVIEW: '待审核',
+  PUBLISHED: '已发布',
+  REJECTED: '已拒绝',
+  ARCHIVED: '已归档',
 }
 
-const VISIBILITY_META: Record<Skill['visibility'], { color: string; label: string }> = {
-  PRIVATE: { color: 'default', label: '私有' },
-  PROJECT_SHARED: { color: 'blue', label: '项目共享' },
+const VISIBILITY_LABEL: Record<Skill['visibility'], string> = {
+  PRIVATE: '私有',
+  PROJECT_SHARED: '项目共享',
 }
 
 /**
@@ -94,46 +76,45 @@ export function SkillPage() {
   const detail = skills.find((s) => s.id === detailId) ?? null
 
   return (
-    <>
-      <div className="skill-page__toolbar">
+    <div className="skill-page">
+      <div className="skill-toolbar">
         <Segmented
           options={FILTERS.map((f) => ({ label: f.label, value: f.key }))}
           value={filter}
           onChange={(v) => setFilter(v as FilterKey)}
         />
-        <Space>
+        <div className="skill-toolbar__actions">
           <Input.Search
+            className="skill-toolbar__search"
             allowClear
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             placeholder="搜索名称、内容或标签"
-            style={{ width: 240 }}
+            aria-label="搜索 Skill"
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
             新建 Skill
           </Button>
-        </Space>
+        </div>
       </div>
 
       {isLoading ? (
-        <Spin delay={180} size="large" />
+        <Spin delay={180} />
       ) : isError ? (
-        <EmptyState
-          title="Skill 加载失败"
-          description="请检查网络后重试"
-          action={<Button onClick={() => void refetch()}>重新加载</Button>}
-        />
+        <>
+          <p className="skill-note">Skill 加载失败，请检查网络后重试。</p>
+          <div>
+            <Button onClick={() => void refetch()}>重新加载</Button>
+          </div>
+        </>
       ) : filtered.length === 0 ? (
-        <EmptyState
-          title={keyword.trim() || filter !== 'ALL' ? '没有匹配的 Skill' : '暂无共享 Skill'}
-          description={
-            keyword.trim() || filter !== 'ALL'
-              ? '可以更换关键词或状态筛选'
-              : '新建私有 Skill，或创建项目共享 Skill'
-          }
-        />
+        <p className="skill-note">
+          {keyword.trim() || filter !== 'ALL'
+            ? '没有匹配的 Skill，可以更换关键词或状态筛选。'
+            : '暂无共享 Skill，用右上角新建私有 Skill，或创建项目共享 Skill。'}
+        </p>
       ) : (
-        <div className="skill-page__list">
+        <div className="skill-list">
           {filtered.map((s, i) => (
             <SkillCard key={s.id} skill={s} index={i + 1} onClick={() => setDetailId(s.id)} />
           ))}
@@ -167,11 +148,11 @@ export function SkillPage() {
           setEditTarget(null)
         }}
       />
-    </>
+    </div>
   )
 }
 
-/** 列表卡片 */
+/** 列表卡片。整行可点，用原生 button 拿到键盘焦点与 Enter 触发。 */
 function SkillCard({
   skill,
   index,
@@ -181,42 +162,32 @@ function SkillCard({
   index: number
   onClick: () => void
 }) {
-  const meta = STATUS_META[skill.status] ?? { color: 'default', label: skill.status }
-  const vis = VISIBILITY_META[skill.visibility] ?? { color: 'default', label: skill.visibility }
+  const status = STATUS_LABEL[skill.status] ?? skill.status
+  const visibility = VISIBILITY_LABEL[skill.visibility] ?? skill.visibility
   return (
-    <Card className="skill-card" onClick={onClick}>
-      <div className="skill-card__main">
-        <div className="skill-card__left">
-          <span className="skill-card__index">{String(index).padStart(2, '0')}</span>
-          <div className="skill-card__name-wrap">
-            <Text className="skill-card__name">{skill.name}</Text>
-            <Paragraph ellipsis={{ rows: 1 }} className="skill-card__content">
-              {skill.description}
-            </Paragraph>
-          </div>
-        </div>
-        <div className="skill-card__right">
-          <Space size={4}>
-            <Tag color={vis.color} style={{ margin: 0 }}>
-              {vis.label}
-            </Tag>
-            <Tag color={meta.color} style={{ margin: 0 }}>
-              {meta.label}
-            </Tag>
-          </Space>
-          <Text className="skill-card__creator">{skill.creator?.displayName ?? '未知'}</Text>
-        </div>
-      </div>
+    <button type="button" className="skill-card" onClick={onClick}>
+      <span className="skill-card__main">
+        <span className="skill-card__index">{String(index).padStart(2, '0')}</span>
+        <span className="skill-card__body">
+          <span className="skill-card__name">{skill.name}</span>
+          <span className="skill-card__description">{skill.description}</span>
+        </span>
+        <span className="skill-card__meta">
+          <Tag>{visibility}</Tag>
+          <Tag>{status}</Tag>
+          <span className="skill-card__creator">{skill.creator?.displayName ?? '未知'}</span>
+        </span>
+      </span>
       {(skill.tags ?? []).length > 0 && (
-        <div className="skill-card__tags">
+        <span className="skill-card__tags">
           {(skill.tags ?? []).map((t) => (
-            <Tag key={t} icon={<TagsOutlined />} bordered={false}>
+            <Tag key={t} icon={<TagsOutlined />}>
               {t}
             </Tag>
           ))}
-        </div>
+        </span>
       )}
-    </Card>
+    </button>
   )
 }
 
@@ -231,8 +202,8 @@ function SkillDetail({
   onEdit: () => void
 }) {
   if (!skill) return <Drawer open={false} onClose={onClose} />
-  const meta = STATUS_META[skill.status] ?? { color: 'default', label: skill.status }
-  const vis = VISIBILITY_META[skill.visibility] ?? { color: 'default', label: skill.visibility }
+  const status = STATUS_LABEL[skill.status] ?? skill.status
+  const visibility = VISIBILITY_LABEL[skill.visibility] ?? skill.visibility
 
   return (
     <Drawer
@@ -241,15 +212,15 @@ function SkillDetail({
       size={420}
       open
       onClose={onClose}
-      extra={<Tag color={meta.color}>{meta.label}</Tag>}
+      extra={<Tag>{status}</Tag>}
     >
-      <Space direction="vertical" size={16} style={{ width: '100%' }}>
+      <div className="skill-detail">
         <div>
-          <Tag color={vis.color}>{vis.label}</Tag>
+          <Tag>{visibility}</Tag>
           {(skill.tags ?? []).length > 0 && (
-            <div style={{ marginTop: 8 }}>
+            <div className="skill-detail__tags">
               {(skill.tags ?? []).map((t) => (
-                <Tag key={t} icon={<TagsOutlined />} style={{ marginBottom: 4 }}>
+                <Tag key={t} icon={<TagsOutlined />}>
                   {t}
                 </Tag>
               ))}
@@ -257,33 +228,21 @@ function SkillDetail({
           )}
         </div>
 
-        <Paragraph
-          style={{ color: 'var(--qg-text-primary)', whiteSpace: 'pre-wrap', marginBottom: 0 }}
-        >
-          {skill.content}
-        </Paragraph>
+        <p className="skill-detail__content">{skill.content}</p>
 
-        <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.8 }}>
-          <div>
-            <UserOutlined /> 创建者：{skill.creator?.displayName ?? '未知'}
-          </div>
+        <div className="skill-detail__meta">
+          <span>
+            <UserOutlined aria-hidden /> 创建者：{skill.creator?.displayName ?? '未知'}
+          </span>
           {skill.reviewer && (
-            <div>
-              <UserOutlined /> 审核者：{skill.reviewer.displayName}
+            <span>
+              <UserOutlined aria-hidden /> 审核者：{skill.reviewer.displayName}
               {skill.reviewedAt ? ` · ${formatDate(skill.reviewedAt)}` : ''}
-            </div>
+            </span>
           )}
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            gap: 8,
-            flexWrap: 'wrap',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-            paddingTop: 16,
-          }}
-        >
+        <div className="skill-detail__actions">
           <SkillActions
             projectId={skill.projectId}
             id={skill.id}
@@ -292,7 +251,7 @@ function SkillDetail({
             onEdit={onEdit}
           />
         </div>
-      </Space>
+      </div>
     </Drawer>
   )
 }
@@ -374,10 +333,15 @@ function CreateSkillModal({
       okButtonProps={{ disabled: !editTarget && !preview }}
       destroyOnClose
     >
-      <Form form={form} layout="vertical" onFinish={(values) => save.mutate(values)}>
+      <Form
+        className="skill-form"
+        form={form}
+        layout="vertical"
+        onFinish={(values) => save.mutate(values)}
+      >
         {editTarget ? (
           <>
-            <Text>可见性：{VISIBILITY_META[editTarget.visibility].label}</Text>
+            <p className="skill-form__intro">可见性：{VISIBILITY_LABEL[editTarget.visibility]}</p>
             <Form.Item
               name="content"
               label="SKILL.md 完整内容"
@@ -388,14 +352,15 @@ function CreateSkillModal({
           </>
         ) : (
           <>
-            <Paragraph>
+            <p className="skill-form__intro">
               仅导入单个 SKILL.md。文件中提到的文件、脚本、外部工具或其他 Skill
               不会随之安装，宿主特有字段也未必生效。
-            </Paragraph>
+            </p>
             <Form.Item label="选择 SKILL.md">
               <input
                 type="file"
                 accept=".md"
+                aria-label="选择 SKILL.md"
                 disabled={previewMutation.isPending}
                 onChange={(event) => {
                   const selected = event.target.files?.[0]
@@ -408,14 +373,12 @@ function CreateSkillModal({
                 }}
               />
             </Form.Item>
-            {previewMutation.isPending && <Spin />}
+            {previewMutation.isPending && <Spin delay={180} />}
             {preview && (
-              <div>
-                <Text strong>{preview.name}</Text>
-                <Paragraph>{preview.description}</Paragraph>
-                <Paragraph style={{ whiteSpace: 'pre-wrap', maxHeight: 240, overflow: 'auto' }}>
-                  {preview.content}
-                </Paragraph>
+              <div className="skill-preview">
+                <strong>{preview.name}</strong>
+                <span className="skill-preview__content">{preview.description}</span>
+                <span className="skill-preview__content">{preview.content}</span>
               </div>
             )}
             <Form.Item name="visibility" label="可见性" rules={[{ required: true }]}>

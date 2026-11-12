@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Alert, App, Button, Empty, Spin, Tag } from 'antd'
+import { Alert, App, Button, Spin } from 'antd'
 import { GithubOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { repositoriesApi } from '@/api/repositories'
@@ -8,6 +8,7 @@ import { teamApi } from '@/api/team'
 import { WorkspacePage } from '@/components/WorkspacePage'
 import { useCurrentTeamId } from '@/store/appUiStore'
 import { formatApiError } from '@/utils/formatApiError'
+import './GitHubIntegrationPage.css'
 
 export function GitHubIntegrationPage() {
   const [params, setParams] = useSearchParams()
@@ -66,7 +67,7 @@ export function GitHubIntegrationPage() {
       }
     >
       {!teamId ? (
-        <Alert type="info" message="请先从团队或项目进入 GitHub 连接。" />
+        <p className="workspace-page__note">请先从团队或项目进入 GitHub 连接。</p>
       ) : connections.isPending ? (
         <Spin delay={180} />
       ) : connections.isError ? (
@@ -77,42 +78,36 @@ export function GitHubIntegrationPage() {
           action={<Button onClick={() => void connections.refetch()}>重试</Button>}
         />
       ) : !connections.data.length ? (
-        <Empty
-          description={
-            owner
-              ? '连接 GitHub App，授权团队需要使用的仓库。'
-              : '团队尚未连接 GitHub，请联系团队所有者。'
-          }
-        />
+        <p className="github-empty">
+          {owner
+            ? '连接 GitHub App，授权团队需要使用的仓库。'
+            : '团队尚未连接 GitHub，请联系团队所有者。'}
+        </p>
       ) : (
-        <div className="workspace-page__grid">
+        <ul className="github-connections">
           {connections.data.map((connection) => (
-            <article className="workspace-card" key={connection.id}>
-              <h2>
-                <GithubOutlined /> {connection.accountLogin}
-              </h2>
-              <Tag color={connection.suspended ? 'orange' : 'green'}>
-                {connection.suspended ? '已暂停' : '已连接'}
-              </Tag>
-              <p>
+            <li className="github-connection" key={connection.id}>
+              <span className="github-connection__name">
+                <GithubOutlined aria-hidden /> {connection.accountLogin}
+              </span>
+              <span className="github-connection__meta">
                 {connection.accountType === 'ORGANIZATION' ? '组织账号' : '个人账号'} · GitHub App
-              </p>
+              </span>
+              <span className="github-pill">{connection.suspended ? '已暂停' : '已连接'}</span>
               {owner && (
-                <div className="workspace-card__actions">
-                  <Button
-                    type="text"
-                    size="small"
-                    icon={<ReloadOutlined />}
-                    loading={action.isPending && action.variables?.id === connection.id}
-                    onClick={() => action.mutate({ id: connection.id })}
-                  >
-                    刷新授权
-                  </Button>
-                </div>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  loading={action.isPending && action.variables?.id === connection.id}
+                  onClick={() => action.mutate({ id: connection.id })}
+                >
+                  刷新授权
+                </Button>
               )}
-            </article>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
       <p className="workspace-page__note">
         连接后，在项目仓库页导入 Qgent 可使用的仓库；Qgent 只使用团队 App
