@@ -1,5 +1,5 @@
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Button, Empty, Spin } from 'antd'
+import { Button } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { ChatMessageRow } from './ChatMessageRow'
@@ -147,12 +147,14 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
         }}
       >
         {props.loading ? (
-          <div className="chat-timeline__empty">
-            <Spin delay={180} />
+          <div className="chat-timeline__empty" role="status">
+            <p className="chat-timeline__empty-text">正在加载消息…</p>
           </div>
         ) : !messages.length ? (
           <div className="chat-timeline__empty">
-            <Empty description="从一个想法开始讨论" />
+            <p className="chat-timeline__empty-text">
+              还没有消息。写下第一句，或者 @Agent 开始干活。
+            </p>
           </div>
         ) : (
           <div
@@ -162,11 +164,17 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
             {virtualizer.getVirtualItems().map((row) => {
               const item = messages[row.index]
               const date = new Date(item.createdAt)
-              const previousDate =
-                row.index > 0 ? new Date(messages[row.index - 1].createdAt) : null
+              const previous = row.index > 0 ? messages[row.index - 1] : undefined
+              const previousDate = previous ? new Date(previous.createdAt) : null
               const showDate =
                 !Number.isNaN(date.getTime()) &&
                 date.toDateString() !== previousDate?.toDateString()
+              // 同一发送者的连续消息只显示一次作者与头像。
+              const continued =
+                !showDate &&
+                item.senderType !== 'SYSTEM' &&
+                previous?.senderType === item.senderType &&
+                previous?.senderId === item.senderId
               const canStop =
                 item.senderType === 'USER' &&
                 (item.senderId === props.currentUserId || props.isAdmin) &&
@@ -210,6 +218,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     reply={item.replyToId ? byId.get(item.replyToId) : undefined}
                     sender={senders.get(`${item.senderType}:${item.senderId}`)}
                     currentUserId={props.currentUserId}
+                    continued={continued}
                     canStop={canStop}
                     stopping={props.stoppingId === item.id}
                     onReply={props.onReply}
@@ -226,7 +235,6 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
       {awayFromBottom && (
         <Button
           className="chat-timeline__latest"
-          shape="round"
           icon={<ArrowDownOutlined />}
           onClick={jumpToBottom}
         >

@@ -7,14 +7,8 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom'
-import { Alert, Avatar, Badge, Button, Empty, Input, Spin } from 'antd'
-import {
-  ArrowLeftOutlined,
-  MessageOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  SettingOutlined,
-} from '@ant-design/icons'
+import { Alert, Avatar, Button, Input } from 'antd'
+import { ArrowLeftOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
 import { chatApi } from '@/api/chat'
@@ -47,18 +41,20 @@ export default function ProjectDetailLayout() {
   useRememberTeam(project.data?.teamId)
   if (project.isPending)
     return (
-      <div className="project-loading">
-        <Spin delay={180} />
+      <div className="project-workspace__status">
+        <PageLoader />
       </div>
     )
   if (project.isError)
     return (
-      <Alert
-        type="error"
-        showIcon
-        message={formatApiError(project.error)}
-        action={<Button onClick={() => void project.refetch()}>重试</Button>}
-      />
+      <div className="project-workspace__status">
+        <Alert
+          type="error"
+          showIcon
+          message={formatApiError(project.error)}
+          action={<Button onClick={() => void project.refetch()}>重试</Button>}
+        />
+      </div>
     )
   const selectedId =
     params.get('groupId') ||
@@ -76,7 +72,7 @@ export default function ProjectDetailLayout() {
     <div className="project-workspace">
       <aside className="project-sidebar" aria-label="群聊导航">
         <div className="project-sidebar__identity">
-          <Avatar size={42} src={project.data.avatarUrl}>
+          <Avatar size={32} src={project.data.avatarUrl}>
             {project.data.name.slice(0, 1)}
           </Avatar>
           <div>
@@ -106,11 +102,13 @@ export default function ProjectDetailLayout() {
         </div>
         <nav className="project-sidebar__groups">
           {groups.isPending ? (
-            <Spin delay={180} />
+            <p className="project-sidebar__hint">正在加载群聊…</p>
           ) : groups.isError ? (
-            <Button onClick={() => void groups.refetch()}>重新加载群聊</Button>
+            <Button size="small" onClick={() => void groups.refetch()}>
+              重新加载群聊
+            </Button>
           ) : visible.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有匹配的群聊" />
+            <p className="project-sidebar__hint">没有匹配的群聊</p>
           ) : (
             visible.map((group) => (
               <NavLink
@@ -119,9 +117,6 @@ export default function ProjectDetailLayout() {
                 className={`project-sidebar__group${inChat && selectedId === group.id ? ' is-active' : ''}`}
                 aria-label={group.title}
               >
-                <span className="project-sidebar__group-icon">
-                  <MessageOutlined />
-                </span>
                 <div>
                   <strong>{group.title}</strong>
                   <span>
@@ -130,21 +125,25 @@ export default function ProjectDetailLayout() {
                       : group.latestMessage?.text || '开始新的讨论'}
                   </span>
                 </div>
-                <Badge count={group.unreadCount} size="small" overflowCount={99} />
+                {group.unreadCount ? (
+                  <span className="project-sidebar__unread">
+                    {group.unreadCount > 99 ? '99+' : group.unreadCount}
+                  </span>
+                ) : null}
               </NavLink>
             ))
           )}
         </nav>
         <Button
           className="project-sidebar__create"
-          icon={<PlusOutlined />}
+          block
           disabled={project.data.status === 'ARCHIVED'}
           onClick={() => setCreateOpen(true)}
         >
           创建新群聊
         </Button>
         <NavLink className="project-sidebar__settings" to={PATHS.projectSettings(projectId)}>
-          <SettingOutlined /> 项目设置
+          项目设置
         </NavLink>
       </aside>
       <main className="project-workspace__main">

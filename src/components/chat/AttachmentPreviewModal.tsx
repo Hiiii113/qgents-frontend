@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Empty, Modal, Space, Spin, Typography } from 'antd'
+import { Button, Empty, Modal, Space } from 'antd'
 import {
   FilePdfOutlined,
   FileTextOutlined,
@@ -10,8 +10,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { attachmentApi, resolvePreviewUrl } from '@/api/attachment'
 import type { AttachmentInfo, AttachmentPreviewType } from '@/api/attachment'
-
-const { Text } = Typography
+import './AttachmentPreviewModal.css'
 
 /** 附件预览类型对应的图标和标签。 */
 function attachmentTypeMeta(type: AttachmentPreviewType | undefined): {
@@ -22,11 +21,11 @@ function attachmentTypeMeta(type: AttachmentPreviewType | undefined): {
     case 'IMAGE':
       return { icon: <FileOutlined />, label: '图片' }
     case 'PDF':
-      return { icon: <FilePdfOutlined style={{ color: '#ef4444' }} />, label: 'PDF' }
+      return { icon: <FilePdfOutlined />, label: 'PDF' }
     case 'CODE':
-      return { icon: <CodeOutlined style={{ color: '#3b82f6' }} />, label: '代码' }
+      return { icon: <CodeOutlined />, label: '代码' }
     case 'TEXT':
-      return { icon: <FileTextOutlined style={{ color: '#64748b' }} />, label: '文本' }
+      return { icon: <FileTextOutlined />, label: '文本' }
     default:
       return { icon: <FileOutlined />, label: '文件' }
   }
@@ -115,55 +114,29 @@ export function AttachmentPreviewModal({
       width={previewType === 'IMAGE' ? 720 : 860}
       destroyOnHidden
       title={
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        <span className="attachment-preview__title">
           {icon} {title}
         </span>
       }
     >
       {previewType === 'IMAGE' && contentUrl ? (
-        <div style={{ textAlign: 'center', padding: '8px 0' }}>
-          <img
-            src={contentUrl}
-            alt={title}
-            style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: 8, objectFit: 'contain' }}
-          />
+        <div className="attachment-preview__image">
+          <img src={contentUrl} alt={title} />
         </div>
       ) : previewType === 'PDF' && contentUrl ? (
-        <iframe
-          src={contentUrl}
-          title={title}
-          style={{ width: '100%', height: '70vh', border: '1px solid #e5e7eb', borderRadius: 8 }}
-        />
+        <iframe className="attachment-preview__frame" src={contentUrl} title={title} />
       ) : (previewType === 'TEXT' || previewType === 'CODE') && contentUrl ? (
-        <div style={{ position: 'relative' }}>
+        <div className="attachment-preview__text">
           {rawLoading ? (
-            <div style={{ textAlign: 'center', padding: 40 }}>
-              <Spin delay={180} />
-            </div>
+            <p className="attachment-preview__loading">正在加载文件内容…</p>
           ) : rawText != null ? (
-            <pre
-              style={{
-                margin: 0,
-                maxHeight: '65vh',
-                overflow: 'auto',
-                padding: 16,
-                background: '#0f172a',
-                color: '#e2e8f0',
-                borderRadius: 8,
-                fontSize: 13,
-                lineHeight: 1.6,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-all',
-              }}
-            >
-              {rawText}
-            </pre>
+            <pre className="attachment-preview__code">{rawText}</pre>
           ) : (
             <Empty description="无法加载文本内容">
               <Button onClick={() => void infoQuery.refetch()}>重新获取</Button>
             </Empty>
           )}
-          <div style={{ marginTop: 12, textAlign: 'right' }}>
+          <div className="attachment-preview__copy">
             {rawText != null ? (
               <Button size="small" onClick={() => void navigator.clipboard?.writeText(rawText)}>
                 复制内容
@@ -184,15 +157,8 @@ export function AttachmentPreviewModal({
           }
         />
       )}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: 12,
-        }}
-      >
-        <Text type="secondary">无法加载时，可刷新内容地址后重试。</Text>
+      <div className="attachment-preview__footer">
+        <p className="attachment-preview__note">无法加载时，可刷新内容地址后重试。</p>
         <Space>
           {fileDownloadUrl ? (
             <Button
