@@ -38,8 +38,6 @@ export const repositoriesApi = {
     request<GithubConnection>(`${installationsPath(teamId)}/${encodeURIComponent(id)}/sync`, {
       method: 'POST',
     }),
-  disconnect: (teamId: string, id: string) =>
-    request<void>(`${installationsPath(teamId)}/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   available: (teamId: string) =>
     request<AvailableRepository[]>(
       `/teams/${encodeURIComponent(teamId)}/integrations/github/repositories`,

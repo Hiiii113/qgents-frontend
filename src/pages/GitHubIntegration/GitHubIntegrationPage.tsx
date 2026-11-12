@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Alert, App, Button, Empty, Popconfirm, Spin, Tag } from 'antd'
+import { Alert, App, Button, Empty, Spin, Tag } from 'antd'
 import { GithubOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { repositoriesApi } from '@/api/repositories'
@@ -39,9 +39,8 @@ export function GitHubIntegrationPage() {
     onError: (error) => void message.error(formatApiError(error)),
   })
   const action = useMutation({
-    mutationFn: async ({ id, kind }: { id: string; kind: 'sync' | 'disconnect' }) => {
-      if (kind === 'sync') await repositoriesApi.sync(teamId, id)
-      else await repositoriesApi.disconnect(teamId, id)
+    mutationFn: async ({ id }: { id: string }) => {
+      await repositoriesApi.sync(teamId, id)
     },
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['github', teamId] })
@@ -105,19 +104,10 @@ export function GitHubIntegrationPage() {
                     size="small"
                     icon={<ReloadOutlined />}
                     loading={action.isPending && action.variables?.id === connection.id}
-                    onClick={() => action.mutate({ id: connection.id, kind: 'sync' })}
+                    onClick={() => action.mutate({ id: connection.id })}
                   >
                     刷新授权
                   </Button>
-                  <Popconfirm
-                    title="解除团队的 GitHub 连接？"
-                    description="相关仓库会从项目导入列表移除，GitHub 仓库本身不会删除。"
-                    onConfirm={() => action.mutateAsync({ id: connection.id, kind: 'disconnect' })}
-                  >
-                    <Button type="text" size="small" danger>
-                      解除连接
-                    </Button>
-                  </Popconfirm>
                 </div>
               )}
             </article>
