@@ -5,7 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
 import { AuthProvider } from '@/context/AuthProvider'
 import { queryClient } from '@/query'
-import { QG_FONT_FAMILY } from '@/theme/antdTheme'
+import { antdTheme } from '@/theme/antdTheme'
 import { PageLoader } from '@/components/PageLoader'
 
 /**
@@ -25,7 +25,7 @@ function BootstrapGate({ children }: { children: ReactNode }) {
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ConfigProvider
-      theme={{ token: { colorPrimary: '#4f7146', borderRadius: 10, fontFamily: QG_FONT_FAMILY } }}
+      theme={antdTheme}
       spin={{ indicator: <LoadingOutlined spin /> }}
       modal={{ centered: true }}
     >

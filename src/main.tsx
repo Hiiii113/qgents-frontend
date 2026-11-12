@@ -6,6 +6,10 @@ import '@fontsource/plus-jakarta-sans/latin-600.css'
 import '@/styles/global.scss'
 import App from './App'
 import { AppProviders } from '@/providers/AppProviders'
+import { applyDesignTokens } from '@/theme/tokens'
+
+// token 必须在首屏渲染前落到 :root，否则首帧会拿到空变量。
+applyDesignTokens()
 
 const MOCK_START_TIMEOUT_MS = 10_000
 const STALE_MOCK_WORKER_RELOAD_KEY = 'qgents:stale-mock-worker-reload'

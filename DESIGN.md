@@ -1,0 +1,131 @@
+# Qgents 前端设计规范 v2
+
+**方向：瑞士网格 + 墨 / 纸。** 白纸底、近黑正文、单一强调色（品牌绿）、1px 发丝线分区、4px 圆角、没有阴影也没有渐变、字号层级拉开、留白撑起结构。
+
+目标气质：**克制、结构清晰、信息密度可调**。聊天与表格紧凑，页面骨架宽松；不靠装饰、不靠色彩堆叠、不做常见 SaaS 那种"圆角卡片 + 柔和投影 + 渐变大标题"。
+
+**数值唯一来源：`src/theme/tokens.ts`。** 页面里不写死颜色、圆角、字体大小、间距，一律引用 CSS 变量。
+
+---
+
+## 1. Token
+
+| 用途 | 变量 | 值 |
+|---|---|---|
+| 正文 / 标题 | `--ink-900` | `#111312` |
+| 次要正文 | `--ink-700` | `#3A3D38` |
+| 说明 / 元信息 | `--ink-500` | `#6B6F66` |
+| 占位 / 极弱 | `--ink-300` | `#A8ACA3` |
+| 页面底色 | `--paper` | `#FAFAF7` |
+| 容器 | `--paper-raised` | `#FFFFFF` |
+| 凹陷区（表头/track） | `--paper-sunken` | `#F2F2EC` |
+| 发丝线 | `--rule` | `#E3E4DE` |
+| 强分隔线 | `--rule-strong` | `#C9CBC2` |
+| 强调 | `--accent` / `--accent-strong` / `--accent-soft` | `#4F7146` / `#3F5C38` / `#EDF1E9` |
+| 状态 | `--success` `--warning` `--danger` | `#2F7A4F` `#8A5A00` `#B3261E` |
+| 间距 | `--space-1..24` | 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96 |
+| 圆角 | `--radius-s` `--radius-m` `--radius-pill` | 2 / 4 / 999 |
+| 字号 | `--text-xs..display` | 12 / 13 / 14 / 16 / 20 / 26 / 34 / clamp(28,3.4vw,44) |
+| 动效 | `--dur-fast/base/slow`、`--ease` | 120 / 180 / 240ms、`cubic-bezier(.2,0,0,1)` |
+
+---
+
+## 2. 排版
+
+- 正文 14px / 行高 1.6；次要说明 13px；元信息与标签 12px。**不许出现小于 12px 的正文。**
+- 页面标题 `var(--text-display)`，`letter-spacing: -0.03em`，行高 1.1，只出现一次。
+- 分区标题 20px / 600；卡片与列表项标题 16px / 600。
+- 眉标（eyebrow）用 `.qg-eyebrow`：11px、600、全大写、`0.14em` 字距、`--ink-500`。**只能给英文或数字用**，中文不做大写变形。
+- 长文本最大宽度 62ch；说明文字 76ch。
+- 数字列、指标、时间用 `.qg-num`（等宽数字）。
+
+---
+
+## 3. 间距与结构
+
+- 只用 4 的倍数档位。区块之间 32，卡片内边距 24，相邻控件 8，标题到分隔线 24。
+- 垂直堆叠一律 `display: flex; flex-direction: column; gap`，不用 margin 拼接。
+- 分区靠 **1px 线 + 留白**，不靠背景色块和阴影。
+- 页面骨架统一用 `WorkspacePage`（`title` / `description` / `action` / `children`），页面里不要再写 padding 与页头。
+
+---
+
+## 4. 组件配方
+
+| 组件 | 规则 |
+|---|---|
+| 卡片 | `1px solid var(--rule)`、`radius 4`、`padding 24`、`background: --paper-raised`；hover 只把边框变 `--rule-strong`；无阴影 |
+| 列表行 | 行高 48-56px，行间 1px 分隔线，hover 背景 `--paper-sunken`；行内标题 14/600 + 说明 13/`--ink-500` |
+| 表格 | antd `size="middle"`，表头 `--paper-sunken`，单元格 1px `--rule` 分隔，无斑马纹 |
+| 表单 | label 13px/600 在控件上方，字段间距 16；错误紧贴字段下方 12px `--danger` |
+| 主按钮 | 实心 `--accent`，白字，高 34，radius 4；hover 只变 `--accent-strong`，不做位移与阴影 |
+| 次按钮 | 1px 边框 + 透明底，hover 边框加深 |
+| 标签 | pill 或 2px 圆角，`--paper-sunken` 底、`--ink-700` 字，不填充饱和色 |
+| 提示条 | 左侧 2px 实线 + 正文色，不用整块彩色背景（`.workspace-page__note`） |
+| 空状态 | 一行说明 + 一个主按钮，不用插画 |
+| 聊天消息 | 不用气泡尾巴与彩色底色；靠头像列 + 1px 分隔线 + 时间戳区分；本人消息仅用左侧 2px `--accent` 边框标记 |
+
+---
+
+## 5. 禁止（出现即算不通过）
+
+- 任何 `box-shadow`、渐变 (`linear-gradient` / `radial-gradient`)、玻璃拟态、彩色光晕
+- `border-radius` 大于 4px（标签 pill 除外）
+- 装饰性插画、emoji 当图标、无意义的图标堆叠
+- 一屏出现两个以上饱和强调色（状态色只在真实状态里用）
+- 正文 < 12px、全大写的界面文案
+- hover 位移、放大、翻转等会改变布局边界的动效
+- 硬编码颜色（`#xxx` / `rgb()`）与硬编码字号
+
+---
+
+## 6. 可访问性（适用于桌面 Web 的那部分）
+
+- 正文对比度 ≥ 4.5:1，大字与图标 ≥ 3:1（以上配色已满足，不要自己调浅）
+- 键盘焦点可见：`:focus-visible` 2px `--accent` 环，禁止 `outline: none`
+- 图标按钮必须有 `aria-label`；装饰性图标 `aria-hidden`
+- 表单：label 关联、错误 inline 且提交后聚焦首个错误或错误摘要
+- 禁用态用 `disabled` 语义，不能只是看起来灰
+- 尊重 `prefers-reduced-motion`（全局已兜底，组件别自己覆盖）
+- 触控目标 ≥ 44×44px（移动端断点下）
+- 加载态用骨架或文字提示，禁止超过 1s 的裸转圈
+
+---
+
+## 7. antd 用法
+
+- 颜色/圆角/字号只走主题（`src/theme/antdTheme.ts`），不写 `style={{ color: '#..' }}`
+- 不用 antd 默认阴影；Modal/Drawer/Card 用 1px 边框替代
+- 组件尺寸统一：常规 `middle`，紧凑列表 `small`，不要混用三档
+- 覆写样式优先用组件 token，其次 `:where()` 降低特异性，禁止 `!important` 堆叠
+
+---
+
+## 8. 响应式
+
+- 断点：375 / 768 / 1024 / 1440
+- 页面骨架在 ≤700px 收窄内边距到 16、标题降到 28、action 换行到说明下面
+- 聊天与表格在窄屏允许横向滚动，不压缩字号
+
+---
+
+## 9. 分工
+
+| 范围 | 归属 |
+|---|---|
+| `src/theme/*`、`src/styles/global.scss`、`src/providers/AppProviders.tsx`、`src/main.tsx`、`src/components/WorkspacePage.*`、`src/layouts/MainLayout/*`、公共组件（`EmptyState` / `PageLoader` / `StartupScreen` / `ErrorBoundary`） | 主 Agent |
+| `src/pages/Login`、`ForgotPassword`、`JoinTeam`、`CreateTeam`、`Welcome`、`Home`、`ForbiddenPage.tsx`、`NotFoundPage.tsx` | Agent A |
+| `src/pages/TeamDetail`、`src/pages/ProjectDetail`（含 Chat / Code / Memory / Overview / Settings / Skill / MergeRequest / DiffReview）、`src/pages/GitHubIntegration` | Agent B |
+
+**子 Agent 只改自己名下的文件。** 需要改 token、全局样式、布局或公共组件时，写进汇报里，不要自己动。
+
+---
+
+## 10. 交付前自检
+
+- [ ] 页面里没有硬编码颜色 / 字号 / 圆角 / 阴影
+- [ ] 没有出现第 5 节的任何禁止项
+- [ ] 所有交互元素有 hover 与 `:focus-visible` 状态
+- [ ] 表格/列表在 375px 宽度下不破版
+- [ ] 空状态、加载态、错误态都有
+- [ ] `npx tsc -p tsconfig.app.json --noEmit` 与 `npx vitest run` 通过
