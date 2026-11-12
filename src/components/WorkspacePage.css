@@ -103,7 +103,7 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-300);
+  color: var(--ink-500);
 }
 
 .workspace-card__actions {

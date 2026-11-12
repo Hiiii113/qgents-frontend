@@ -132,7 +132,7 @@ export function AttachmentPreviewModal({
           ) : rawText != null ? (
             <pre className="attachment-preview__code">{rawText}</pre>
           ) : (
-            <Empty description="无法加载文本内容">
+            <Empty image={null} description="无法加载文本内容">
               <Button onClick={() => void infoQuery.refetch()}>重新获取</Button>
             </Empty>
           )}
@@ -145,11 +145,11 @@ export function AttachmentPreviewModal({
           </div>
         </div>
       ) : infoQuery.isError ? (
-        <Empty description="预览信息加载失败">
+        <Empty image={null} description="预览信息加载失败">
           <Button onClick={() => void infoQuery.refetch()}>重试</Button>
         </Empty>
       ) : contentUrl && previewable ? (
-        <Empty description="该文件类型不支持页内预览" />
+        <Empty image={null} description="该文件类型不支持页内预览" />
       ) : (
         <Empty
           description={

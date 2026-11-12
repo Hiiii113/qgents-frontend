@@ -9,6 +9,7 @@ export const T = {
   ink900: '#111312',
   ink700: '#3A3D38',
   ink500: '#6B6F66',
+  ink400: '#8B8F86',
   ink300: '#A8ACA3',
   // 纸：背景与容器
   paper: '#FAFAF7',
@@ -30,6 +31,7 @@ export const cssVars: Record<string, string> = {
   '--ink-900': T.ink900,
   '--ink-700': T.ink700,
   '--ink-500': T.ink500,
+  '--ink-400': T.ink400,
   '--ink-300': T.ink300,
   '--paper': T.paper,
   '--paper-raised': T.paperRaised,

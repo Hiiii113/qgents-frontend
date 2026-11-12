@@ -201,3 +201,22 @@
     flex-wrap: wrap;
   }
 }
+
+/* 文件选择：隐藏原生控件，用按钮 + 文件名说明。 */
+.skill-file {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.skill-file__name {
+  font-size: var(--text-sm);
+  color: var(--ink-700);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-file__name.is-empty {
+  color: var(--ink-400);
+}

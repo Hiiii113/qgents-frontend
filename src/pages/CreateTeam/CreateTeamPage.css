@@ -94,7 +94,7 @@
 }
 
 .create-team__input::placeholder {
-  color: var(--ink-300);
+  color: var(--ink-400);
 }
 
 .create-team__input:hover {

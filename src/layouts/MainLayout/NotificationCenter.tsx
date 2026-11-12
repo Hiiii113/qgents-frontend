@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Drawer, Badge, Button, Typography, Space, Empty } from 'antd'
+import { Drawer, Badge, Button, Typography, Space } from 'antd'
 import { BellOutlined, CheckOutlined, UserAddOutlined, MessageOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificationApi } from '@/api'
@@ -140,7 +140,10 @@ export function NotificationCenter() {
         styles={{ body: { padding: 0 } }}
       >
         {notifications.length === 0 ? (
-          <Empty description="暂无通知" style={{ marginTop: 64 }} />
+          <div className="qg-notice-empty">
+            <p className="qg-notice-empty__title">暂无通知</p>
+            <p className="qg-notice-empty__hint">有人提到你、邀请你或项目有更新时会出现在这里。</p>
+          </div>
         ) : (
           notifications.map((n) => {
             const meta = KIND_META[n.kind] ?? FALLBACK_META

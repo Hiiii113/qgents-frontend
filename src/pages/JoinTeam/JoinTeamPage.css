@@ -33,7 +33,7 @@
 }
 
 .join-team__input::placeholder {
-  color: var(--ink-300);
+  color: var(--ink-400);
 }
 
 .join-team__input:hover {

@@ -2,8 +2,21 @@ import { SkillActions } from '@/components/SkillActions'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Alert, App, Button, Drawer, Form, Input, Modal, Segmented, Select, Spin, Tag } from 'antd'
-import { PlusOutlined, TagsOutlined, UserOutlined } from '@ant-design/icons'
+import {
+  Alert,
+  App,
+  Button,
+  Drawer,
+  Form,
+  Input,
+  Modal,
+  Segmented,
+  Select,
+  Spin,
+  Tag,
+  Upload,
+} from 'antd'
+import { PlusOutlined, TagsOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons'
 import { skillApi } from '@/api'
 import type { Skill, SkillPreview, SkillStatus, SkillVisibility } from '@/types'
 import './SkillPage.css'
@@ -357,21 +370,28 @@ function CreateSkillModal({
               不会随之安装，宿主特有字段也未必生效。
             </p>
             <Form.Item label="选择 SKILL.md">
-              <input
-                type="file"
-                accept=".md"
-                aria-label="选择 SKILL.md"
-                disabled={previewMutation.isPending}
-                onChange={(event) => {
-                  const selected = event.target.files?.[0]
-                  setFile(null)
-                  setPreview(null)
-                  setError('')
-                  if (!selected) return
-                  setFile(selected)
-                  previewMutation.mutate(selected)
-                }}
-              />
+              <div className="skill-file">
+                <Upload
+                  accept=".md"
+                  showUploadList={false}
+                  disabled={previewMutation.isPending}
+                  beforeUpload={(selected) => {
+                    setFile(null)
+                    setPreview(null)
+                    setError('')
+                    setFile(selected)
+                    previewMutation.mutate(selected)
+                    return false
+                  }}
+                >
+                  <Button icon={<UploadOutlined aria-hidden />} loading={previewMutation.isPending}>
+                    选择文件
+                  </Button>
+                </Upload>
+                <span className={`skill-file__name${file ? '' : ' is-empty'}`}>
+                  {file ? file.name : '未选择文件，仅支持单个 .md'}
+                </span>
+              </div>
             </Form.Item>
             {previewMutation.isPending && <Spin delay={180} />}
             {preview && (

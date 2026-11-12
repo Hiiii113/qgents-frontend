@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { Alert, App, Avatar, Button, Drawer, List, Tag, Tooltip } from 'antd'
 import { PushpinOutlined, RobotOutlined, TeamOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
@@ -9,7 +9,6 @@ import { useAuth } from '@/context/AuthContext'
 import { formatApiError } from '@/utils/formatApiError'
 import type { Page } from '@/types/api'
 import { messageField, type ChatMessage, type SendChatMessage } from '@/types/chat'
-import { PATHS } from '@/routes/paths'
 import { GroupMembersModal } from './GroupMembersModal'
 import { AttachmentPreviewModal } from './AttachmentPreviewModal'
 import { ChatComposer, type ChatComposerHandle } from './ChatComposer'
@@ -202,18 +201,23 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
           disabled={!ready || project.data?.status === 'ARCHIVED'}
         />
       </div>
-      <Drawer title="群聊成员" open={membersOpen} onClose={() => setMembersOpen(false)}>
+      <Drawer
+        className="chat-members"
+        title="群聊成员"
+        open={membersOpen}
+        onClose={() => setMembersOpen(false)}
+        extra={
+          <Button
+            onClick={() => setInviteOpen(true)}
+            disabled={project.data?.status === 'ARCHIVED'}
+          >
+            邀请成员 / Agent
+          </Button>
+        }
+      >
         <p className="chat-members__hint">
           {group?.defaultGroup ? '默认群的用户与项目成员同步。' : '这个群聊中的成员与 Agent。'}
         </p>
-        <Button
-          type="primary"
-          block
-          onClick={() => setInviteOpen(true)}
-          disabled={project.data?.status === 'ARCHIVED'}
-        >
-          邀请成员 / Agent
-        </Button>
         <List
           dataSource={members.data ?? []}
           renderItem={(member) => (
@@ -237,9 +241,6 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
             </List.Item>
           )}
         />
-        <Link to={PATHS.projectSettings(projectId)}>
-          <Button block>项目设置</Button>
-        </Link>
       </Drawer>
       {inviteOpen && group && project.data && (
         <GroupMembersModal

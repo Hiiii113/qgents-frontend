@@ -150,6 +150,21 @@ input[type='password']::-moz-reveal {
   margin: 0;
 }
 
+/* antd 弹层默认带投影；这套设计只用 1px 发丝线，所以统一压平。 */
+.ant-dropdown .ant-dropdown-menu,
+.ant-select-dropdown,
+.ant-popover .ant-popover-inner,
+.ant-modal .ant-modal-content,
+.ant-drawer .ant-drawer-content,
+.ant-tooltip .ant-tooltip-inner {
+  box-shadow: none;
+  border: 1px solid var(--rule);
+}
+
+.ant-tooltip .ant-tooltip-inner {
+  border-color: transparent;
+}
+
 /* ──── 全局滚动条 ──── */
 ::-webkit-scrollbar {
   width: 10px;

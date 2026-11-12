@@ -61,7 +61,7 @@
 .login-page__feature-index {
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--ink-300);
+  color: var(--ink-500);
 }
 
 .login-page__feature-text {
@@ -193,7 +193,7 @@
 }
 
 .login-field__input::placeholder {
-  color: var(--ink-300);
+  color: var(--ink-400);
 }
 
 .login-field__input:hover {
@@ -321,5 +321,15 @@
   .login-field__icon-btn,
   .login-form .ant-btn {
     min-height: var(--space-12);
+  }
+
+  /* 窄屏先给表单：营销区只留 wordmark 与标题，省掉后面的三条说明。 */
+  .login-page__features {
+    display: none;
+  }
+
+  .login-page__headline {
+    max-width: 20em;
+    font-size: var(--text-h2);
   }
 }

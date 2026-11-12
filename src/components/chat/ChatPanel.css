@@ -482,6 +482,29 @@
   color: var(--ink-500);
 }
 
+.chat-mention-option .ant-avatar {
+  background: var(--paper-sunken);
+  color: var(--ink-500);
+}
+
+/* 提及下拉：与其它弹层一致，1px 边框、无投影。 */
+.chat-composer .ant-mentions-dropdown,
+.ant-mentions-dropdown {
+  box-shadow: none;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-m);
+  padding: var(--space-1);
+}
+
+.ant-mentions-dropdown .ant-select-item {
+  border-radius: var(--radius-s);
+  padding: var(--space-2);
+}
+
+.ant-mentions-dropdown .ant-select-item-option-active {
+  background: var(--paper-sunken);
+}
+
 .chat-composer__reply {
   display: flex;
   justify-content: space-between;
@@ -529,10 +552,41 @@
   margin-top: var(--space-2);
 }
 
+/* 成员抽屉：行式列表，1px 分隔，头像浅底，状态标签保持安静。 */
+.chat-members .ant-drawer-header {
+  border-bottom: 1px solid var(--rule);
+}
+
+.chat-members .ant-drawer-title {
+  font-size: var(--text-lead);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.chat-members .ant-drawer-body {
+  padding: var(--space-4) var(--space-6);
+}
+
 .chat-members__hint {
+  margin-bottom: var(--space-4);
   font-size: var(--text-sm);
   line-height: 1.7;
   color: var(--ink-500);
+}
+
+.chat-members .ant-list-item {
+  padding: var(--space-3) 0;
+  border-block-end: 1px solid var(--rule);
+}
+
+.chat-members .ant-avatar {
+  background: var(--paper-sunken);
+  color: var(--ink-500);
+}
+
+.chat-members .ant-list-item-meta-title {
+  font-size: var(--text-base);
+  font-weight: 600;
 }
 
 @media (max-width: 800px) {
