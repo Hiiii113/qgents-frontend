@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Drawer, Badge, Button, Typography, Space } from 'antd'
+import { Drawer, Badge, Button, Typography } from 'antd'
 import { BellOutlined, CheckOutlined, UserAddOutlined, MessageOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificationApi } from '@/api'
@@ -137,23 +137,24 @@ export function NotificationCenter() {
           notifications.map((n) => {
             const meta = KIND_META[n.kind] ?? FALLBACK_META
             return (
-              <div
+              <button
                 key={n.id}
+                type="button"
                 onClick={() => handleItemClick(n)}
                 className={`qg-notice${n.isRead ? '' : ' qg-notice--unread'}`}
               >
                 <span className="qg-notice__icon" style={{ color: meta.color }}>
                   {meta.icon}
                 </span>
-                <div className="qg-notice__body">
-                  <Space size={6} align="center">
+                <span className="qg-notice__body">
+                  <span className="qg-notice__head">
                     {!n.isRead && <Badge status="processing" />}
                     <Text strong={!n.isRead}>{n.title}</Text>
-                  </Space>
-                  {n.description && <p className="qg-notice__description">{n.description}</p>}
-                  <p className="qg-notice__time">{formatRelativeTime(n.createdAt)}</p>
-                </div>
-              </div>
+                  </span>
+                  {n.description && <span className="qg-notice__description">{n.description}</span>}
+                  <span className="qg-notice__time">{formatRelativeTime(n.createdAt)}</span>
+                </span>
+              </button>
             )
           })
         )}

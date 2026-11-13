@@ -1,18 +1,30 @@
 /* 通知列表：行式布局，未读只靠一条左线与加粗标题区分，不用彩色底。 */
 .qg-notice {
   display: flex;
+  align-items: flex-start;
   gap: var(--space-3);
+  width: 100%;
   padding: var(--space-3) var(--space-4);
-  cursor: pointer;
-  background: transparent;
+  border: 0;
   border-bottom: 1px solid var(--rule);
   border-left: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   transition: background-color var(--dur-fast) var(--ease);
 }
 
 .qg-notice:hover,
 .qg-notice:focus-visible {
   background: var(--paper-sunken);
+}
+
+/* 抽屉边缘会裁掉外扩张焦点环，内缩 2px 让键盘焦点始终可见。 */
+.qg-notice:focus-visible {
+  outline-offset: -2px;
 }
 
 .qg-notice--unread {
@@ -26,8 +38,20 @@
 }
 
 .qg-notice__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
   flex: 1;
   min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.qg-notice__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  max-width: 100%;
 }
 
 .qg-notice__description {
