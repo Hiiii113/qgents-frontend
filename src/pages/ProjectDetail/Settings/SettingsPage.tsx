@@ -20,7 +20,14 @@ export function SettingsPage() {
   })
   if (project.isPending) return <Skeleton active />
   if (project.isError)
-    return <Alert type="error" showIcon message={formatApiError(project.error)} />
+    return (
+      <Alert
+        type="error"
+        showIcon
+        title={formatApiError(project.error)}
+        action={<Button onClick={() => void project.refetch()}>重试</Button>}
+      />
+    )
   return params.get('tab') === 'members' ? (
     <ProjectMembers key={project.data.id} />
   ) : (
@@ -64,7 +71,7 @@ function ProjectSettings({ project }: { project: Project }) {
   })
   return (
     <div className="settings-page">
-      {actionError && <Alert type="error" showIcon message={actionError} />}
+      {actionError && <Alert type="error" showIcon title={actionError} />}
       <section className="settings-section">
         <h2 className="settings-section__title">项目资料</h2>
         <hr className="qg-rule" />
@@ -113,9 +120,7 @@ function ProjectSettings({ project }: { project: Project }) {
       </section>
       {editable && (
         <section className="settings-section">
-          <h2 className="settings-section__title">
-            {project.status === 'ARCHIVED' ? '恢复项目' : '归档项目'}
-          </h2>
+          <h2 className="settings-section__title">项目状态</h2>
           <hr className="qg-rule" />
           <p className="settings-hint">
             {project.status === 'ARCHIVED'

@@ -24,12 +24,16 @@ it('shows owner, admin and member roles and lets the owner manage roles', async 
       client.setQueryData(['teams', 't1', 'invitations'], [])
     },
   )
+  expect(await screen.findByRole('tab', { name: '基本信息' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  expect(screen.queryByRole('button', { name: /GitHub/ })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '解散团队' })).toBeInTheDocument()
   fireEvent.click(screen.getByRole('tab', { name: '成员管理' }))
   expect(await screen.findByText('所有者')).toBeInTheDocument()
   expect(screen.getAllByText('管理员').length).toBeGreaterThan(0)
   expect(screen.getAllByText('成员').length).toBeGreaterThan(0)
-  expect(screen.queryByRole('button', { name: /GitHub/ })).not.toBeInTheDocument()
-  expect(screen.getByRole('button', { name: '解散团队' })).toBeInTheDocument()
   expect(screen.getByLabelText('调整 团队管理员 的团队角色')).toBeInTheDocument()
   expect(screen.getByLabelText('调整 团队伙伴 的团队角色')).toBeInTheDocument()
   expect(screen.getAllByRole('button', { name: '移除' })).toHaveLength(2)
@@ -86,6 +90,23 @@ it('does not expose team management actions to ordinary members', async () => {
   expect(screen.queryByRole('button', { name: '移除' })).not.toBeInTheDocument()
   expect(screen.queryByLabelText(/调整 .* 的团队角色/)).not.toBeInTheDocument()
 }, 60_000)
+
+it('falls back to basic info when the old teams tab link is opened', async () => {
+  renderWorkspace(
+    <TeamSettingsPage />,
+    '/app/teams/t1/settings?tab=teams',
+    '/app/teams/:teamId/settings',
+    (client) => {
+      client.setQueryData(['teams', 't1'], { id: 't1', name: '团队', role: 'TEAM_MEMBER' })
+      client.setQueryData(['teams', 't1', 'members'], [])
+    },
+  )
+  expect(await screen.findByRole('tab', { name: '基本信息' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  expect(screen.queryByRole('tab', { name: '所在团队' })).not.toBeInTheDocument()
+})
 
 it('opens member management directly from the invitation deep link', async () => {
   renderWorkspace(

@@ -1,13 +1,15 @@
 /**
- * 牌头带：深墨横贯，写着当前团队与项目。
- * 只做定位，不做切换 —— 切换团队在团队设置的「所在团队」页签里。
+ * 牌头带：深墨横贯，写清品牌 / 团队 / 当前项目。
+ * 项目在这里就地切换；团队与账号的动作都在头像菜单里。
  */
 .qg-banner {
   flex: 0 0 64px;
   height: 64px;
-  display: flex;
+  display: grid;
+  /* 账号区按内容定宽：团队名再长也只在自己那一格里截断 */
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-6);
+  gap: clamp(var(--space-4), 2.5vw, var(--space-8));
   padding: 0 clamp(var(--space-4), 2.5vw, var(--space-8));
   background: var(--band);
   color: var(--band-ink);
@@ -20,7 +22,10 @@
   font-size: var(--text-lead);
   font-weight: 600;
   letter-spacing: -0.01em;
-  flex-shrink: 0;
+}
+
+.qg-banner__brand:hover {
+  color: var(--band-ink-strong);
 }
 
 .qg-banner__where {
@@ -31,15 +36,15 @@
 }
 
 .qg-banner__team {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 240px;
+  overflow: hidden;
   padding: 2px 0;
   color: var(--band-ink);
   font-size: var(--text-ui);
   font-weight: 600;
   white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
 }
 
@@ -47,37 +52,73 @@
   color: var(--band-ink-strong);
 }
 
-.qg-banner__sep {
-  width: 1px;
-  height: 16px;
-  background: rgb(255 255 255 / 22%);
-  flex-shrink: 0;
-}
-
-.qg-banner__proj {
+/*
+ * antd 6 的 Select 没有 selector 层：根节点自己画底，值、输入框和箭头都在
+ * .ant-select-content / .ant-select-input / .ant-select-suffix 里。
+ */
+.qg-banner__project.ant-select {
+  flex: 0 0 auto;
+  width: clamp(140px, 22vw, 260px);
+  border-radius: var(--radius-m) !important;
+  background-color: color-mix(in srgb, var(--band-ink) 12%, transparent) !important;
+  color: var(--band-ink) !important;
   font-size: var(--text-ui);
-  /* 深底浅字：多给一点字距，小字号在暗底上不会糊在一起 */
-  letter-spacing: 0.01em;
-  color: var(--band-ink-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.qg-banner__proj b {
+.qg-banner__project.ant-select:not(.ant-select-disabled):hover {
+  background-color: color-mix(in srgb, var(--band-ink) 18%, transparent) !important;
+}
+
+/* 深底上用亮色键盘焦点环（盖掉 antd 的蓝环），鼠标点开只换底色 */
+.qg-banner .qg-banner__project:has(input:focus-visible) {
+  outline: 2px solid var(--band-ink-strong) !important;
+  outline-offset: 1px;
+}
+
+.qg-banner__project.ant-select-focused {
+  box-shadow: none !important;
+}
+
+.qg-banner .qg-banner__project .ant-select-placeholder,
+.qg-banner .qg-banner__project .ant-select-suffix {
+  color: var(--band-ink-muted);
+}
+
+.qg-banner .qg-banner__project .ant-select-input {
+  /* antd 搜索时把已选值置为 transparent，输入框必须显式给色才不会跟着隐形 */
   color: var(--band-ink);
-  font-weight: 500;
+  caret-color: var(--band-ink-strong);
+}
+
+.qg-banner__retry.ant-btn {
+  flex-shrink: 0;
+  color: var(--band-ink);
+}
+
+.qg-banner__retry.ant-btn:hover {
+  color: var(--band-ink-strong) !important;
+  background: rgb(255 255 255 / 10%) !important;
 }
 
 .qg-banner__account {
-  margin-left: auto;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-1);
 }
 
-/* 深底上的按钮与图标统一提到亮色，避免默认的墨色压不住 */
+.qg-banner__account .qg-banner__user-name {
+  max-width: 120px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 深底上的按钮与图标统一提到亮色，并保证 44px 命中区 */
 .qg-banner__account .ant-btn {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 var(--space-2);
   color: var(--band-ink-muted);
 }
 
@@ -92,22 +133,42 @@
   gap: var(--space-2);
 }
 
+.qg-banner__account .ant-btn:focus-visible {
+  outline: 2px solid var(--band-ink-strong);
+  outline-offset: -2px;
+}
+
 @media (max-width: 700px) {
   .qg-banner {
-    gap: var(--space-3);
+    gap: var(--space-2);
     padding: 0 var(--space-4);
   }
 
-  .qg-banner__proj {
-    display: none;
+  .qg-banner__where {
+    gap: var(--space-2);
   }
 
-  .qg-banner__account .ant-btn > .qg-banner__user-name {
-    display: none;
+  .qg-banner__brand {
+    font-size: var(--text-ui);
+  }
+
+  /* 窄屏先压团队名：项目选择必须留下可操作的宽度 */
+  .qg-banner__team {
+    max-width: 84px;
+  }
+
+  .qg-banner__project.ant-select {
+    flex: 1 1 120px;
+    width: auto;
+    min-width: 120px;
   }
 
   .qg-banner__account {
     gap: 0;
-    flex-shrink: 0;
+  }
+
+  /* 昵称必须在 700px 内隐藏：账号区回到 88，团队名才不被挤到只剩 25px */
+  .qg-banner__account .personal-menu__trigger .qg-banner__user-name {
+    display: none;
   }
 }

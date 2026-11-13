@@ -32,6 +32,7 @@ const MemoryPage = lazy(async () => ({
 const SettingsPage = lazy(async () => ({
   default: (await import('@/pages/ProjectDetail/Settings/SettingsPage')).SettingsPage,
 }))
+const ProductSettingsPage = lazy(() => import('@/pages/Settings/SettingsPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const ForbiddenPage = lazy(() => import('@/pages/ForbiddenPage'))
 
@@ -60,6 +61,7 @@ export function AppRouter() {
             <Route path={PATHS.WELCOME} element={<WelcomePage />} />
             <Route path={PATHS.APP} element={<MainLayout />}>
               <Route index element={<HomeRedirect />} />
+              <Route path="settings" element={<ProductSettingsPage />} />
               <Route path="teams/create" element={<CreateTeamPage />} />
               <Route path="teams/join" element={<JoinTeamPage />} />
               <Route element={<RequireTeam />}>

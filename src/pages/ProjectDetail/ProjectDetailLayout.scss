@@ -26,49 +26,6 @@
   border-bottom: 1px solid var(--rule);
 }
 
-.project-header__identity {
-  /* 桌面端项目名在牌头带上，这里不再重复；窄屏牌头带收起项目名才回落到这一行 */
-  display: none;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  max-width: 220px;
-  flex-shrink: 0;
-  color: var(--ink-900);
-}
-
-.project-header__identity:hover {
-  color: var(--accent-strong);
-}
-
-.project-header__identity .ant-avatar {
-  flex-shrink: 0;
-  border-radius: var(--radius-s);
-  background: var(--paper-sunken);
-  color: var(--ink-700);
-  font-size: var(--text-sm);
-}
-
-.project-header__name {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  line-height: 1.25;
-}
-
-.project-header__name strong {
-  overflow: hidden;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.project-header__name span {
-  color: var(--ink-500);
-  font-size: var(--text-xs);
-}
-
 .project-nav {
   display: flex;
   align-items: stretch;
@@ -360,10 +317,6 @@
 }
 
 @media (max-width: 1000px) {
-  .project-header__identity {
-    max-width: 160px;
-  }
-
   .project-nav {
     gap: var(--space-3);
   }
@@ -387,31 +340,59 @@
     padding: 0 var(--space-4);
   }
 
-  .project-header__identity {
-    display: flex;
-    max-width: none;
-  }
-
-  .project-header__name span {
-    display: none;
-  }
-
   .project-nav,
   .project-header__settings {
     display: none;
+  }
+
+  /* 窄屏只剩一个菜单按钮：放在左边当项目/群聊的抽屉入口 */
+  .project-header__actions {
+    margin-left: 0;
   }
 
   .project-header__menu {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    /* antd 的 icon-only 宽度会压过 width，min-width 才能保住 44px 命中区 */
     width: 44px;
+    min-width: 44px;
     height: 44px;
-    margin-right: calc(-1 * var(--space-2));
+    margin-left: calc(-1 * var(--space-2));
   }
 
   .project-groups {
     display: none;
+  }
+
+  /* 聊天页：外壳不再单独占一行，菜单按钮浮到聊天群标题行左侧 */
+  .project-workspace--chat {
+    position: relative;
+  }
+
+  .project-workspace--chat .project-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    height: 56px;
+    padding: 0 var(--space-4);
+    border: 0;
+    background: none;
+    pointer-events: none;
+  }
+
+  .project-workspace--chat .project-header__actions {
+    pointer-events: auto;
+  }
+
+  .project-workspace--chat .project-header__menu {
+    margin-left: 0;
+  }
+
+  /* 群标题行给 44px 触发按钮和间隔留位，标题不压在按钮下 */
+  .project-workspace--chat .chat-panel__header-inner {
+    padding-left: calc(44px + var(--space-2));
   }
 }
 

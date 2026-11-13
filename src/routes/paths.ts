@@ -3,6 +3,7 @@ export const PATHS = {
   FORGOT_PASSWORD: '/forgot-password',
   WELCOME: '/welcome',
   APP: '/app',
+  SETTINGS: '/app/settings',
   CREATE_TEAM: '/app/teams/create',
   JOIN_TEAM: '/app/teams/join',
   teamDetail: (teamId: string) => `/app/teams/${encodeURIComponent(teamId)}`,

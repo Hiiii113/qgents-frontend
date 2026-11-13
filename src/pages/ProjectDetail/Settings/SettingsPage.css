@@ -69,28 +69,54 @@
   gap: var(--space-3);
 }
 
-/* 表格单元格里的两行信息：主值 14/600，次值 13/--ink-500。 */
+/* 表格单元格里的两行信息：主值 14/600，次值 12/--ink-500。 */
 .settings-member-cell {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  min-width: 0;
 }
 
 .settings-member-cell__name {
-  font-size: var(--text-base);
+  font-size: var(--text-ui);
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
-.settings-member-cell__email,
-.settings-member-cell__hint {
+.settings-member-cell__email {
   font-size: var(--text-xs);
   color: var(--ink-500);
+  overflow-wrap: anywhere;
+}
+
+/* 成员表：表头 13、单元格 14；角色列纯文本与操作列按钮同为控件高 36。 */
+.settings-page .ant-table-thead > tr > th {
+  font-size: var(--text-sm);
+}
+
+.settings-page .ant-table-tbody > tr > td {
+  font-size: var(--text-ui);
+}
+
+.settings-member-cell__role {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  color: var(--ink-900);
 }
 
 .settings-row-actions {
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  min-height: 36px;
+}
+
+/* 团队所有者行没有可用操作，用同样高度的文字占位，保持行高稳定。 */
+.settings-row-actions__placeholder {
+  font-size: var(--text-ui);
+  line-height: 36px;
+  color: var(--ink-400);
 }
 
 /* Agent 列表：行高 56，行间 1px 线，hover 只变底色。 */
@@ -134,6 +160,7 @@
 .settings-agent-list__name {
   font-size: var(--text-base);
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .settings-agent-list__description {

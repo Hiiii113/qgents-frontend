@@ -130,3 +130,44 @@
   border-radius: 0;
   color: var(--danger);
 }
+
+/* 团队：搜索式选择器，当前团队在选项里带标记 */
+.personal-menu__teams {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6) var(--space-2);
+}
+
+.personal-menu__label {
+  color: var(--ink-500);
+  font-size: var(--text-xs);
+}
+
+.personal-menu__team-select {
+  width: 100%;
+}
+
+.personal-menu__team-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.personal-menu__team-option em {
+  flex-shrink: 0;
+  padding: 0 var(--space-2);
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-style: normal;
+}
+
+/* 牌头带里的头像按钮：44px 命中区，昵称不挤其他控件 */
+.personal-menu__trigger.ant-btn {
+  height: 44px;
+  padding-inline: var(--space-2);
+  color: var(--band-ink);
+}

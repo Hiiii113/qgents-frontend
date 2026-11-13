@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
+import { useLocation } from 'react-router-dom'
 import { authApi } from '@/api/auth'
+import { useAppUiStore } from '@/store/appUiStore'
 import { renderWorkspace } from '@/test/renderWorkspace'
 import { PersonalCenter } from './PersonalCenter'
 
@@ -10,14 +12,37 @@ const { updateUser, logout, user } = vi.hoisted(() => ({
   user: { id: 'u1', displayName: '小林', email: 'lin@example.test' },
 }))
 vi.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user, updateUser, logout }) }))
+
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
   updateUser.mockReset()
+  useAppUiStore.getState().clearContext()
 })
 
-function openMenu() {
-  const view = renderWorkspace(<PersonalCenter />, '/app', '/app', () => {})
+const teams = [
+  { id: 't1', name: '云端研发' },
+  { id: 't2', name: '遥岑科技' },
+]
+
+function Address() {
+  const location = useLocation()
+  return <output>{location.pathname + location.search}</output>
+}
+
+function openMenu(path = '/app/settings', seed?: Parameters<typeof renderWorkspace>[3]) {
+  const view = renderWorkspace(
+    <>
+      <PersonalCenter />
+      <Address />
+    </>,
+    path,
+    '/app/*',
+    (client) => {
+      client.setQueryData(['teams', 'mine'], teams)
+      if (seed) seed(client)
+    },
+  )
   fireEvent.click(screen.getByRole('button', { name: '打开个人中心' }))
   return view
 }
@@ -30,13 +55,76 @@ it('opens a profile popover with inline avatar and nickname controls', async () 
   expect(document.querySelector('.ant-drawer')).toBeNull()
 })
 
-it('keeps team switching and team management out of the personal menu', async () => {
+it('offers team switching, creating and joining, settings and logout', async () => {
+  useAppUiStore.getState().setCurrentTeam('t1')
+  openMenu()
+  const menu = await screen.findByRole('region', { name: '个人中心' })
+  expect(screen.getByRole('combobox', { name: '团队' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /创建团队/ })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /加入团队/ })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /设置/ })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /退出登录/ })).toBeInTheDocument()
+  expect(menu).toHaveTextContent('云端研发')
+})
+
+it('switches team only after the server confirms, then enters that team', async () => {
+  useAppUiStore.getState().setCurrentTeam('t1')
+  const selectTeam = vi.spyOn(authApi, 'selectTeam').mockResolvedValue(undefined)
+  const { client } = openMenu('/app/settings', (seedClient) =>
+    seedClient.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目一' }),
+  )
+  await screen.findByRole('region', { name: '个人中心' })
+
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: '团队' }))
+  fireEvent.click(await screen.findByTitle('遥岑科技'))
+
+  await waitFor(() => expect(screen.getByText('/app/teams/t2')).toBeInTheDocument())
+  expect(selectTeam).toHaveBeenCalledWith('t2')
+  expect(useAppUiStore.getState().currentTeamId).toBe('t2')
+  // 切团队不动项目缓存：回到原团队时不用重新加载
+  expect(client.getQueryData(['projects', 'p1'])).toBeDefined()
+})
+
+it('keeps the current team and page when switching fails', async () => {
+  useAppUiStore.getState().setCurrentTeam('t1')
+  vi.spyOn(authApi, 'selectTeam').mockRejectedValue(new Error('网络异常'))
+  const { client } = openMenu('/app/settings', (seedClient) =>
+    seedClient.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目一' }),
+  )
+  await screen.findByRole('region', { name: '个人中心' })
+
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: '团队' }))
+  fireEvent.click(await screen.findByTitle('遥岑科技'))
+
+  expect(await screen.findByText('网络异常')).toBeInTheDocument()
+  expect(useAppUiStore.getState().currentTeamId).toBe('t1')
+  expect(screen.getByText('/app/settings')).toBeInTheDocument()
+  expect(client.getQueryData(['projects', 'p1'])).toBeDefined()
+})
+
+it('carries the current project back with it when opening settings', async () => {
+  openMenu('/app/projects/p1/chat?groupId=g2')
+  await screen.findByRole('region', { name: '个人中心' })
+
+  fireEvent.click(screen.getByRole('button', { name: /设置/ }))
+
+  const address = screen.getByText(/^\/app\/settings/).textContent ?? ''
+  const query = new URLSearchParams(address.slice(address.indexOf('?')))
+  expect(query.get('returnTo')).toBe('/app/projects/p1/chat?groupId=g2')
+})
+
+it('marks the current team and searches the team list', async () => {
+  useAppUiStore.getState().setCurrentTeam('t1')
   openMenu()
   await screen.findByRole('region', { name: '个人中心' })
-  for (const name of [/切换团队/, /团队设置/, /创建团队/, /加入团队/]) {
-    expect(screen.queryByRole('button', { name })).not.toBeInTheDocument()
-  }
-  expect(screen.getByRole('button', { name: /退出登录/ })).toBeInTheDocument()
+
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: '团队' }))
+  // 当前团队在选项里带“当前”，不用展开也能从选中值看出来
+  expect(await screen.findByText('当前')).toBeInTheDocument()
+  expect(screen.getAllByText('云端研发')).toHaveLength(2)
+  fireEvent.change(screen.getByRole('combobox', { name: '团队' }), { target: { value: '遥岑' } })
+  await waitFor(() => expect(screen.getAllByText('云端研发')).toHaveLength(1))
+  expect(screen.getByTitle('遥岑科技')).toBeInTheDocument()
 })
 
 it('saves the nickname and uses the server profile response', async () => {
@@ -63,4 +151,21 @@ it('leaves the previous avatar intact if upload credentials fail', async () => {
   })
   expect(await screen.findByText('上传失败')).toBeInTheDocument()
   expect(updateUser).not.toHaveBeenCalled()
+})
+
+it('switches team from the keyboard', async () => {
+  useAppUiStore.getState().setCurrentTeam('t1')
+  vi.spyOn(authApi, 'selectTeam').mockResolvedValue(undefined)
+  openMenu()
+  await screen.findByRole('region', { name: '个人中心' })
+
+  const select = screen.getByRole('combobox', { name: '团队' })
+  fireEvent.mouseDown(select)
+  fireEvent.change(select, { target: { value: '遥岑' } })
+  await waitFor(() => expect(screen.getByTitle('遥岑科技')).toBeInTheDocument())
+  fireEvent.keyDown(select, { key: 'ArrowDown', keyCode: 40, which: 40 })
+  fireEvent.keyDown(select, { key: 'Enter', keyCode: 13, which: 13 })
+
+  await waitFor(() => expect(screen.getByText('/app/teams/t2')).toBeInTheDocument())
+  expect(useAppUiStore.getState().currentTeamId).toBe('t2')
 })

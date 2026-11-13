@@ -1,17 +1,30 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
-import { App, Avatar, Button, Input, Popover, Spin, Upload } from 'antd'
-import { CameraOutlined, CheckOutlined, EditOutlined, LogoutOutlined } from '@ant-design/icons'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { App, Avatar, Button, Input, Popover, Select, Spin, Upload } from 'antd'
+import {
+  CameraOutlined,
+  CheckOutlined,
+  EditOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+  SettingOutlined,
+  UsergroupAddOutlined,
+} from '@ant-design/icons'
 import { useAuth } from '@/context/AuthContext'
-import { authApi, uploadAvatar } from '@/api'
+import { authApi, teamApi, uploadAvatar } from '@/api'
+import { useAppUiStore, useCurrentTeamId } from '@/store/appUiStore'
 import { formatApiError } from '@/utils/formatApiError'
 import { PATHS } from '@/routes/paths'
 import './PersonalCenter.css'
 
-/** 头像菜单只负责个人资料和账号操作；团队切换与团队管理在顶栏团队选择器。 */
+/**
+ * 头像菜单：改昵称与头像、切换/创建/加入团队、进入设置、退出登录。
+ * 团队切换只有服务端保存成功才改当前团队并进入该团队；失败停在原团队，不丢当前项目上下文。
+ */
 export function PersonalCenter() {
   const navigate = useNavigate()
+  const { pathname, search } = useLocation()
   const { message } = App.useApp()
   const { user, logout, updateUser } = useAuth()
   const [open, setOpen] = useState(false)
@@ -19,6 +32,23 @@ export function PersonalCenter() {
   const [nickname, setNickname] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const name = user?.displayName || '用户'
+  const currentTeamId = useCurrentTeamId()
+  const teams = useQuery({ queryKey: ['teams', 'mine'], queryFn: teamApi.listMine })
+  // 从项目里进设置时带上回程地址（含群定位），设置页据此提供「返回项目」。
+  const returnTo = pathname.startsWith('/app/projects/') ? pathname + search : null
+  const settingsHref = returnTo
+    ? `${PATHS.SETTINGS}?returnTo=${encodeURIComponent(returnTo)}`
+    : PATHS.SETTINGS
+
+  const selectTeam = useMutation({
+    mutationFn: (teamId: string) => authApi.selectTeam(teamId),
+    onSuccess: (_data, teamId) => {
+      useAppUiStore.getState().setCurrentTeam(teamId)
+      setOpen(false)
+      navigate(PATHS.teamDetail(teamId))
+    },
+    onError: (error) => message.error(formatApiError(error)),
+  })
 
   const updateProfile = useMutation({
     mutationFn: (displayName: string) => authApi.updateMe({ displayName }),
@@ -126,7 +156,72 @@ export function PersonalCenter() {
           <span className="personal-menu__email">{user?.email}</span>
         </div>
       </div>
+      <div className="personal-menu__teams">
+        <label className="personal-menu__label" htmlFor="personal-team-select">
+          团队
+        </label>
+        <Select
+          id="personal-team-select"
+          className="personal-menu__team-select"
+          showSearch
+          optionFilterProp="label"
+          value={currentTeamId ?? undefined}
+          placeholder={teams.isPending ? '正在加载团队…' : '选择团队'}
+          options={(teams.data ?? []).map((item) => ({ value: item.id, label: item.name }))}
+          loading={teams.isPending}
+          disabled={teams.isPending || selectTeam.isPending || teams.data?.length === 0}
+          notFoundContent={teams.isPending ? '正在加载…' : '没有匹配的团队'}
+          popupMatchSelectWidth={280}
+          onChange={(teamId) => {
+            if (teamId !== currentTeamId) selectTeam.mutate(teamId)
+          }}
+          optionRender={(option) => (
+            <span className="personal-menu__team-option">
+              <span>{option.label}</span>
+              {option.value === currentTeamId && <em>当前</em>}
+            </span>
+          )}
+        />
+        {teams.isError && (
+          <Button size="small" onClick={() => void teams.refetch()}>
+            重新加载团队
+          </Button>
+        )}
+      </div>
       <div className="personal-menu__actions">
+        <button
+          type="button"
+          className="personal-menu__item"
+          onClick={() => {
+            setOpen(false)
+            navigate(PATHS.CREATE_TEAM)
+          }}
+        >
+          <PlusOutlined />
+          <span>创建团队</span>
+        </button>
+        <button
+          type="button"
+          className="personal-menu__item"
+          onClick={() => {
+            setOpen(false)
+            navigate(PATHS.JOIN_TEAM)
+          }}
+        >
+          <UsergroupAddOutlined />
+          <span>加入团队</span>
+        </button>
+        <button
+          type="button"
+          className="personal-menu__item"
+          onClick={() => {
+            setOpen(false)
+            navigate(settingsHref)
+          }}
+        >
+          <SettingOutlined />
+          <span>设置</span>
+        </button>
         <button
           type="button"
           className="personal-menu__item personal-menu__item--logout"

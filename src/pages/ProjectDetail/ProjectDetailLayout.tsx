@@ -8,7 +8,7 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom'
-import { Alert, Avatar, Button, Drawer, Input } from 'antd'
+import { Alert, Button, Drawer, Input } from 'antd'
 import { MenuOutlined, PlusOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
@@ -24,7 +24,8 @@ import { PageLoader } from '@/components/PageLoader'
 import './ProjectDetailLayout.scss'
 
 /**
- * 项目外壳：项目顶栏承载一级导航，聊天页左侧承载群聊二级列表。
+ * 项目外壳：项目顶栏只承载一级导航，聊天页左侧承载群聊二级列表。
+ * 项目名与切换都在牌头带的选择器里，这里不再重复一遍身份。
  * 设置、Agent、Skill、共享知识、仓库共用同一组直达路由，URL 不被导航改写。
  */
 export default function ProjectDetailLayout() {
@@ -154,21 +155,8 @@ export default function ProjectDetailLayout() {
     ))
 
   return (
-    <div className="project-workspace">
+    <div className={`project-workspace${inChat ? ' project-workspace--chat' : ''}`}>
       <header className="project-header">
-        <Link
-          className="project-header__identity"
-          to={PATHS.teamDetail(project.data.teamId)}
-          aria-label="返回团队项目"
-        >
-          <Avatar size={28} shape="square" src={project.data.avatarUrl}>
-            {project.data.name.slice(0, 1)}
-          </Avatar>
-          <span className="project-header__name">
-            <strong>{project.data.name}</strong>
-            <span>{project.data.status === 'ARCHIVED' ? '已归档' : '项目'}</span>
-          </span>
-        </Link>
         <nav className="project-nav" aria-label="项目导航">
           {links.map((link) => (
             <NavLink key={link.label} className="project-nav__link" to={link.to}>

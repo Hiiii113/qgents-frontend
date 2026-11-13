@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import {
   ArrowLeftOutlined,
-  ArrowRightOutlined,
   GithubOutlined,
-  MessageOutlined,
   PlusOutlined,
   SearchOutlined,
   SettingOutlined,
@@ -48,7 +46,7 @@ export default function TeamDetailPage() {
     return (
       <Alert
         type="error"
-        message="团队加载失败或暂无访问权限"
+        title="团队加载失败或暂无访问权限"
         action={<Button onClick={() => void team.refetch()}>重试</Button>}
       />
     )
@@ -78,7 +76,7 @@ export default function TeamDetailPage() {
         <header className="team-hero">
           <div className="team-hero__head">
             <h1>{team.data.name}</h1>
-            <p>{team.data.description || '选择项目继续协作，或创建一个新项目。'}</p>
+            {team.data.description && <p>{team.data.description}</p>}
           </div>
           <div className="team-hero__actions">
             {owner && (
@@ -138,13 +136,11 @@ export default function TeamDetailPage() {
           ) : projects.isError ? (
             <Alert
               type="error"
-              message="项目加载失败"
+              title="项目加载失败"
               action={<Button onClick={() => void projects.refetch()}>重试</Button>}
             />
           ) : visible.length === 0 ? (
-            <p className="workspace-page__note">
-              {search ? '没有匹配的项目。' : '还没有项目，创建第一个项目开始聊天。'}
-            </p>
+            <p className="workspace-page__note">{search ? '没有匹配的项目。' : '还没有项目。'}</p>
           ) : (
             <div className="team-grid">
               {visible.map((project) => (
@@ -153,18 +149,10 @@ export default function TeamDetailPage() {
                     <Avatar size={48} shape="square" src={project.avatarUrl}>
                       {project.name.slice(0, 1)}
                     </Avatar>
-                    <span className="team-pill">
-                      {project.status === 'ARCHIVED' ? '已归档' : '项目空间'}
-                    </span>
+                    {project.status === 'ARCHIVED' && <span className="team-pill">已归档</span>}
                   </div>
                   <h3>{project.name}</h3>
-                  <p>{project.description || '在这里讨论想法，记录每一次进展。'}</p>
-                  <div className="team-card__foot">
-                    <span>
-                      <MessageOutlined aria-hidden /> 进入聊天
-                    </span>
-                    <ArrowRightOutlined aria-hidden />
-                  </div>
+                  {project.description && <p>{project.description}</p>}
                 </Link>
               ))}
             </div>

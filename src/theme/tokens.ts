@@ -94,7 +94,7 @@ export const cssVars: Record<string, string> = {
   '--text-h3': '20px',
   '--text-h2': '26px',
   '--text-h1': '32px',
-  '--text-display': 'clamp(30px, 3.2vw, 42px)',
+  '--text-display': '32px',
 
   '--qg-font': FONT_SANS,
 

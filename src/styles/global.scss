@@ -153,13 +153,17 @@ input[type='password']::-moz-reveal {
   margin: 0;
 }
 
-/* antd 弹层默认带投影；这套设计只用 1px 发丝线，所以统一压平。 */
+/* 弹层用行界分层；Ant Design 6 的 Popover 阴影由根节点 filter 绘制。 */
+.ant-popover {
+  filter: none !important;
+}
+
 .ant-dropdown .ant-dropdown-menu,
 .ant-select-dropdown,
-.ant-popover .ant-popover-inner,
-.ant-modal .ant-modal-content,
-.ant-drawer .ant-drawer-content,
-.ant-tooltip .ant-tooltip-inner {
+.ant-popover .ant-popover-container,
+.ant-modal .ant-modal-container,
+.ant-drawer .ant-drawer-section,
+.ant-tooltip .ant-tooltip-container {
   box-shadow: none;
   border: 1px solid var(--rule);
 }
@@ -169,7 +173,7 @@ input[type='password']::-moz-reveal {
   box-shadow: none !important;
 }
 
-.ant-tooltip .ant-tooltip-inner {
+.ant-tooltip .ant-tooltip-container {
   border-color: transparent;
 }
 

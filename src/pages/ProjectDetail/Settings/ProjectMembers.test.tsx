@@ -1,4 +1,4 @@
-import { cleanup, screen } from '@testing-library/react'
+import { cleanup, screen, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { renderWorkspace } from '@/test/renderWorkspace'
 import { ProjectMembers } from './ProjectMembers'
@@ -40,9 +40,10 @@ it('lets project admins promote, demote and remove members while protecting the 
   )
 
   expect(await screen.findByText('当前管理员')).toBeInTheDocument()
-  expect(screen.getByText('继承管理员')).toBeInTheDocument()
   expect(screen.getByText('团队所有者')).toBeInTheDocument()
-  expect(screen.getByText(/团队所有者始终拥有本项目管理员权限/)).toBeInTheDocument()
+  // 团队所有者继承管理员：角色列显示管理员，不是普通成员。
+  const ownerRow = screen.getByText('所有者本人').closest('tr') as HTMLElement
+  expect(within(ownerRow).getByText('管理员')).toBeInTheDocument()
   // 自己和其他管理员都可降级；自己不可移除，其他管理员可移除。
   expect(screen.getAllByRole('button', { name: '降为成员' })).toHaveLength(2)
   expect(screen.getAllByRole('button', { name: '设为管理员' })).toHaveLength(1)

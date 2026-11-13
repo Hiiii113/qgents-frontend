@@ -8,27 +8,6 @@
   gap: var(--space-6);
 }
 
-.team-settings__header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.team-settings__title {
-  font-size: var(--text-h3);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.team-settings__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
 .team-settings__loading {
   display: grid;
   place-items: center;
@@ -88,14 +67,47 @@
   color: var(--ink-300);
 }
 
+/* 成员表：表头 13、单元格 14，与角色列、操作列控件同字号，行高才对得齐。 */
+.team-settings__page .ant-table-thead > tr > th {
+  font-size: var(--text-sm);
+}
+
+.team-settings__page .ant-table-tbody > tr > td {
+  font-size: var(--text-ui);
+}
+
+/* 角色列同一列只放一种形态：可编辑是下拉，不可编辑是与控件同高（36）的文本。 */
+.team-settings__role-text {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  font-size: var(--text-ui);
+  color: var(--ink-900);
+}
+
+/* 无可移除的成员时占住同一高度，行高不被拉低。 */
+.team-settings__action-placeholder {
+  display: inline-block;
+  font-size: var(--text-ui);
+  line-height: 36px;
+  color: var(--ink-400);
+}
+
 .team-settings__invite {
   width: 100%;
   max-width: 62ch;
 }
 
-.team-settings__invite .ant-select {
-  flex: 0 0 auto;
-  width: 120px;
+/* 解散团队：放在基本信息末尾，用一条行界与上方资料隔开。 */
+.team-settings__danger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  max-width: 62ch;
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--rule);
 }
 
 .team-settings__invitations {
@@ -105,32 +117,7 @@
 }
 
 @media (max-width: 700px) {
-  .team-settings__header {
-    align-items: flex-start;
-    flex-direction: column;
+  .team-settings__danger {
+    max-width: none;
   }
-}
-
-/* 所在团队：一行一个团队，当前团队用标签而非高亮色块 */
-.team-settings__teams {
-  display: flex;
-  flex-direction: column;
-}
-
-.team-settings__team {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 56px;
-  border-bottom: 1px solid var(--rule);
-}
-
-.team-settings__team-name {
-  font-size: var(--text-base);
-  font-weight: 600;
-}
-
-.team-settings__team .ant-btn,
-.team-settings__team .ant-tag {
-  margin-left: auto;
 }

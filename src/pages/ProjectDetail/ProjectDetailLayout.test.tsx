@@ -22,7 +22,7 @@ function seed(client: Parameters<Parameters<typeof renderWorkspace>[3]>[0]) {
   client.setQueryData(['projects', 'p1'], {
     id: 'p1',
     teamId: 't1',
-    name: '项目',
+    name: '项目甲',
     role: 'PROJECT_ADMIN',
   })
   client.setQueryData(chatKeys.groups('p1'), groups)
@@ -66,10 +66,10 @@ describe('project navigation', () => {
       'href',
       '/app/projects/p1/settings?groupId=g2&messageId=m9',
     )
-    expect(screen.getByRole('link', { name: '返回团队项目' })).toHaveAttribute(
-      'href',
-      '/app/teams/t1',
-    )
+    // 项目身份只在牌头带的选择器里，第二行只有功能导航
+    const header = document.querySelector('.project-header') as HTMLElement
+    expect(header).not.toHaveTextContent('项目甲')
+    expect(screen.queryByRole('link', { name: '返回团队项目' })).not.toBeInTheDocument()
 
     expect(screen.getByRole('link', { name: '产品讨论' })).toHaveClass('is-active')
     expect(screen.getByRole('link', { name: '产品讨论' })).toHaveAttribute('aria-current', 'page')
@@ -101,11 +101,14 @@ describe('project navigation', () => {
           name: '项目',
           role: 'PROJECT_ADMIN',
         })
+        client.setQueryData(chatKeys.groups('p1'), groups)
       },
     )
     expect(screen.getByRole('navigation', { name: '项目导航' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: '群聊列表' })).not.toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: '搜索群聊' })).not.toBeInTheDocument()
+    // 非聊天页不显示群名，即使 URL 还带着 groupId
+    expect(screen.queryByText(/默认聊天|产品讨论/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '聊天' })).toHaveAttribute(
       'href',
       '/app/projects/p1/chat?groupId=g2',
@@ -157,8 +160,18 @@ describe('group board', () => {
       (client) => {
         client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目' })
         client.setQueryData(chatKeys.groups('p1'), [
-          { id: 'g1', projectId: 'p1', title: '瓦房', lastMessageAt: new Date(now - 6e5).toISOString() },
-          { id: 'g2', projectId: 'p1', title: '安卓', lastMessageAt: new Date(now - 6e6).toISOString() },
+          {
+            id: 'g1',
+            projectId: 'p1',
+            title: '瓦房',
+            lastMessageAt: new Date(now - 6e5).toISOString(),
+          },
+          {
+            id: 'g2',
+            projectId: 'p1',
+            title: '安卓',
+            lastMessageAt: new Date(now - 6e6).toISOString(),
+          },
         ])
       },
     )
@@ -175,8 +188,18 @@ describe('group board', () => {
       (seedClient) => {
         seedClient.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目' })
         seedClient.setQueryData(chatKeys.groups('p1'), [
-          { id: 'g1', projectId: 'p1', title: '瓦房', lastMessageAt: new Date(now - 6e6).toISOString() },
-          { id: 'g2', projectId: 'p1', title: '安卓', lastMessageAt: new Date(now - 9e6).toISOString() },
+          {
+            id: 'g1',
+            projectId: 'p1',
+            title: '瓦房',
+            lastMessageAt: new Date(now - 6e6).toISOString(),
+          },
+          {
+            id: 'g2',
+            projectId: 'p1',
+            title: '安卓',
+            lastMessageAt: new Date(now - 9e6).toISOString(),
+          },
         ])
       },
     )
@@ -185,8 +208,18 @@ describe('group board', () => {
 
     // g2 有新动静：它自己升到上面并亮起来
     client.setQueryData(chatKeys.groups('p1'), [
-      { id: 'g1', projectId: 'p1', title: '瓦房', lastMessageAt: new Date(now - 6e6).toISOString() },
-      { id: 'g2', projectId: 'p1', title: '安卓', lastMessageAt: new Date(now - 3e4).toISOString() },
+      {
+        id: 'g1',
+        projectId: 'p1',
+        title: '瓦房',
+        lastMessageAt: new Date(now - 6e6).toISOString(),
+      },
+      {
+        id: 'g2',
+        projectId: 'p1',
+        title: '安卓',
+        lastMessageAt: new Date(now - 3e4).toISOString(),
+      },
     ])
 
     const flag = await screen.findByText('更新')

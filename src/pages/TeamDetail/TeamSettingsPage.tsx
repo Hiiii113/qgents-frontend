@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
+  Alert,
   Avatar,
   Button,
   Form,
@@ -15,9 +16,9 @@ import {
   Upload,
   message,
 } from 'antd'
-import { CameraOutlined, CheckOutlined, PlusOutlined, TeamOutlined, UploadOutlined } from '@ant-design/icons'
+import { CameraOutlined, UploadOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { authApi, teamApi } from '@/api'
+import { teamApi } from '@/api'
 import { useAuth } from '@/context/AuthContext'
 import { useAppUiStore } from '@/store/appUiStore'
 import { PATHS } from '@/routes/paths'
@@ -26,10 +27,8 @@ import type { CreateTeamPayload, Team, TeamMember, TeamInvitation, TeamRole } fr
 import type { TableProps } from 'antd'
 import './TeamSettingsPage.css'
 
-const INVITE_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
-  // 邀请接口目前仅创建普通成员；管理员由团队所有者后续任命。
-  { value: 'TEAM_MEMBER', label: '成员' },
-]
+// 邀请接口只创建普通成员；管理员由团队所有者后续任命。
+const INVITE_ROLE: TeamRole = 'TEAM_MEMBER'
 
 const MEMBER_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
   { value: 'TEAM_ADMIN', label: '管理员' },
@@ -57,62 +56,29 @@ function formatCreatedAt(iso?: string): string {
 
 /**
  * 团队设置沿用团队详情的纸张底色。
- * 顶部只保留解散团队；GitHub 授权与邀请入口在团队页头。
- * 下方 Tab：基本信息 / 成员管理 / 所在团队，?tab=members 可直接打开邀请。
- * 切换团队放在这一层：一级界面只呈现当前上下文，换上下文要进到这里。
+ * 顶部只有 Tab：基本信息 / 成员管理，?tab=members 可直接打开成员管理。
+ * GitHub 授权与邀请入口在团队页头；解散团队放在基本信息末尾。
  * 路由：/app/teams/:teamId/settings
  */
 export default function TeamSettingsPage() {
   const { teamId = '' } = useParams<{ teamId: string }>()
-  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
-  const queryClient = useQueryClient()
-  const tabParam = params.get('tab')
-  const activeTab = tabParam === 'members' || tabParam === 'teams' ? tabParam : 'basic'
+  // 旧链接里的 ?tab=teams 已迁到 /app/settings，这里回落到基本信息。
+  const activeTab = params.get('tab') === 'members' ? 'members' : 'basic'
 
   const {
     data: team,
     isLoading,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ['teams', teamId],
     queryFn: () => teamApi.getById(teamId),
     enabled: !!teamId,
   })
 
-  const { data: members = [] } = useQuery({
-    queryKey: ['teams', teamId, 'members'],
-    queryFn: () => teamApi.listMembers(teamId),
-    enabled: !!teamId,
-  })
-
   const isOwner = team?.role === 'TEAM_OWNER'
   const canManage = isOwner || team?.role === 'TEAM_ADMIN'
-
-  const disbandTeam = useMutation({
-    mutationFn: () => teamApi.disband(teamId),
-    onSuccess: () => {
-      message.success('团队已解散')
-      queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
-      queryClient.removeQueries({ queryKey: ['me'] })
-      useAppUiStore.getState().clearContext()
-      navigate(PATHS.APP, { replace: true })
-    },
-    onError: (err) => {
-      message.error(err instanceof Error ? err.message : '解散失败')
-    },
-  })
-
-  function handleDisband() {
-    Modal.confirm({
-      title: '解散团队',
-      content: `确定要解散「${team?.name}」吗？解散后团队下的所有项目、群聊和成员将不可恢复。`,
-      okText: '解散',
-      okType: 'danger',
-      cancelText: '取消',
-      onOk: () => disbandTeam.mutate(),
-    })
-  }
 
   if (isLoading) {
     return (
@@ -125,24 +91,18 @@ export default function TeamSettingsPage() {
   if (isError || !team) {
     return (
       <div className="team-settings__page">
-        <p className="workspace-page__note">团队未找到：该团队不存在，或你暂无访问权限。</p>
+        <Alert
+          type="error"
+          showIcon
+          title="团队未找到：该团队不存在，或你暂无访问权限。"
+          action={<Button onClick={() => void refetch()}>重试</Button>}
+        />
       </div>
     )
   }
 
   return (
     <div className="team-settings__page">
-      {/* 页头由团队详情提供；这里是分区操作，与标签同一行。 */}
-      {isOwner && (
-        <div className="team-settings__header">
-          <div className="team-settings__actions">
-            <Button type="text" danger loading={disbandTeam.isPending} onClick={handleDisband}>
-              解散团队
-            </Button>
-          </div>
-        </div>
-      )}
-
       <Tabs
         className="team-settings__tabs"
         activeKey={activeTab}
@@ -156,24 +116,14 @@ export default function TeamSettingsPage() {
           {
             key: 'basic',
             label: '基本信息',
-            children: <BasicInfoTab team={team} teamId={teamId} canManage={canManage} />,
+            children: (
+              <BasicInfoTab team={team} teamId={teamId} canManage={canManage} isOwner={isOwner} />
+            ),
           },
           {
             key: 'members',
             label: '成员管理',
-            children: (
-              <MembersTab
-                teamId={teamId}
-                members={members}
-                canManage={canManage}
-                isOwner={isOwner}
-              />
-            ),
-          },
-          {
-            key: 'teams',
-            label: '所在团队',
-            children: <TeamsTab currentTeamId={teamId} />,
+            children: <MembersTab teamId={teamId} canManage={canManage} isOwner={isOwner} />,
           },
         ]}
       />
@@ -186,14 +136,40 @@ function BasicInfoTab({
   team,
   teamId,
   canManage,
+  isOwner,
 }: {
   team: Team
   teamId: string
   canManage: boolean
+  isOwner: boolean
 }) {
+  const navigate = useNavigate()
   const [form] = Form.useForm<CreateTeamPayload>()
   const queryClient = useQueryClient()
   const [avatarUploading, setAvatarUploading] = useState(false)
+
+  const disbandTeam = useMutation({
+    mutationFn: () => teamApi.disband(teamId),
+    onSuccess: () => {
+      message.success('团队已解散')
+      queryClient.invalidateQueries({ queryKey: ['teams', 'mine'] })
+      queryClient.removeQueries({ queryKey: ['me'] })
+      useAppUiStore.getState().clearContext()
+      navigate(PATHS.APP, { replace: true })
+    },
+    onError: (err) => message.error(formatApiError(err)),
+  })
+
+  function handleDisband() {
+    Modal.confirm({
+      title: '解散团队',
+      content: `确定要解散「${team.name}」吗？解散后团队下的所有项目、群聊和成员将不可恢复。`,
+      okText: '解散',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: () => disbandTeam.mutate(),
+    })
+  }
 
   const updateTeam = useMutation({
     mutationFn: (payload: CreateTeamPayload) => teamApi.update(teamId, payload),
@@ -234,64 +210,88 @@ function BasicInfoTab({
   }
 
   return (
-    <Form
-      className="team-settings__form"
-      form={form}
-      layout="vertical"
-      disabled={!canManage}
-      onFinish={handleFinish}
-    >
-      <Form.Item label="团队头像">
-        <div className="team-settings__avatar">
-          <Avatar size={56} src={team.avatarUrl} icon={<CameraOutlined />} />
-          <Upload accept="image/*" showUploadList={false} beforeUpload={handleAvatarUpload}>
-            <Button icon={<UploadOutlined />} loading={avatarUploading}>
-              上传图片
-            </Button>
-          </Upload>
-        </div>
-        <p className="team-settings__hint">支持 JPG / PNG，建议 200×200 方形图片；上传后自动保存</p>
-      </Form.Item>
-      <Form.Item
-        name="name"
-        label="团队名称"
-        rules={[{ required: true, whitespace: true, message: '请输入团队名称' }]}
+    <>
+      <Form
+        className="team-settings__form"
+        form={form}
+        layout="vertical"
+        disabled={!canManage}
+        onFinish={handleFinish}
       >
-        <Input placeholder="团队名称" />
-      </Form.Item>
-      <Form.Item name="description" label="团队简介">
-        <Input.TextArea rows={3} placeholder="描述团队用途、协作方向" />
-      </Form.Item>
-      <Form.Item label="成立时间">
-        <span className="team-settings__value">{formatCreatedAt(team.createdAt)}</span>
-      </Form.Item>
-      {canManage && (
-        <Button type="primary" htmlType="submit" loading={updateTeam.isPending}>
-          保存修改
-        </Button>
+        <Form.Item label="团队头像">
+          <div className="team-settings__avatar">
+            <Avatar size={56} src={team.avatarUrl} icon={<CameraOutlined />} />
+            <Upload accept="image/*" showUploadList={false} beforeUpload={handleAvatarUpload}>
+              <Button icon={<UploadOutlined />} loading={avatarUploading}>
+                上传图片
+              </Button>
+            </Upload>
+          </div>
+          <p className="team-settings__hint">
+            支持 JPG / PNG，建议 200×200 方形图片；上传后自动保存
+          </p>
+        </Form.Item>
+        <Form.Item
+          name="name"
+          label="团队名称"
+          rules={[{ required: true, whitespace: true, message: '请输入团队名称' }]}
+        >
+          <Input placeholder="团队名称" />
+        </Form.Item>
+        <Form.Item name="description" label="团队简介">
+          <Input.TextArea rows={3} placeholder="描述团队用途、协作方向" />
+        </Form.Item>
+        <Form.Item label="成立时间">
+          <span className="team-settings__value">{formatCreatedAt(team.createdAt)}</span>
+        </Form.Item>
+        {canManage && (
+          <Button type="primary" htmlType="submit" loading={updateTeam.isPending}>
+            保存修改
+          </Button>
+        )}
+      </Form>
+      {isOwner && (
+        <section className="team-settings__danger">
+          <p className="team-settings__hint">解散后团队下的所有项目、群聊和成员不可恢复。</p>
+          <Button type="text" danger loading={disbandTeam.isPending} onClick={handleDisband}>
+            解散团队
+          </Button>
+        </section>
       )}
-    </Form>
+    </>
   )
 }
 
 /** ──── Tab 2：成员管理 ──── */
 function MembersTab({
   teamId,
-  members,
   canManage,
   isOwner,
 }: {
   teamId: string
-  members: TeamMember[]
   canManage: boolean
   isOwner: boolean
 }) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<TeamRole>('TEAM_MEMBER')
 
-  const { data: invitations = [] } = useQuery({
+  const {
+    data: members = [],
+    isPending: membersPending,
+    isError: membersError,
+    refetch: refetchMembers,
+  } = useQuery({
+    queryKey: ['teams', teamId, 'members'],
+    queryFn: () => teamApi.listMembers(teamId),
+    enabled: !!teamId,
+  })
+
+  const {
+    data: invitations = [],
+    isError: invitationsError,
+    refetch: refetchInvitations,
+  } = useQuery({
     queryKey: ['teams', teamId, 'invitations'],
     queryFn: () => teamApi.listInvitations(teamId),
     enabled: !!teamId && canManage,
@@ -300,7 +300,7 @@ function MembersTab({
   const inviteMutation = useMutation({
     // expiresInDays 后端必填（INVALID_ARGUMENT），前端默认 7 天
     mutationFn: () =>
-      teamApi.invite(teamId, { email: inviteEmail.trim(), role: inviteRole, expiresInDays: 7 }),
+      teamApi.invite(teamId, { email: inviteEmail.trim(), role: INVITE_ROLE, expiresInDays: 7 }),
     onSuccess: () => {
       message.success('邀请已发送')
       setInviteEmail('')
@@ -386,7 +386,7 @@ function MembersTab({
             onChange={(role) => updateRoleMutation.mutate({ userId: m.userId, role })}
           />
         ) : (
-          <Tag>{getRoleLabel(m.role)}</Tag>
+          <span className="team-settings__role-text">{getRoleLabel(m.role)}</span>
         ),
     },
     ...(canManage
@@ -406,7 +406,7 @@ function MembersTab({
                   移除
                 </Button>
               ) : (
-                <span className="team-settings__hint">—</span>
+                <span className="team-settings__action-placeholder">—</span>
               ),
           },
         ]
@@ -461,6 +461,14 @@ function MembersTab({
 
   return (
     <div className="team-settings__stack">
+      {membersError && (
+        <Alert
+          type="error"
+          showIcon
+          title="成员加载失败"
+          action={<Button onClick={() => void refetchMembers()}>重试</Button>}
+        />
+      )}
       <Table
         size="middle"
         rowKey="userId"
@@ -468,6 +476,7 @@ function MembersTab({
         dataSource={members}
         pagination={false}
         scroll={{ x: 'max-content' }}
+        loading={{ spinning: membersPending, delay: 180 }}
       />
 
       {!isOwner && canManage && (
@@ -487,12 +496,6 @@ function MembersTab({
               onChange={(e) => setInviteEmail(e.target.value)}
               onPressEnter={() => inviteEmail.trim() && inviteMutation.mutate()}
             />
-            <Select
-              aria-label="邀请角色"
-              value={inviteRole}
-              options={INVITE_ROLE_OPTIONS}
-              onChange={(v) => setInviteRole(v)}
-            />
             <Button
               type="primary"
               loading={inviteMutation.isPending}
@@ -502,6 +505,15 @@ function MembersTab({
               发送邀请
             </Button>
           </Space.Compact>
+
+          {invitationsError && (
+            <Alert
+              type="error"
+              showIcon
+              title="邀请加载失败"
+              action={<Button onClick={() => void refetchInvitations()}>重试</Button>}
+            />
+          )}
 
           {invitations.length > 0 && (
             <div className="team-settings__invitations">
@@ -518,75 +530,6 @@ function MembersTab({
           )}
         </section>
       )}
-    </div>
-  )
-}
-
-/** ──── Tab 3：所在团队 ──── */
-/**
- * 切换团队收在这一层：一级界面只显示当前团队，换团队要进到设置里。
- * 创建与加入团队也走这里，不占顶栏。
- */
-function TeamsTab({ currentTeamId }: { currentTeamId: string }) {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const teams = useQuery({ queryKey: ['teams', 'mine'], queryFn: teamApi.listMine })
-  const selectTeam = useMutation({
-    mutationFn: (id: string) => authApi.selectTeam(id),
-    onSuccess: (_data, id) => {
-      useAppUiStore.getState().setCurrentTeam(id)
-      queryClient.removeQueries({ queryKey: ['projects'] })
-      message.success('已切换团队')
-      navigate(PATHS.teamDetail(id))
-    },
-    onError: (err) => message.error(formatApiError(err)),
-  })
-
-  return (
-    <div className="team-settings__stack">
-      <p className="team-settings__hint">
-        切换团队后会回到该团队的项目首页。
-      </p>
-      <div className="team-settings__teams">
-        {teams.isPending ? (
-          <p className="team-settings__hint">正在加载团队…</p>
-        ) : teams.isError ? (
-          <Button size="small" onClick={() => void teams.refetch()}>
-            重新加载团队
-          </Button>
-        ) : (
-          (teams.data ?? []).map((item) => {
-            const current = item.id === currentTeamId
-            return (
-              <div key={item.id} className="team-settings__team">
-                <Avatar size={32} shape="square" src={item.avatarUrl}>
-                  {item.name.slice(0, 1)}
-                </Avatar>
-                <span className="team-settings__team-name">{item.name}</span>
-                {current ? (
-                  <Tag icon={<CheckOutlined aria-hidden />}>当前团队</Tag>
-                ) : (
-                  <Button
-                    type="text"
-                    loading={selectTeam.isPending && selectTeam.variables === item.id}
-                    onClick={() => selectTeam.mutate(item.id)}
-                  >
-                    切换到该团队
-                  </Button>
-                )}
-              </div>
-            )
-          })
-        )}
-      </div>
-      <Space>
-        <Button icon={<PlusOutlined />} onClick={() => navigate(PATHS.CREATE_TEAM)}>
-          创建团队
-        </Button>
-        <Button icon={<TeamOutlined />} onClick={() => navigate(PATHS.JOIN_TEAM)}>
-          加入团队
-        </Button>
-      </Space>
     </div>
   )
 }

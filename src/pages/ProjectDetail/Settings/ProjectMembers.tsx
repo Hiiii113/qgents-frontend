@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { App, Button, Modal, Popconfirm, Select, Table, Tag } from 'antd'
+import { Alert, App, Button, Modal, Popconfirm, Select, Table } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { projectApi, teamApi } from '@/api'
 import { useAuth } from '@/context/AuthContext'
@@ -28,7 +28,12 @@ export function ProjectMembers() {
   const isAdmin = project?.role === 'PROJECT_ADMIN'
 
   // 项目成员
-  const { data: members = [], isLoading } = useQuery({
+  const {
+    data: members = [],
+    isLoading,
+    isError: membersError,
+    refetch: refetchMembers,
+  } = useQuery({
     queryKey: ['projects', projectId, 'members'],
     queryFn: () => projectApi.listMembers(projectId),
     enabled: !!projectId,
@@ -117,12 +122,11 @@ export function ProjectMembers() {
       title: '角色',
       key: 'role',
       width: 150,
-      render: (_, m) =>
-        isTeamOwnerRow(m) ? (
-          <Tag>继承管理员</Tag>
-        ) : (
-          <Tag>{m.role === 'PROJECT_ADMIN' ? '管理员' : '成员'}</Tag>
-        ),
+      render: (_, m) => (
+        <span className="settings-member-cell__role">
+          {isTeamOwnerRow(m) || m.role === 'PROJECT_ADMIN' ? '管理员' : '成员'}
+        </span>
+      ),
     },
     ...(isAdmin
       ? [
@@ -132,7 +136,7 @@ export function ProjectMembers() {
             width: 240,
             render: (_: unknown, m: ProjectMember) => {
               if (isTeamOwnerRow(m)) {
-                return <span className="settings-member-cell__hint">团队所有者</span>
+                return <span className="settings-row-actions__placeholder">团队所有者</span>
               }
               const isSelf = m.userId === user?.id
               const nextRole = m.role === 'PROJECT_ADMIN' ? 'PROJECT_MEMBER' : 'PROJECT_ADMIN'
@@ -153,8 +157,7 @@ export function ProjectMembers() {
                     }
                   >
                     <Button
-                      size="small"
-                      type="link"
+                      type="text"
                       loading={
                         updateRoleMutation.isPending &&
                         updateRoleMutation.variables?.userId === m.userId
@@ -165,9 +168,8 @@ export function ProjectMembers() {
                   </Popconfirm>
                   {!isSelf && (
                     <Button
-                      size="small"
                       danger
-                      type="link"
+                      type="text"
                       loading={removeMutation.isPending}
                       onClick={() => confirmRemove(m)}
                     >
@@ -199,9 +201,14 @@ export function ProjectMembers() {
         </div>
       )}
 
-      <p className="workspace-page__note">
-        团队所有者始终拥有本项目管理员权限（继承），无需出现在项目成员列表中。
-      </p>
+      {membersError && (
+        <Alert
+          type="error"
+          showIcon
+          title="成员加载失败"
+          action={<Button onClick={() => void refetchMembers()}>重试</Button>}
+        />
+      )}
 
       <Table
         size="middle"
@@ -225,7 +232,7 @@ export function ProjectMembers() {
         okButtonProps={{ disabled: selectedIds.length === 0 }}
       >
         <p className="settings-hint">
-          团队现有成员中还有 {candidateMembers.length} 人未加入项目；选中即加入，无需对方确认。
+          团队中还有 {candidateMembers.length} 人未加入项目，选中即加入。
         </p>
         <Select
           mode="multiple"
