@@ -1,4 +1,4 @@
-/* 项目记忆：标题 + 元信息 + 一块等宽文本区，边框与字号都来自 tokens。 */
+/* 项目记忆：说明 + 操作 + 一块等宽文本区，边框与字号都来自 tokens。 */
 .memory-page {
   display: flex;
   flex-direction: column;
@@ -6,24 +6,12 @@
   max-width: 1040px;
 }
 
-.memory-page__header {
+.memory-page__bar {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
-}
-
-.memory-page__heading {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.memory-page__title {
-  font-size: var(--text-lead);
-  font-weight: 600;
 }
 
 .memory-page__description {
@@ -37,6 +25,7 @@
   display: flex;
   gap: var(--space-2);
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .memory-page__hint {
@@ -50,6 +39,11 @@
   line-height: 1.7;
   padding: var(--space-4);
   max-width: 900px;
+}
+
+.memory-page__editor textarea[readonly] {
+  background: var(--paper-raised);
+  color: var(--ink-700);
 }
 
 .memory-page__footer {
@@ -66,8 +60,135 @@
 }
 
 @media (max-width: 700px) {
-  .memory-page__header {
-    align-items: flex-start;
+  .memory-page__bar {
     flex-direction: column;
   }
+}
+
+/* 阅读态按普通文档排版；编辑态才使用等宽 textarea。 */
+.memory-page__document {
+  max-width: 76ch;
+  padding: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-m);
+  background: var(--paper-raised);
+  color: var(--ink-700);
+  font-size: var(--text-base);
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.memory-page__document > :first-child {
+  margin-top: 0;
+}
+
+.memory-page__document > :last-child {
+  margin-bottom: 0;
+}
+
+.memory-page__document h1,
+.memory-page__document h2,
+.memory-page__document h3,
+.memory-page__document h4 {
+  margin: var(--space-6) 0 var(--space-2);
+  color: var(--ink-900);
+}
+
+.memory-page__document h1 {
+  font-size: var(--text-h2);
+}
+
+.memory-page__document h2 {
+  font-size: var(--text-h3);
+}
+
+.memory-page__document h3,
+.memory-page__document h4 {
+  font-size: var(--text-lead);
+}
+
+.memory-page__document p,
+.memory-page__document ul,
+.memory-page__document ol,
+.memory-page__document blockquote,
+.memory-page__document pre,
+.memory-page__document table {
+  margin: 0 0 var(--space-3);
+}
+
+.memory-page__document ul,
+.memory-page__document ol {
+  padding-left: var(--space-6);
+}
+
+.memory-page__document li + li {
+  margin-top: var(--space-1);
+}
+
+.memory-page__document a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.memory-page__document code {
+  padding: 1px var(--space-1);
+  border-radius: 2px;
+  background: var(--paper-sunken);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--text-sm);
+}
+
+.memory-page__document pre {
+  overflow: auto;
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-m);
+  background: var(--paper-sunken);
+}
+
+.memory-page__document pre code {
+  padding: 0;
+  background: none;
+}
+
+.memory-page__document blockquote {
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--rule-strong);
+  color: var(--ink-500);
+}
+
+.memory-page__document table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.memory-page__document th,
+.memory-page__document td {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule);
+  text-align: left;
+}
+
+.memory-page__document th {
+  background: var(--paper-sunken);
+  font-weight: 600;
+}
+
+.memory-page__document hr {
+  margin: var(--space-4) 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.memory-page__document img {
+  max-width: 100%;
+}
+
+.memory-page__empty {
+  padding: var(--space-6);
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--radius-m);
+  color: var(--ink-500);
+  font-size: var(--text-sm);
 }

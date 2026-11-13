@@ -2,18 +2,20 @@ import { useState } from 'react'
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
+  GithubOutlined,
   MessageOutlined,
   PlusOutlined,
   SearchOutlined,
+  SettingOutlined,
+  TeamOutlined,
 } from '@ant-design/icons'
 import { Alert, Avatar, Button, Input, Spin } from 'antd'
-import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { PATHS } from '@/routes/paths'
 import { projectApi, teamApi } from '@/api'
 import { CreateProjectModal } from '@/components/CreateProjectModal'
 import { useRememberTeam } from '@/hooks/useRememberTeam'
-import { useAuth } from '@/context/AuthContext'
 import { useTeamEvents } from '@/realtime/useTeamEvents'
 import './TeamDetailPage.css'
 
@@ -21,7 +23,7 @@ import './TeamDetailPage.css'
 export default function TeamDetailPage() {
   const { teamId = '' } = useParams<{ teamId: string }>()
   const location = useLocation()
-  const { user } = useAuth()
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   useTeamEvents(teamId || undefined)
@@ -56,25 +58,48 @@ export default function TeamDetailPage() {
       .includes(search.trim().toLowerCase()),
   )
   const settings = location.pathname.endsWith('/settings')
+  const owner = team.data.role === 'TEAM_OWNER'
+  const canManage = owner || team.data.role === 'TEAM_ADMIN'
   return (
     <div className="team-page">
       {settings ? (
         <header className="team-hero team-hero--compact">
           <div className="team-hero__head">
             <span className="qg-eyebrow">团队设置</span>
-            <h1>{team.data?.name ?? '团队'}</h1>
+            <h1>{team.data.name}</h1>
           </div>
           <div className="team-hero__actions">
-            <Link to={PATHS.teamDetail(teamId)}>
-              <Button icon={<ArrowLeftOutlined />}>返回项目</Button>
-            </Link>
+            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(PATHS.teamDetail(teamId))}>
+              返回项目
+            </Button>
           </div>
         </header>
       ) : (
         <header className="team-hero">
           <div className="team-hero__head">
-            <h1>{user?.displayName || '用户'}，欢迎回来</h1>
-            <p>从一个项目开始今天的讨论。</p>
+            <h1>{team.data.name}</h1>
+            <p>{team.data.description || '选择项目继续协作，或创建一个新项目。'}</p>
+          </div>
+          <div className="team-hero__actions">
+            {owner && (
+              <Button
+                icon={<GithubOutlined />}
+                onClick={() => navigate(PATHS.githubIntegration(teamId))}
+              >
+                GitHub 授权
+              </Button>
+            )}
+            {canManage && (
+              <Button
+                icon={<TeamOutlined />}
+                onClick={() => navigate(`${PATHS.teamSettings(teamId)}?tab=members`)}
+              >
+                邀请成员
+              </Button>
+            )}
+            <Button icon={<SettingOutlined />} onClick={() => navigate(PATHS.teamSettings(teamId))}>
+              团队设置
+            </Button>
           </div>
         </header>
       )}

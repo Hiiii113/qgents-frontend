@@ -161,6 +161,11 @@ input[type='password']::-moz-reveal {
   border: 1px solid var(--rule);
 }
 
+/* Drawer 投影挂在 wrapper 的组件样式上，主题 token 未暴露对应 alias，这里单独压平。 */
+.ant-drawer .ant-drawer-content-wrapper {
+  box-shadow: none !important;
+}
+
 .ant-tooltip .ant-tooltip-inner {
   border-color: transparent;
 }

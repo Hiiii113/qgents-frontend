@@ -70,12 +70,12 @@ export function AppRouter() {
                 <Route path="projects/:projectId" element={<ProjectDetailLayout />}>
                   <Route index element={<Navigate to="chat" replace />} />
                   <Route path="chat" element={<ProjectChatPage />} />
-                  <Route element={<ProjectSettingsLayout />}>
-                    <Route path="agents" element={<AgentsPage />} />
-                    <Route path="skills" element={<SkillPage />} />
-                    <Route path="memory" element={<MemoryPage />} />
-                    <Route path="code" element={<CodePage />} />
-                    <Route path="settings" element={<SettingsPage />} />
+                  <Route path="agents" element={<AgentsPage />} />
+                  <Route path="skills" element={<SkillPage />} />
+                  <Route path="memory" element={<MemoryPage />} />
+                  <Route path="code" element={<CodePage />} />
+                  <Route path="settings" element={<ProjectSettingsLayout />}>
+                    <Route index element={<SettingsPage />} />
                   </Route>
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>

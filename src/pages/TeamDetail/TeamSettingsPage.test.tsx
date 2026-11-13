@@ -28,7 +28,7 @@ it('shows owner, admin and member roles and lets the owner manage roles', async 
   expect(await screen.findByText('所有者')).toBeInTheDocument()
   expect(screen.getAllByText('管理员').length).toBeGreaterThan(0)
   expect(screen.getAllByText('成员').length).toBeGreaterThan(0)
-  expect(screen.getByRole('button', { name: /GitHub 集成/ })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /GitHub/ })).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: '解散团队' })).toBeInTheDocument()
   expect(screen.getByLabelText('调整 团队管理员 的团队角色')).toBeInTheDocument()
   expect(screen.getByLabelText('调整 团队伙伴 的团队角色')).toBeInTheDocument()
@@ -58,7 +58,7 @@ it('lets a team admin manage invitations and ordinary members but not admins or 
   expect(await screen.findByText('所有者')).toBeInTheDocument()
   expect(screen.getAllByRole('button', { name: '移除' })).toHaveLength(1)
   expect(screen.getByRole('button', { name: /发送邀请/ })).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /GitHub 集成/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /GitHub/ })).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '解散团队' })).not.toBeInTheDocument()
   expect(screen.queryByLabelText(/调整 .* 的团队角色/)).not.toBeInTheDocument()
   expect(screen.getByText(/团队管理员可以邀请和移除普通成员/)).toBeInTheDocument()
@@ -86,3 +86,24 @@ it('does not expose team management actions to ordinary members', async () => {
   expect(screen.queryByRole('button', { name: '移除' })).not.toBeInTheDocument()
   expect(screen.queryByLabelText(/调整 .* 的团队角色/)).not.toBeInTheDocument()
 }, 60_000)
+
+it('opens member management directly from the invitation deep link', async () => {
+  renderWorkspace(
+    <TeamSettingsPage />,
+    '/app/teams/t1/settings?tab=members',
+    '/app/teams/:teamId/settings',
+    (client) => {
+      client.setQueryData(['teams', 't1'], { id: 't1', name: '团队', role: 'TEAM_OWNER' })
+      client.setQueryData(
+        ['teams', 't1', 'members'],
+        [{ userId: 'u1', displayName: '团队创建者', role: 'TEAM_OWNER' }],
+      )
+      client.setQueryData(['teams', 't1', 'invitations'], [])
+    },
+  )
+  expect(await screen.findByRole('tab', { name: '成员管理' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  expect(screen.getByRole('button', { name: /发送邀请/ })).toBeInTheDocument()
+})

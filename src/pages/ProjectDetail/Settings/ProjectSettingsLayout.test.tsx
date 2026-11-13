@@ -1,12 +1,7 @@
 import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { Route, Routes, useLocation } from 'react-router-dom'
-import { chatKeys } from '@/query/chatKeys'
 import { renderWorkspace } from '@/test/renderWorkspace'
-import { CodePage } from '../Code/CodePage'
-import { MemoryPage } from '../Memory/MemoryPage'
-import { SkillPage } from '../Skill/SkillPage'
-import { ProjectAgents } from './ProjectAgents'
 import { SettingsPage } from './SettingsPage'
 import { ProjectSettingsLayout } from './ProjectSettingsLayout'
 
@@ -20,18 +15,19 @@ function Address() {
 
 function openSettings(path: string) {
   return renderWorkspace(
-    <>
-      <Routes>
-        <Route element={<ProjectSettingsLayout />}>
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="agents" element={<ProjectAgents />} />
-          <Route path="skills" element={<SkillPage />} />
-          <Route path="memory" element={<MemoryPage />} />
-          <Route path="code" element={<CodePage />} />
-        </Route>
-      </Routes>
-      <Address />
-    </>,
+    <Routes>
+      <Route element={<ProjectSettingsLayout />}>
+        <Route
+          path="settings"
+          element={
+            <>
+              <SettingsPage />
+              <Address />
+            </>
+          }
+        />
+      </Route>
+    </Routes>,
     path,
     '/app/projects/:projectId/*',
     (client) => {
@@ -41,58 +37,33 @@ function openSettings(path: string) {
         name: '项目',
         role: 'PROJECT_ADMIN',
       })
-      client.setQueryData(['teams', 't1'], { id: 't1', role: 'TEAM_OWNER' })
       client.setQueryData(
         ['projects', 'p1', 'members'],
         [{ userId: 'u1', displayName: '创建者', role: 'PROJECT_ADMIN' }],
       )
       client.setQueryData(['teams', 't1', 'members'], [])
-      client.setQueryData(['skills', 'p1'], [])
-      client.setQueryData(chatKeys.agents('p1'), [])
-      client.setQueryData(['memory', 'p1'], {
-        projectId: 'p1',
-        content: '',
-        version: '1',
-        updatedAt: new Date().toISOString(),
-      })
-      client.setQueryData(['repositories', 'p1'], [])
     },
   )
 }
 
-it('opens every management capability from the same horizontal tabs and preserves the chat group', async () => {
+it('keeps only project information and members under settings', () => {
   openSettings('/app/projects/p1/settings?groupId=g2')
-  const heading = screen.getByRole('heading', { name: '项目设置' })
-  expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
-    '基本信息',
-    '成员管理',
-    'Agent',
-    'Skill',
-    '共享知识',
-    '项目仓库',
-  ])
-  for (const [label, path, control] of [
-    ['Agent', 'agents', '申请新 Agent'],
-    ['Skill', 'skills', '新建 Skill'],
-    ['共享知识', 'memory', '保存'],
-    ['项目仓库', 'code', '导入仓库'],
-  ]) {
-    fireEvent.click(screen.getByRole('tab', { name: label }))
-    expect(await screen.findByRole('button', { name: new RegExp(control) })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: label })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByText(`/app/projects/p1/${path}?groupId=g2`)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '项目设置' })).toBe(heading)
+  expect(screen.getByRole('heading', { name: '项目设置' })).toBeInTheDocument()
+  expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['基本信息', '成员管理'])
+  for (const label of ['Agent', 'Skill', '共享知识', '仓库']) {
+    expect(screen.queryByRole('tab', { name: label })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: label })).not.toBeInTheDocument()
   }
-  fireEvent.click(screen.getByRole('tab', { name: '成员管理' }))
-  expect(await screen.findByText('创建者')).toBeInTheDocument()
-  expect(screen.getByText('/app/projects/p1/settings?groupId=g2&tab=members')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('tab', { name: '基本信息' }))
-  expect(await screen.findByRole('button', { name: '保存资料' })).toBeInTheDocument()
 })
 
-it('selects the repository tab when opening its existing deep link directly', () => {
-  openSettings('/app/projects/p1/code')
-  expect(screen.getByRole('tab', { name: '项目仓库' })).toHaveAttribute('aria-selected', 'true')
-  expect(screen.getByRole('button', { name: /导入仓库/ })).toBeInTheDocument()
-  expect(screen.queryByText('项目工具')).not.toBeInTheDocument()
+it('switches between the two settings tabs and preserves the chat group', async () => {
+  openSettings('/app/projects/p1/settings?groupId=g2')
+  fireEvent.click(screen.getByRole('tab', { name: '成员管理' }))
+  expect(await screen.findByText('创建者')).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: '成员管理' })).toHaveAttribute('aria-selected', 'true')
+  expect(screen.getByText('/app/projects/p1/settings?groupId=g2&tab=members')).toBeInTheDocument()
+
+  fireEvent.click(screen.getByRole('tab', { name: '基本信息' }))
+  expect(await screen.findByRole('button', { name: '保存资料' })).toBeInTheDocument()
+  expect(screen.getByText('/app/projects/p1/settings?groupId=g2&tab=basic')).toBeInTheDocument()
 })

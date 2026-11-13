@@ -24,8 +24,7 @@
 }
 
 .personal-menu__avatar .ant-avatar,
-.personal-menu__trigger .ant-avatar,
-.personal-menu__team .ant-avatar {
+.personal-menu__trigger .ant-avatar {
   background: var(--paper-sunken);
   color: var(--ink-700);
 }
@@ -130,64 +129,4 @@
   border-top: 1px solid var(--rule);
   border-radius: 0;
   color: var(--danger);
-}
-
-.personal-menu__arrow {
-  margin-left: auto;
-  color: var(--ink-300);
-  font-size: 12px;
-}
-
-.personal-menu__teams {
-  width: min(260px, calc(100vw - 32px));
-  max-height: 360px;
-  overflow-y: auto;
-}
-
-.personal-menu__team {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  background: none;
-  border: 0;
-  border-radius: var(--radius-m);
-  color: var(--ink-900);
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease);
-}
-
-.personal-menu__team:hover,
-.personal-menu__team:focus-visible,
-.personal-menu__team.is-current {
-  background: var(--paper-sunken);
-}
-
-.personal-menu__team .ant-avatar {
-  flex-shrink: 0;
-}
-
-.personal-menu__team > span:not(.ant-avatar) {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.personal-menu__team > .anticon {
-  margin-left: auto;
-  color: var(--accent);
-}
-
-.personal-menu__team:disabled {
-  cursor: wait;
-  opacity: 0.6;
-}
-
-.personal-menu__team-status {
-  padding: var(--space-6);
-  color: var(--ink-500);
-  font-size: var(--text-sm);
-  text-align: center;
 }

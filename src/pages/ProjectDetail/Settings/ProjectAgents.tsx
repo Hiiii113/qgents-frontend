@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { Alert, App, Avatar, Button, Form, Input, Modal, Tag } from 'antd'
 import { PlusOutlined, RobotOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { agentApi } from '@/api/agent'
+import { chatApi } from '@/api/chat'
 import { chatKeys } from '@/query/chatKeys'
 import { formatApiError } from '@/utils/formatApiError'
+import { PATHS } from '@/routes/paths'
+import { ProjectPage } from '../ProjectPage'
 import type { AgentApplication, AgentStatus, ProjectAgent } from '@/types/agent'
 import './SettingsPage.css'
 
@@ -15,7 +18,7 @@ const statusLabel: Record<AgentStatus, string> = {
   REJECTED: '已拒绝',
 }
 
-/** 项目 Agent：成员提交自定义 Agent 申请，项目管理员在默认群回复并 @Agent 后启用。 */
+/** 项目 Agent：浏览已启用的 Agent，申请新 Agent 后去默认群跟进管理员审批。 */
 export function ProjectAgents() {
   const { projectId = '' } = useParams<{ projectId: string }>()
   const { message } = App.useApp()
@@ -28,6 +31,13 @@ export function ProjectAgents() {
     queryFn: () => agentApi.list(projectId),
     enabled: Boolean(projectId),
   })
+  // 申请后给出一条去默认群跟进的直达入口；只在有申请结果时读取群列表。
+  const groups = useQuery({
+    queryKey: chatKeys.groups(projectId),
+    queryFn: () => chatApi.groups(projectId),
+    enabled: Boolean(projectId) && Boolean(application),
+  })
+  const defaultGroup = groups.data?.find((group) => group.defaultGroup)
   const apply = useMutation({
     mutationFn: (body: AgentApplication) => agentApi.apply(projectId, body),
     onSuccess: (created) => {
@@ -38,56 +48,70 @@ export function ProjectAgents() {
     },
     onError: (error) => void message.error(formatApiError(error)),
   })
+
   return (
-    <div className="settings-page">
-      {agents.isError && <Alert type="error" showIcon message={formatApiError(agents.error)} />}
-      <div className="settings-toolbar">
-        <div>
-          <h2 className="settings-section__title">项目 Agent</h2>
-          <p className="settings-hint">
-            申请本项目专用的 Agent；审批通过后可在群设置里邀请它入群。
-          </p>
-        </div>
+    <ProjectPage
+      title="Agent"
+      action={
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpen(true)}>
           申请新 Agent
         </Button>
-      </div>
-      <p className="workspace-page__note">
-        提交后在项目默认群说明申请内容，项目管理员同意即可生效；审批通过前不能邀请入群或参与对话。
-      </p>
-      {application && (
-        <div className="settings-toolbar">
-          <div>
+      }
+    >
+      <div className="settings-page">
+        {agents.isError && <Alert type="error" showIcon message={formatApiError(agents.error)} />}
+        {application && (
+          <section className="settings-application">
             <p>{`「${application.name}」申请已提交，${statusLabel[application.status]}`}</p>
             <p className="settings-hint">
-              请在项目默认群等待项目管理员回复并 @Agent 审批，通过后即可邀请入群。
+              请在项目默认群说明申请内容，项目管理员回复并 @Agent 后即可邀请入群。
             </p>
-          </div>
-          <Button type="text" size="small" onClick={() => setApplication(null)}>
-            关闭
-          </Button>
-        </div>
-      )}
-      {agents.isPending ? (
-        <p className="settings-hint">正在加载 Agent…</p>
-      ) : !(agents.data ?? []).length ? (
-        <p className="settings-hint">项目暂无已启用的 Agent。</p>
-      ) : (
-        <ul className="settings-agent-list">
-          {(agents.data ?? []).map((agent) => (
-            <li className="settings-agent-list__row" key={agent.id}>
-              <Avatar shape="square" src={agent.avatarUrl ?? undefined} icon={<RobotOutlined />} />
-              <div className="settings-agent-list__body">
-                <span className="settings-agent-list__name">{agent.name}</span>
-                <span className="settings-agent-list__description">
-                  {agent.description || '暂无描述'}
-                </span>
-              </div>
-              <Tag>{agent.defaultAgent ? '默认 Agent' : '已启用'}</Tag>
-            </li>
-          ))}
-        </ul>
-      )}
+            <div className="settings-application__actions">
+              {defaultGroup && (
+                <Link
+                  className="settings-application__link"
+                  to={PATHS.projectChat(projectId, undefined, defaultGroup.id)}
+                >
+                  去默认群跟进
+                </Link>
+              )}
+              <Button type="text" size="small" onClick={() => setApplication(null)}>
+                关闭
+              </Button>
+            </div>
+          </section>
+        )}
+        <section className="settings-section">
+          <h2 className="settings-section__title">已启用的 Agent</h2>
+          <p className="settings-hint">
+            只有这里列出的 Agent 才能被邀请进群，并在被提及时参与对话。
+          </p>
+          {agents.isPending ? (
+            <p className="settings-hint">正在加载 Agent…</p>
+          ) : !(agents.data ?? []).length ? (
+            <p className="settings-hint">项目暂无已启用的 Agent。</p>
+          ) : (
+            <ul className="settings-agent-list">
+              {(agents.data ?? []).map((agent) => (
+                <li className="settings-agent-list__row" key={agent.id}>
+                  <Avatar
+                    shape="square"
+                    src={agent.avatarUrl ?? undefined}
+                    icon={<RobotOutlined />}
+                  />
+                  <div className="settings-agent-list__body">
+                    <span className="settings-agent-list__name">{agent.name}</span>
+                    <span className="settings-agent-list__description">
+                      {agent.description || '暂无描述'}
+                    </span>
+                  </div>
+                  <Tag>{agent.defaultAgent ? '默认 Agent' : '已启用'}</Tag>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
       <Modal
         title="申请新 Agent"
         open={open}
@@ -154,6 +178,6 @@ export function ProjectAgents() {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </ProjectPage>
   )
 }

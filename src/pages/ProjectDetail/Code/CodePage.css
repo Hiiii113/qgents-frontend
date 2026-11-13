@@ -66,3 +66,29 @@
     width: 100%;
   }
 }
+
+/* 团队授权入口是导航链接，单独用次按钮样式，不嵌套按钮。 */
+.code-actions__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-m);
+  color: var(--ink-700);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.code-actions__link:hover {
+  border-color: var(--rule-strong);
+  color: var(--ink-900);
+}
+
+@media (max-width: 700px) {
+  .code-actions__link {
+    min-height: 44px;
+  }
+}

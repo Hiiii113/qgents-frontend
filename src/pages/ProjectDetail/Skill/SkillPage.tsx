@@ -19,6 +19,7 @@ import {
 import { PlusOutlined, TagsOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons'
 import { skillApi } from '@/api'
 import type { Skill, SkillPreview, SkillStatus, SkillVisibility } from '@/types'
+import { ProjectPage } from '../ProjectPage'
 import './SkillPage.css'
 
 /** 状态筛选维度 */
@@ -89,79 +90,85 @@ export function SkillPage() {
   const detail = skills.find((s) => s.id === detailId) ?? null
 
   return (
-    <div className="skill-page">
-      <div className="skill-toolbar">
-        <Segmented
-          options={FILTERS.map((f) => ({ label: f.label, value: f.key }))}
-          value={filter}
-          onChange={(v) => setFilter(v as FilterKey)}
-        />
-        <div className="skill-toolbar__actions">
-          <Input.Search
-            className="skill-toolbar__search"
-            allowClear
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-            placeholder="搜索名称、内容或标签"
-            aria-label="搜索 Skill"
+    <ProjectPage
+      title="Skill"
+      action={
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+          导入 Skill
+        </Button>
+      }
+    >
+      <div className="skill-page">
+        <div className="skill-toolbar">
+          <Segmented
+            options={FILTERS.map((f) => ({ label: f.label, value: f.key }))}
+            value={filter}
+            onChange={(v) => setFilter(v as FilterKey)}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-            新建 Skill
-          </Button>
-        </div>
-      </div>
-
-      {isLoading ? (
-        <Spin delay={180} />
-      ) : isError ? (
-        <>
-          <p className="skill-note">Skill 加载失败，请检查网络后重试。</p>
-          <div>
-            <Button onClick={() => void refetch()}>重新加载</Button>
+          <div className="skill-toolbar__actions">
+            <Input.Search
+              className="skill-toolbar__search"
+              allowClear
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+              placeholder="搜索名称、内容或标签"
+              aria-label="搜索 Skill"
+            />
           </div>
-        </>
-      ) : filtered.length === 0 ? (
-        <p className="skill-note">
-          {keyword.trim() || filter !== 'ALL'
-            ? '没有匹配的 Skill，可以更换关键词或状态筛选。'
-            : '暂无共享 Skill，用右上角新建私有 Skill，或创建项目共享 Skill。'}
-        </p>
-      ) : (
-        <div className="skill-list">
-          {filtered.map((s, i) => (
-            <SkillCard key={s.id} skill={s} index={i + 1} onClick={() => setDetailId(s.id)} />
-          ))}
         </div>
-      )}
 
-      {/* 详情抽屉 */}
-      <SkillDetail
-        skill={detail}
-        onClose={() => setDetailId(null)}
-        onEdit={() => {
-          // 编辑目标独立于详情抽屉，且不随列表刷新而更新，否则会重置表单覆盖未保存的输入
-          setEditTarget(detail)
-          setDetailId(null)
-          setCreateOpen(true)
-        }}
-      />
+        {isLoading ? (
+          <Spin delay={180} />
+        ) : isError ? (
+          <>
+            <p className="skill-note">Skill 加载失败，请检查网络后重试。</p>
+            <div>
+              <Button onClick={() => void refetch()}>重新加载</Button>
+            </div>
+          </>
+        ) : filtered.length === 0 ? (
+          <p className="skill-note">
+            {keyword.trim() || filter !== 'ALL'
+              ? '没有匹配的 Skill，可以更换关键词或状态筛选。'
+              : '暂无共享 Skill。用右上角导入 SKILL.md，创建私有 Skill 或项目共享 Skill。'}
+          </p>
+        ) : (
+          <div className="skill-list">
+            {filtered.map((s, i) => (
+              <SkillCard key={s.id} skill={s} index={i + 1} onClick={() => setDetailId(s.id)} />
+            ))}
+          </div>
+        )}
 
-      {/* 新建 / 编辑弹窗 */}
-      <CreateSkillModal
-        projectId={projectId}
-        open={createOpen}
-        editTarget={editTarget}
-        onClose={() => {
-          setCreateOpen(false)
-          setEditTarget(null)
-        }}
-        onCreated={() => {
-          invalidate()
-          setCreateOpen(false)
-          setEditTarget(null)
-        }}
-      />
-    </div>
+        {/* 详情抽屉 */}
+        <SkillDetail
+          skill={detail}
+          onClose={() => setDetailId(null)}
+          onEdit={() => {
+            // 编辑目标独立于详情抽屉，且不随列表刷新而更新，否则会重置表单覆盖未保存的输入
+            setEditTarget(detail)
+            setDetailId(null)
+            setCreateOpen(true)
+          }}
+        />
+
+        {/* 导入 / 编辑弹窗 */}
+        <CreateSkillModal
+          projectId={projectId}
+          open={createOpen}
+          editTarget={editTarget}
+          onClose={() => {
+            setCreateOpen(false)
+            setEditTarget(null)
+          }}
+          onCreated={() => {
+            invalidate()
+            setCreateOpen(false)
+            setEditTarget(null)
+          }}
+        />
+      </div>
+    </ProjectPage>
   )
 }
 

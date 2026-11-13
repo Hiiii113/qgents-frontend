@@ -1,5 +1,6 @@
 /**
- * 团队详情：欢迎语 + 项目列表。分区靠 1px 线与留白，卡片只用边框与 hover 变色。
+ * 团队详情：团队名 + 简介 + 团队级入口，下面是项目列表。
+ * 分区靠 1px 线与留白，卡片只用边框与 hover 变色。
  */
 
 .team-page {
@@ -55,7 +56,9 @@
 
 .team-hero__actions {
   display: flex;
+  align-items: center;
   gap: var(--space-2);
+  flex-wrap: wrap;
   flex-shrink: 0;
 }
 
@@ -187,6 +190,10 @@
     align-items: flex-start;
     flex-direction: column;
     gap: var(--space-4);
+  }
+
+  .team-hero__actions {
+    width: 100%;
   }
 
   .team-search {

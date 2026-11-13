@@ -224,7 +224,9 @@ export function ProjectMembers() {
         confirmLoading={addMutation.isPending}
         okButtonProps={{ disabled: selectedIds.length === 0 }}
       >
-        <p className="settings-hint">从团队现有成员中选择，选中即加入项目（无需对方确认）</p>
+        <p className="settings-hint">
+          团队现有成员中还有 {candidateMembers.length} 人未加入项目；选中即加入，无需对方确认。
+        </p>
         <Select
           mode="multiple"
           className="settings-select-block"
@@ -236,6 +238,7 @@ export function ProjectMembers() {
             label: m.displayName || m.userId,
           }))}
           optionFilterProp="label"
+          notFoundContent={candidateMembers.length ? undefined : '团队现有成员都已加入本项目'}
         />
       </Modal>
     </div>

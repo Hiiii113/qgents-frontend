@@ -37,6 +37,25 @@
   flex-wrap: wrap;
 }
 
+/* Agent 申请待审批提示：发丝线 + 留白，不用整块状态色。 */
+.settings-application {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-m);
+  background: var(--paper-raised);
+}
+
+.settings-application__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
 /* 表单：label 13/600 压在控件上方，错误紧贴控件下方 12px。
    弹窗里的表单挂同一个类，因为它不在 .settings-page 的 DOM 树里。 */
 /* 纵向 flex 里的文字按钮会被拉满宽度、标签居中，这里只占自身宽度。 */
@@ -140,4 +159,22 @@
 .settings-agent-list__row .ant-avatar {
   background: var(--paper-sunken);
   color: var(--ink-300);
+}
+
+/* 申请后的跟进入口是一个单独链接，样式与次按钮一致，避免把按钮嵌进链接。 */
+.settings-application__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-m);
+  color: var(--ink-700);
+  font-size: var(--text-sm);
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.settings-application__link:hover {
+  border-color: var(--rule-strong);
+  color: var(--ink-900);
 }

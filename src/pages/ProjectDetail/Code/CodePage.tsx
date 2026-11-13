@@ -8,6 +8,7 @@ import { repositoriesApi } from '@/api/repositories'
 import type { AvailableRepository } from '@/api/repositories'
 import { formatApiError } from '@/utils/formatApiError'
 import { PATHS } from '@/routes/paths'
+import { ProjectPage } from '../ProjectPage'
 import './CodePage.css'
 
 export function CodePage() {
@@ -61,7 +62,16 @@ export function CodePage() {
     onError: (error) => void message.error(formatApiError(error)),
   })
   return (
-    <>
+    <ProjectPage
+      title="仓库"
+      action={
+        canManage && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setImportOpen(true)}>
+            导入仓库
+          </Button>
+        )
+      }
+    >
       <div className="workspace-page__toolbar">
         <Input
           className="code-search"
@@ -73,14 +83,9 @@ export function CodePage() {
           allowClear
         />
         <div className="code-actions">
-          <Link to={PATHS.githubIntegration(teamId)}>
-            <Button icon={<GithubOutlined />}>GitHub 连接</Button>
+          <Link className="code-actions__link" to={PATHS.githubIntegration(teamId)}>
+            <GithubOutlined aria-hidden /> 团队 GitHub 授权
           </Link>
-          {canManage && (
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setImportOpen(true)}>
-              导入仓库
-            </Button>
-          )}
         </div>
       </div>
       {imported.isError && (
@@ -177,10 +182,10 @@ export function CodePage() {
         {!available.isPending && !options.length && (
           <p>
             没有可导入的仓库。
-            <Link to={PATHS.githubIntegration(teamId)}>管理 GitHub 连接与授权</Link>
+            <Link to={PATHS.githubIntegration(teamId)}>管理团队 GitHub 授权</Link>
           </p>
         )}
       </Modal>
-    </>
+    </ProjectPage>
   )
 }

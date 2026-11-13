@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   Avatar,
   Button,
@@ -15,7 +15,7 @@ import {
   Upload,
   message,
 } from 'antd'
-import { CameraOutlined, GithubOutlined, UploadOutlined } from '@ant-design/icons'
+import { CameraOutlined, UploadOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { teamApi } from '@/api'
 import { useAuth } from '@/context/AuthContext'
@@ -57,14 +57,16 @@ function formatCreatedAt(iso?: string): string {
 
 /**
  * 团队设置沿用团队详情的纸张底色。
- * 顶部：标题 + GitHub 集成 / 解散团队
- * 下方 Tab：基本信息 / 成员管理
+ * 顶部只保留解散团队；GitHub 授权与邀请入口在团队页头。
+ * 下方 Tab：基本信息 / 成员管理，?tab=members 可直接打开邀请。
  * 路由：/app/teams/:teamId/settings
  */
 export default function TeamSettingsPage() {
   const { teamId = '' } = useParams<{ teamId: string }>()
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
   const queryClient = useQueryClient()
+  const activeTab = params.get('tab') === 'members' ? 'members' : 'basic'
 
   const {
     data: team,
@@ -129,27 +131,25 @@ export default function TeamSettingsPage() {
   return (
     <div className="team-settings__page">
       {/* 页头由团队详情提供；这里是分区操作，与标签同一行。 */}
-      <div className="team-settings__header">
-        <div className="team-settings__actions">
-          {isOwner && (
-            <Button
-              icon={<GithubOutlined />}
-              onClick={() => navigate(PATHS.githubIntegration(teamId))}
-            >
-              GitHub 集成
-            </Button>
-          )}
-          {isOwner && (
+      {isOwner && (
+        <div className="team-settings__header">
+          <div className="team-settings__actions">
             <Button type="text" danger loading={disbandTeam.isPending} onClick={handleDisband}>
               解散团队
             </Button>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       <Tabs
         className="team-settings__tabs"
-        defaultActiveKey="basic"
+        activeKey={activeTab}
+        onChange={(key) => {
+          const next = new URLSearchParams(params)
+          if (key === 'basic') next.delete('tab')
+          else next.set('tab', key)
+          setParams(next, { replace: true })
+        }}
         items={[
           {
             key: 'basic',

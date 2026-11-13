@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { agentApi } from '@/api/agent'
+import { chatKeys } from '@/query/chatKeys'
 import { renderWorkspace } from '@/test/renderWorkspace'
 import { ProjectAgents } from './ProjectAgents'
 afterEach(() => {
@@ -20,6 +21,9 @@ function open() {
         name: '项目',
         role: 'PROJECT_MEMBER',
       })
+      client.setQueryData(chatKeys.groups('p1'), [
+        { id: 'g1', projectId: 'p1', title: '默认聊天', defaultGroup: true },
+      ])
     },
   )
 }
@@ -71,4 +75,8 @@ it('submits a custom agent application and shows it waits for admin approval', a
     }),
   )
   expect(await screen.findByText('「测试助手」申请已提交，待审批')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: '去默认群跟进' })).toHaveAttribute(
+    'href',
+    '/app/projects/p1/chat?groupId=g1',
+  )
 })
