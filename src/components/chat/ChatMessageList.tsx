@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Button } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -24,10 +24,15 @@ interface Props {
   onLocate: (id: string) => void
   onMention?: (member: ChatMember) => void
   onReadingLatestChange?: (reading: boolean) => void
+  /** 在指定消息之后插入的临时内容（如 Agent 运行进度）：与消息一起参与虚拟化。 */
+  afterMessage?: (item: ChatMessage) => ReactNode
 }
 
+/** 虚拟列表里的一行：真实消息，或挂在它后面的临时内容。 */
+type Entry = { key: string; message: ChatMessage; showDate: boolean; extra: ReactNode }
+
 export const ChatMessageList = memo(function ChatMessageList(props: Props) {
-  const { messages, targetId, onReadingLatestChange } = props
+  const { messages, targetId, onReadingLatestChange, afterMessage } = props
   const scrollRef = useRef<HTMLDivElement>(null)
   const stickToBottom = useRef(true)
   const anchor = useRef<{ id: string; offset: number } | null>(null)
@@ -50,10 +55,24 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
     }
     return completed
   }, [messages])
+  // 临时运行进度作为单独一行插在触发消息后面，和消息一起参与虚拟化。
+  const entries = useMemo<Entry[]>(() => {
+    const rows: Entry[] = []
+    messages.forEach((message, index) => {
+      const previousDate = index > 0 ? new Date(messages[index - 1].createdAt) : null
+      const date = new Date(message.createdAt)
+      const showDate =
+        !Number.isNaN(date.getTime()) && date.toDateString() !== previousDate?.toDateString()
+      rows.push({ key: message.id, message, showDate, extra: null })
+      const extra = afterMessage?.(message)
+      if (extra) rows.push({ key: `${message.id}:runs`, message, showDate: false, extra })
+    })
+    return rows
+  }, [messages, afterMessage])
   const virtualizer = useVirtualizer({
-    count: messages.length,
+    count: entries.length,
     getScrollElement: () => scrollRef.current,
-    getItemKey: (index) => messages[index].id,
+    getItemKey: (index) => entries[index].key,
     estimateSize: () => 132,
     overscan: 8,
     useFlushSync: false,
@@ -67,24 +86,24 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
   const totalSize = virtualizer.getTotalSize()
   useLayoutEffect(() => {
     if (anchor.current) {
-      const index = messages.findIndex((item) => item.id === anchor.current?.id)
+      const index = entries.findIndex((entry) => entry.key === anchor.current?.id)
       if (index >= 0) {
         const offset = anchor.current.offset
         virtualizer.scrollToIndex(index, { align: 'start' })
         if (scrollRef.current) scrollRef.current.scrollTop += offset
       }
       anchor.current = null
-    } else if (stickToBottom.current && messages.length) {
-      virtualizer.scrollToIndex(messages.length - 1, { align: 'end' })
+    } else if (stickToBottom.current && entries.length) {
+      virtualizer.scrollToIndex(entries.length - 1, { align: 'end' })
     }
-  }, [latestId, messages, virtualizer, totalSize])
+  }, [latestId, entries, virtualizer, totalSize])
   useLayoutEffect(() => {
     if (!targetId) {
       locatedId.current = null
       return
     }
     if (locatedId.current === targetId) return
-    const index = messages.findIndex((item) => item.id === targetId)
+    const index = entries.findIndex((entry) => entry.message.id === targetId)
     if (index >= 0) {
       stickToBottom.current = false
       setAwayFromBottom(true)
@@ -93,7 +112,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
       locatedId.current = targetId
       virtualizer.scrollToIndex(index, { align: 'center' })
     }
-  }, [targetId, onReadingLatestChange, messages, virtualizer, latestSequence])
+  }, [targetId, onReadingLatestChange, entries, virtualizer, latestSequence])
 
   async function loadOlder() {
     if (props.loadingOlder) return
@@ -102,7 +121,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
       .find((item) => item.end >= (scrollRef.current?.scrollTop ?? 0))
     if (top)
       anchor.current = {
-        id: messages[top.index].id,
+        id: entries[top.index].key,
         offset: (scrollRef.current?.scrollTop ?? 0) - top.start,
       }
     stickToBottom.current = false
@@ -119,7 +138,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
     stickToBottom.current = true
     setAwayFromBottom(false)
     props.onReadingLatestChange?.(true)
-    if (messages.length) virtualizer.scrollToIndex(messages.length - 1, { align: 'end' })
+    if (entries.length) virtualizer.scrollToIndex(entries.length - 1, { align: 'end' })
   }
   return (
     <div className="chat-timeline">
@@ -165,19 +184,27 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
             style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
           >
             {virtualizer.getVirtualItems().map((row) => {
-              const item = messages[row.index]
+              const entry = entries[row.index]
+              const item = entry.message
+              if (entry.extra)
+                return (
+                  <div
+                    key={row.key}
+                    data-index={row.index}
+                    ref={virtualizer.measureElement}
+                    className="chat-timeline__row chat-timeline__row--runs"
+                    style={{
+                      position: 'absolute',
+                      width: '100%',
+                      top: 0,
+                      left: 0,
+                      transform: `translateY(${row.start}px)`,
+                    }}
+                  >
+                    {entry.extra}
+                  </div>
+                )
               const date = new Date(item.createdAt)
-              const previous = row.index > 0 ? messages[row.index - 1] : undefined
-              const previousDate = previous ? new Date(previous.createdAt) : null
-              const showDate =
-                !Number.isNaN(date.getTime()) &&
-                date.toDateString() !== previousDate?.toDateString()
-              // 同一发送者的连续消息只显示一次作者与头像。
-              const continued =
-                !showDate &&
-                item.senderType !== 'SYSTEM' &&
-                previous?.senderType === item.senderType &&
-                previous?.senderId === item.senderId
               const canStop =
                 item.senderType === 'USER' &&
                 (item.senderId === props.currentUserId || props.isAdmin) &&
@@ -205,7 +232,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     transform: `translateY(${row.start}px)`,
                   }}
                 >
-                  {showDate && (
+                  {entry.showDate && (
                     <div className="chat-timeline__date">
                       {date.toLocaleDateString('zh-CN', {
                         year: 'numeric',
@@ -221,7 +248,6 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     reply={item.replyToId ? byId.get(item.replyToId) : undefined}
                     sender={senders.get(`${item.senderType}:${item.senderId}`)}
                     currentUserId={props.currentUserId}
-                    continued={continued}
                     canStop={canStop}
                     stopping={props.stoppingId === item.id}
                     onReply={props.onReply}

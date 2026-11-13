@@ -201,4 +201,49 @@ describe('chat composition', () => {
     await waitFor(() => expect(send).toHaveBeenCalledOnce())
     expect(send.mock.calls[0][0].mentions).toEqual([{ type: 'AGENT', id: '102' }])
   })
+
+  it('inserts a mention from the toolbar and starts a new client message id', async () => {
+    const send = vi
+      .fn<(body: SendChatMessage) => Promise<unknown>>()
+      .mockRejectedValueOnce(new Error('网络中断'))
+      .mockResolvedValue({})
+    show(send)
+    const user = userEvent.setup()
+    fireEvent.change(screen.getByLabelText('消息内容'), { target: { value: '看下这个' } })
+    fireEvent.click(screen.getByRole('button', { name: /发送/ }))
+    await screen.findByText('网络中断')
+
+    await user.click(screen.getByRole('button', { name: '提及成员' }))
+    await user.click(await screen.findByRole('menuitem', { name: /Qgent/ }))
+    expect(screen.getByLabelText('消息内容')).toHaveValue('看下这个 @Qgent ')
+    // 插入提及后草稿变了：旧错误提示收起，内容按新消息发送。
+    expect(screen.queryByText('网络中断')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /发送/ }))
+    await waitFor(() => expect(send).toHaveBeenCalledTimes(2))
+    expect(send.mock.calls[1][0]).toMatchObject({
+      content: { text: '看下这个 @Qgent' },
+      mentions: [{ type: 'AGENT', id: '101' }],
+    })
+    expect(send.mock.calls[1][0].clientMessageId).not.toBe(send.mock.calls[0][0].clientMessageId)
+  })
+
+  it('explains why the composer is disabled', () => {
+    render(
+      <App>
+        <ChatComposer
+          projectId="p1"
+          recipients={[agent]}
+          reply={null}
+          onSend={vi.fn().mockResolvedValue({})}
+          onClearReply={vi.fn()}
+          disabled
+          disabledHint="项目已归档，恢复后可继续发送消息。"
+        />
+      </App>,
+    )
+    expect(screen.getByRole('status')).toHaveTextContent('项目已归档')
+    expect(screen.getByRole('button', { name: /发送/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '提及成员' })).toBeDisabled()
+  })
 })

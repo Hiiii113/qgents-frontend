@@ -61,6 +61,47 @@ describe('virtualized chat history', () => {
     )
     expect(view.container.querySelectorAll('.chat-message').length).toBeLessThan(40)
   })
+  it('renders temporary run progress right after its trigger message', async () => {
+    const trigger: ChatMessage = {
+      id: 't1',
+      sequence: 1,
+      groupId: 'g1',
+      type: 'TEXT',
+      content: { text: '@Qgent 开始执行' },
+      senderType: 'USER',
+      senderId: 'u1',
+      senderName: '成员',
+      mentions: [{ type: 'AGENT', id: agentId }],
+      createdAt: '2026-10-02T00:00:00Z',
+    }
+    const base = {
+      loading: false,
+      hasMore: false,
+      loadingOlder: false,
+      isAdmin: false,
+      currentUserId: 'u1',
+      stoppedIds: new Set<string>(),
+      targetId: null,
+      onLoadOlder: vi.fn(),
+      onReply: vi.fn(),
+      onStop: vi.fn(),
+      onPreview: vi.fn(),
+      onLocate: vi.fn(),
+    }
+    const progress = () => <div data-testid="run-progress">执行中</div>
+    const view = render(
+      <ChatMessageList
+        {...base}
+        messages={[trigger]}
+        afterMessage={(item) => (item.id === 't1' ? progress() : null)}
+      />,
+    )
+    await waitFor(() => expect(screen.getByTestId('run-progress')).toBeInTheDocument())
+    expect(view.container.querySelectorAll('.chat-timeline__row--runs')).toHaveLength(1)
+    // 终态且最终消息到达后 hook 会移除 run，临时行随之消失。
+    view.rerender(<ChatMessageList {...base} messages={[trigger]} afterMessage={() => null} />)
+    await waitFor(() => expect(screen.queryByTestId('run-progress')).not.toBeInTheDocument())
+  })
   it('keeps cancellation available until the mentioned agent has replied', async () => {
     const trigger: ChatMessage = {
       id: 'trigger',

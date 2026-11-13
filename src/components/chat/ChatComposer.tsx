@@ -1,5 +1,6 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Alert, App, Avatar, Button, Mentions, Tag, Upload } from 'antd'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { Alert, App, Avatar, Button, Dropdown, Mentions, Tag, Upload } from 'antd'
+import type { MenuProps } from 'antd'
 import { CloseOutlined, PaperClipOutlined, RobotOutlined, SendOutlined } from '@ant-design/icons'
 import type { MentionsRef } from 'antd/es/mentions'
 import { attachmentApi, uploadAttachment } from '@/api/attachment'
@@ -19,6 +20,7 @@ function containsMention(text: string, name: string) {
     text,
   )
 }
+const memberKey = (member: ChatMember) => `${member.memberType}:${member.id}`
 interface Props {
   projectId: string
   reply: ChatMessage | null
@@ -26,6 +28,8 @@ interface Props {
   onSend: (body: SendChatMessage) => Promise<unknown>
   onClearReply: () => void
   disabled?: boolean
+  /** 输入被禁用时的原因，例如项目已归档、聊天还在加载。 */
+  disabledHint?: string
   draftKey?: string
 }
 
@@ -55,7 +59,16 @@ export interface ChatComposerHandle {
 
 /** 输入状态留在编辑器，打字不会重新渲染历史消息列表。 */
 export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatComposer(
-  { projectId, reply, recipients, onSend, onClearReply, disabled = false, draftKey }: Props,
+  {
+    projectId,
+    reply,
+    recipients,
+    onSend,
+    onClearReply,
+    disabled = false,
+    disabledHint,
+    draftKey,
+  }: Props,
   ref,
 ) {
   const { message } = App.useApp()
@@ -67,31 +80,25 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
   const [selected, setSelected] = useState<string[]>(savedDraft.selected)
   const messageId = useRef(crypto.randomUUID())
   const inputRef = useRef<MentionsRef>(null)
+  const locked = busy || disabled
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      mention(member: ChatMember) {
-        const token = `@${member.displayName} `
-        setDraft((prev) => {
-          if (!prev) return token
-          return /[ \n]$/.test(prev) ? prev + token : `${prev} ${token}`
-        })
-        setSelected((prev) => {
-          const key = `${member.memberType}:${member.id}`
-          return prev.includes(key) ? prev : [...prev, key]
-        })
-        const focus = () => {
-          const textarea = inputRef.current?.nativeElement.querySelector('textarea')
-          textarea?.focus({ preventScroll: true })
-          const end = textarea?.value.length ?? 0
-          textarea?.setSelectionRange(end, end)
-        }
-        requestAnimationFrame(focus)
-      },
-    }),
-    [],
-  )
+  const insertMention = useCallback((member: ChatMember) => {
+    const token = `@${member.displayName} `
+    setDraft((prev) => (!prev ? token : /[ \n]$/.test(prev) ? prev + token : `${prev} ${token}`))
+    setSelected((prev) => (prev.includes(memberKey(member)) ? prev : [...prev, memberKey(member)]))
+    // 草稿变了就是新内容：换 clientMessageId，否则后端会按旧 ID 去重丢掉这条。
+    messageId.current = crypto.randomUUID()
+    setError(null)
+    // 等受控文本更新后再定位光标，避免覆盖用户后续输入。
+    requestAnimationFrame(() => {
+      const textarea = inputRef.current?.nativeElement.querySelector('textarea')
+      textarea?.focus({ preventScroll: true })
+      const end = textarea?.value.length ?? 0
+      textarea?.setSelectionRange(end, end)
+    })
+  }, [])
+  useImperativeHandle(ref, () => ({ mention: insertMention }), [insertMention])
+
   const sending = useRef(false)
   const previousReplyId = useRef(reply?.id)
   useEffect(() => {
@@ -118,21 +125,23 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
       inputRef.current?.nativeElement.querySelector('textarea')?.focus({ preventScroll: true })
   }, [busy, disabled])
 
-  function edit(value: string) {
-    setDraft(value)
-    setSelected((current) =>
-      current.filter((key) =>
-        recipients.some(
-          (item) =>
-            `${item.memberType}:${item.id}` === key && containsMention(value, item.displayName),
+  const edit = useCallback(
+    (value: string) => {
+      setDraft(value)
+      setSelected((current) =>
+        current.filter((key) =>
+          recipients.some(
+            (item) => memberKey(item) === key && containsMention(value, item.displayName),
+          ),
         ),
-      ),
-    )
-    messageId.current = crypto.randomUUID()
-    setError(null)
-  }
+      )
+      messageId.current = crypto.randomUUID()
+      setError(null)
+    },
+    [recipients],
+  )
   async function send() {
-    if (disabled || sending.current || (!draft.trim() && !attachments.length)) return
+    if (locked || sending.current || (!draft.trim() && !attachments.length)) return
     sending.current = true
     setBusy(true)
     setError(null)
@@ -160,8 +169,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
         const mentions: ChatMention[] = recipients
           .filter(
             (item) =>
-              selected.includes(`${item.memberType}:${item.id}`) &&
-              containsMention(draft, item.displayName),
+              selected.includes(memberKey(item)) && containsMention(draft, item.displayName),
           )
           .map((item) => ({ type: item.memberType, id: item.id }))
         await onSend({
@@ -183,26 +191,39 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
     }
   }
 
+  const mentionItems: MenuProps['items'] = recipients.map((item) => ({
+    key: memberKey(item),
+    label: (
+      <span className="chat-composer__mention-target">
+        <Avatar
+          size={24}
+          src={item.avatarUrl}
+          icon={item.memberType === 'AGENT' ? <RobotOutlined /> : undefined}
+        >
+          {item.memberType === 'USER' ? item.displayName.slice(0, 1) : undefined}
+        </Avatar>
+        <span>{item.displayName}</span>
+        <small>{item.memberType === 'AGENT' ? 'Agent' : '成员'}</small>
+      </span>
+    ),
+  }))
+
   return (
-    <div className="chat-composer">
+    <div className="chat-composer" aria-busy={busy || undefined}>
       {reply && (
         <div className="chat-composer__reply">
           <div>
             <strong>回复 {reply.senderName || '成员'}</strong>
-            <span>{chatMessageText(reply).slice(0, 140)}</span>
+            <span>{chatMessageText(reply).slice(0, 140) || '点击查看原消息'}</span>
           </div>
           <Button
             type="text"
-            size="small"
             aria-label="取消回复"
             disabled={busy}
             icon={<CloseOutlined />}
             onClick={onClearReply}
           />
         </div>
-      )}
-      {error && (
-        <Alert type="error" showIcon message={error} closable onClose={() => setError(null)} />
       )}
       {attachments.length > 0 && (
         <div className="chat-composer__files">
@@ -219,10 +240,13 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
           ))}
         </div>
       )}
+      {error && (
+        <Alert type="error" showIcon message={error} closable onClose={() => setError(null)} />
+      )}
       <Mentions
         ref={inputRef}
         aria-label="消息内容"
-        placeholder="写下想法，输入 @ 选择 Agent 或成员…"
+        placeholder={disabled ? '暂时不能发送消息' : '写下想法，输入 @ 选择 Agent 或成员…'}
         value={draft}
         onChange={edit}
         autoSize={{ minRows: 1, maxRows: 7 }}
@@ -230,8 +254,8 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
         notFoundContent="没有匹配的 Agent 或成员"
         validateSearch={(text) => !/\s/.test(text)}
         options={recipients.map((item) => ({
-          key: `${item.memberType}:${item.id}`,
-          memberKey: `${item.memberType}:${item.id}`,
+          key: memberKey(item),
+          memberKey: memberKey(item),
           value: item.displayName,
           label: (
             <span className="chat-mention-option">
@@ -251,19 +275,18 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
         }))}
         onSelect={(option) => {
           // 昵称可重复，选项单独携带成员 ID，发送时不靠昵称推断对象。
-          const memberKey: unknown = Reflect.get(option, 'memberKey')
-          if (typeof memberKey === 'string')
-            setSelected((current) => [...new Set([...current, memberKey])])
+          const key: unknown = Reflect.get(option, 'memberKey')
+          if (typeof key === 'string') setSelected((current) => [...new Set([...current, key])])
         }}
         onKeyDownCapture={(event) => {
           // 换行与输入法确认交给浏览器，避免被候选菜单当成选择操作。
           if (event.key === 'Enter' && (event.shiftKey || event.nativeEvent.isComposing))
             event.stopPropagation()
         }}
-        disabled={busy || disabled}
+        disabled={locked}
         onPaste={(event) => {
           const files = Array.from(event.clipboardData.files)
-          if (!files.length || busy || disabled) return
+          if (!files.length || locked) return
           event.preventDefault()
           if (attachments.length + files.length > 10) {
             void message.info('每次最多添加 10 个附件')
@@ -281,12 +304,17 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
           }
         }}
       />
+      {disabled && disabledHint && (
+        <p className="chat-composer__note" role="status">
+          {disabledHint}
+        </p>
+      )}
       <div className="chat-composer__toolbar">
         <div className="chat-composer__tools">
           <Upload
             showUploadList={false}
             multiple
-            disabled={busy || disabled}
+            disabled={locked}
             beforeUpload={(file, files) => {
               if (attachments.length + files.length > 10) {
                 void message.info('每次最多添加 10 个附件')
@@ -300,16 +328,42 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
               type="text"
               aria-label="添加附件"
               icon={<PaperClipOutlined />}
-              disabled={busy || disabled}
-            />
+              disabled={locked}
+            >
+              附件
+            </Button>
           </Upload>
+          <Dropdown
+            trigger={['click']}
+            rootClassName="chat-mention-menu"
+            disabled={locked || !recipients.length}
+            menu={{
+              items: mentionItems,
+              onClick: ({ key }) => {
+                const member = recipients.find((item) => memberKey(item) === key)
+                if (member) insertMention(member)
+              },
+            }}
+          >
+            <Button
+              type="text"
+              aria-label="提及成员"
+              disabled={locked || !recipients.length}
+              title="把成员 @ 进输入框"
+            >
+              <span aria-hidden="true">@</span> 提及
+            </Button>
+          </Dropdown>
         </div>
         <div className="chat-composer__send">
+          <span className="chat-composer__hint" aria-hidden="true">
+            Enter 发送 · Shift + Enter 换行
+          </span>
           <Button
             type="primary"
             icon={<SendOutlined />}
             loading={busy}
-            disabled={disabled || (!draft.trim() && !attachments.length)}
+            disabled={locked || (!draft.trim() && !attachments.length)}
             onClick={() => void send()}
           >
             发送

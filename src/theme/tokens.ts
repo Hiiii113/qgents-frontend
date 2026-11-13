@@ -71,6 +71,9 @@ export const cssVars: Record<string, string> = {
   '--text-h1': '34px',
   '--text-display': 'clamp(28px, 3.4vw, 44px)',
 
+  // 等宽字体：代码块、行内代码与代码类消息
+  '--font-mono': "ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace",
+
   // 动效：短、克制、只动不透明度与颜色
   '--ease': 'cubic-bezier(0.2, 0, 0, 1)',
   '--dur-fast': '120ms',

@@ -126,6 +126,281 @@ function membersOf(group: ChatGroup): ChatMember[] {
   return [...new Map([...synced, ...stored].map((member) => [member.id, member])).values()]
 }
 const path = '/api/projects/:projectId/groups/:groupId'
+
+/** 附件演示内容：图片与文本各一份，供聊天里的图片/附件消息真实预览。 */
+const SHOWCASE_ATTACHMENTS: Record<string, { fileName: string; mediaType: string; body: string }> =
+  {
+    'seed-chat-shot': {
+      fileName: '聊天排版对比.png',
+      mediaType: 'image/svg+xml',
+      body: `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+  <rect width="640" height="360" fill="#FAFAF7"/>
+  <rect x="24" y="24" width="32" height="32" rx="2" fill="#111312"/>
+  <rect x="72" y="26" width="120" height="12" fill="#C9CBC2"/>
+  <rect x="72" y="48" width="420" height="10" fill="#E3E4DE"/>
+  <rect x="72" y="64" width="360" height="10" fill="#E3E4DE"/>
+  <rect x="72" y="96" width="32" height="32" rx="2" fill="#EDF1E9"/>
+  <rect x="120" y="98" width="96" height="12" fill="#C9CBC2"/>
+  <rect x="120" y="120" width="440" height="10" fill="#E3E4DE"/>
+  <rect x="120" y="136" width="300" height="10" fill="#E3E4DE"/>
+</svg>`,
+    },
+    'seed-chat-checklist': {
+      fileName: '聊天体验走查清单.md',
+      mediaType: 'text/markdown; charset=utf-8',
+      body: '# 聊天体验走查清单\n\n- 头像永远在正文左上角，长回复不居中\n- Agent 正文 Markdown：标题 / 列表 / 代码 / 表格\n- 右键头像只弹菜单，选中才 @\n- 停止执行只在 Agent 尚未回复时出现\n',
+    },
+  }
+
+const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString()
+
+/**
+ * 演示群：固定构造 Agent 长 Markdown、代码块、GFM 表格、图片、附件与
+ * 「Agent 尚未回复」的待执行状态。只创建独立群，不碰默认群的真实消息。
+ */
+function seedChatShowcase() {
+  const project = findProject('2')
+  if (!project) return
+  const [qgent] = projectAgents(project.id)
+  const helper: ProjectAgent = {
+    id: nextMockId(),
+    name: '前端助手',
+    description: '负责聊天与界面实现的 Agent',
+    defaultAgent: false,
+    status: 'ACTIVE',
+  }
+  projectAgents(project.id).push(helper)
+
+  const group: ChatGroup = {
+    id: nextMockId(),
+    projectId: project.id,
+    title: 'Qgent 长回复演示',
+    defaultGroup: false,
+    createdBy: MOCK_USER.id,
+    createdAt: minutesAgo(180),
+    unreadCount: 0,
+    pinned: false,
+  }
+  groups.set(group.id, group)
+  const humans = userMembers(project.id, ['1', '2', '3'])
+  groupMembers.set(group.id, [...humans, agentMember(qgent), agentMember(helper)])
+  group.memberCount = groupMembers.get(group.id)?.length
+
+  const history: ChatMessage[] = []
+  const push = (
+    minutes: number,
+    body: Omit<ChatMessage, 'id' | 'sequence' | 'createdAt' | 'groupId'>,
+  ) => {
+    const item: ChatMessage = {
+      ...body,
+      id: `seed-${group.id}-${history.length + 1}`,
+      groupId: group.id,
+      sequence: history.length + 1,
+      createdAt: minutesAgo(minutes),
+    }
+    history.push(item)
+    return item
+  }
+  push(178, {
+    type: 'SYSTEM',
+    content: { text: '演示群：包含 Agent 长回复、代码块、表格、附件与待执行状态。' },
+    senderId: '',
+    senderName: 'Qgents',
+    senderType: 'SYSTEM',
+  })
+  push(172, {
+    type: 'TEXT',
+    content: { text: '长回复在窄屏上很难读，先把消息行和输入区整体过一遍。' },
+    senderId: '1',
+    senderName: '陈同学',
+    senderType: 'USER',
+  })
+  push(171, {
+    type: 'TEXT',
+    content: { text: '注意保留虚拟列表和历史分页，别把阅读位置弄丢了。' },
+    senderId: '1',
+    senderName: '陈同学',
+    senderType: 'USER',
+  })
+  const planTrigger = push(168, {
+    type: 'TEXT',
+    content: { text: '@Qgent 先给一版排版方案，重点讲清楚正文层级。' },
+    senderId: '2',
+    senderName: '张工',
+    senderType: 'USER',
+    mentions: [{ type: 'AGENT', id: qgent.id }],
+  })
+  push(166, {
+    type: 'TEXT',
+    content: {
+      text: [
+        '## 消息行排版结论',
+        '',
+        '先给结论：**头像列 + 作者行 + 正文**三层固定，正文再长也不会把人挤到中间。',
+        '',
+        '- 头像固定在正文左上角，32px，不随消息高度居中',
+        '- 作者、Agent 标签、时间占一行，回复/停止靠右，悬停才出现',
+        '- 正文长段落限 62ch，代码块和表格自己横向滚动',
+        '',
+        '> 人类消息保持纯文本，只有 Agent 回复走 Markdown。',
+        '',
+        '实现细节见 `src/components/chat/ChatMessageRow.tsx`，样式变量统一取 `tokens.ts`。',
+        '',
+        '还需要你确认三点：',
+        '',
+        '1. 连续消息是否每次都重复头像',
+        '2. 表格在 375px 下允许横向滚动',
+        '3. 停止执行只在 Agent 尚未回复时出现',
+        '',
+        '可参考 [W3C 焦点管理指南](https://www.w3.org/WAI/tutorials/) 的做法。',
+      ].join('\n'),
+    },
+    replyToId: planTrigger.id,
+    senderId: qgent.id,
+    senderName: qgent.name,
+    senderType: 'AGENT',
+  })
+  push(164, {
+    type: 'TEXT',
+    content: {
+      text: [
+        '### 三版排版对比',
+        '',
+        '| 方案 | 头像位置 | 长回复可读性 | 备注 |',
+        '| --- | --- | --- | --- |',
+        '| 气泡 | 正文左侧 | 一般 | 彩色底色太吵，已否决 |',
+        '| 头像列 + 作者行 | 固定左上角 | 好 | 当前采用，窄屏也不挤 |',
+        '| 极简无头像 | 无 | 差 | 三个 Agent 同时说话时容易看串 |',
+      ].join('\n'),
+    },
+    replyToId: planTrigger.id,
+    senderId: qgent.id,
+    senderName: qgent.name,
+    senderType: 'AGENT',
+  })
+  push(162, {
+    type: 'CODE',
+    content: {
+      language: 'ts',
+      code: [
+        "type Sender = 'USER' | 'AGENT' | 'SYSTEM'",
+        '',
+        'export function isAgent(sender: Sender): boolean {',
+        "  return sender === 'AGENT'",
+        '}',
+      ].join('\n'),
+    },
+    replyToId: planTrigger.id,
+    senderId: qgent.id,
+    senderName: qgent.name,
+    senderType: 'AGENT',
+  })
+  push(150, {
+    type: 'TEXT',
+    content: { text: '这是头像与正文的对比图，窄屏下再看一次。' },
+    senderId: '3',
+    senderName: '李设计',
+    senderType: 'USER',
+  })
+  push(149, {
+    type: 'IMAGE',
+    content: {
+      attachmentId: 'seed-chat-shot',
+      url: '',
+      name: '聊天排版对比.png',
+      size: 24576,
+      mediaType: 'image/svg+xml',
+    },
+    senderId: '3',
+    senderName: '李设计',
+    senderType: 'USER',
+  })
+  push(146, {
+    type: 'FILE',
+    content: {
+      attachmentId: 'seed-chat-checklist',
+      url: '',
+      name: '聊天体验走查清单.md',
+      size: 5120,
+      mediaType: 'text/markdown',
+    },
+    senderId: '2',
+    senderName: '张工',
+    senderType: 'USER',
+  })
+  push(120, {
+    type: 'TEXT',
+    content: { text: '@前端助手 代码块和表格在 375px 下再确认一遍。' },
+    senderId: '2',
+    senderName: '张工',
+    senderType: 'USER',
+    mentions: [{ type: 'AGENT', id: helper.id }],
+  })
+  push(118, {
+    type: 'TEXT',
+    content: { text: '好，我先看长回复这一版，窄屏等前端助手回来。' },
+    senderId: '1',
+    senderName: '陈同学',
+    senderType: 'USER',
+  })
+
+  messages.set(group.id, history)
+  const last = history.at(-1)
+  group.lastMessageAt = last?.createdAt
+  group.latestActivityAt = last?.createdAt
+  group.latestMessage = last
+    ? { type: last.type, text: chatMessageText(last), senderName: last.senderName }
+    : null
+}
+seedChatShowcase()
+
+/**
+ * 与 agent-runs mock 约定的固定演示群：SSE 只在这个群播放执行过程，
+ * 群与触发消息 ID 固定为 901 / 9011，方便快照与流事件对齐。
+ */
+function seedAgentRunDemo() {
+  const project = findProject('2')
+  if (!project) return
+  const agent = projectAgents(project.id).find((item) => item.defaultAgent)
+  if (!agent) return
+  const createdAt = minutesAgo(30)
+  const group: ChatGroup = {
+    id: '901',
+    projectId: project.id,
+    title: 'Agent 进度演示',
+    defaultGroup: false,
+    createdBy: MOCK_USER.id,
+    createdAt,
+    unreadCount: 0,
+    pinned: false,
+  }
+  groups.set(group.id, group)
+  const members = [...userMembers(group.projectId, [MOCK_USER.id]), agentMember(agent)]
+  groupMembers.set(group.id, members)
+  group.memberCount = members.length
+  const message: ChatMessage = {
+    id: '9011',
+    groupId: group.id,
+    sequence: 1,
+    type: 'TEXT',
+    content: { text: '@Qgent 演示一次真实执行过程' },
+    senderId: MOCK_USER.id,
+    senderName: MOCK_USER.displayName,
+    senderType: 'USER',
+    mentions: [{ type: 'AGENT', id: agent.id }],
+    createdAt,
+  }
+  messages.set(group.id, [message])
+  group.lastMessageAt = createdAt
+  group.latestActivityAt = createdAt
+  group.latestMessage = {
+    type: message.type,
+    text: chatMessageText(message),
+    senderName: message.senderName,
+  }
+}
+seedAgentRunDemo()
+
 export const projectChatHandlers = [
   http.get('/api/teams/:teamId/projects', ({ params }) =>
     HttpResponse.json({ data: MOCK_PROJECTS[String(params.teamId)] ?? [] }),
@@ -372,5 +647,28 @@ export const projectChatHandlers = [
     const { pinned } = (await request.json()) as { pinned: boolean }
     group.pinned = pinned
     return HttpResponse.json({ data: group })
+  }),
+  // 演示附件：图片与文本走同一内容接口，预览弹窗与缩略图都能真实加载。
+  http.get('/api/projects/:projectId/attachments/:attachmentId', ({ params }) => {
+    const file = SHOWCASE_ATTACHMENTS[String(params.attachmentId)]
+    if (!file) return notFound()
+    return HttpResponse.json({
+      data: {
+        attachmentId: String(params.attachmentId),
+        fileName: file.fileName,
+        mediaType: file.mediaType,
+        sizeBytes: file.body.length,
+        previewable: true,
+        previewType: file.mediaType.startsWith('image/') ? 'IMAGE' : 'TEXT',
+        contentUrl: `/api/projects/${params.projectId}/attachments/${params.attachmentId}/content`,
+        expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+      },
+    })
+  }),
+  http.get('/api/projects/:projectId/attachments/:attachmentId/content', ({ params }) => {
+    const file = SHOWCASE_ATTACHMENTS[String(params.attachmentId)]
+    return file
+      ? new HttpResponse(file.body, { headers: { 'Content-Type': file.mediaType } })
+      : notFound()
   }),
 ]

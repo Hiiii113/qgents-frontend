@@ -199,6 +199,13 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
           onSend={handleSend}
           onClearReply={clearReply}
           disabled={!ready || project.data?.status === 'ARCHIVED'}
+          disabledHint={
+            project.data?.status === 'ARCHIVED'
+              ? '项目已归档，恢复后可继续发送消息。'
+              : !ready
+                ? '正在加载聊天消息…'
+                : undefined
+          }
         />
       </div>
       <Drawer
