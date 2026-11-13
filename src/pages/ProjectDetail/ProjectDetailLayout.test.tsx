@@ -145,3 +145,54 @@ describe('project navigation', () => {
     await waitFor(() => expect(trigger).toHaveFocus())
   })
 })
+
+describe('group board', () => {
+  const now = Date.now()
+
+  it('orders groups by recent activity, not by name', () => {
+    renderWorkspace(
+      <ProjectDetailLayout />,
+      '/app/projects/p1/chat?groupId=g1',
+      '/app/projects/:projectId/*',
+      (client) => {
+        client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目' })
+        client.setQueryData(chatKeys.groups('p1'), [
+          { id: 'g1', projectId: 'p1', title: '瓦房', lastMessageAt: new Date(now - 6e5).toISOString() },
+          { id: 'g2', projectId: 'p1', title: '安卓', lastMessageAt: new Date(now - 6e6).toISOString() },
+        ])
+      },
+    )
+
+    const links = screen.getAllByRole('link', { name: /瓦房|安卓/ })
+    expect(links.map((link) => link.getAttribute('aria-label'))).toEqual(['瓦房', '安卓'])
+  })
+
+  it('keeps a group lit as changed until it is opened', async () => {
+    const { client } = renderWorkspace(
+      <ProjectDetailLayout />,
+      '/app/projects/p1/chat?groupId=g1',
+      '/app/projects/:projectId/*',
+      (seedClient) => {
+        seedClient.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目' })
+        seedClient.setQueryData(chatKeys.groups('p1'), [
+          { id: 'g1', projectId: 'p1', title: '瓦房', lastMessageAt: new Date(now - 6e6).toISOString() },
+          { id: 'g2', projectId: 'p1', title: '安卓', lastMessageAt: new Date(now - 9e6).toISOString() },
+        ])
+      },
+    )
+
+    expect(screen.queryByText('更新')).not.toBeInTheDocument()
+
+    // g2 有新动静：它自己升到上面并亮起来
+    client.setQueryData(chatKeys.groups('p1'), [
+      { id: 'g1', projectId: 'p1', title: '瓦房', lastMessageAt: new Date(now - 6e6).toISOString() },
+      { id: 'g2', projectId: 'p1', title: '安卓', lastMessageAt: new Date(now - 3e4).toISOString() },
+    ])
+
+    const flag = await screen.findByText('更新')
+    expect(flag).toBeInTheDocument()
+    const g2 = screen.getByRole('link', { name: '安卓' })
+    expect(g2.className).toContain('is-changed')
+    expect(screen.getAllByRole('link', { name: /瓦房|安卓/ })[0]).toBe(g2)
+  })
+})

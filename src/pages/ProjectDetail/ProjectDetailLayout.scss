@@ -390,3 +390,15 @@
     display: none;
   }
 }
+
+/* 变更：群行的时间转琥珀并挂一枚小标，直到你进去看过 */
+.project-group.is-changed .project-group__time {
+  color: var(--warning);
+}
+
+.project-group__flag {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--warning);
+  letter-spacing: 0.04em;
+}

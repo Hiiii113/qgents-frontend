@@ -1,4 +1,4 @@
-import { Suspense, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import {
   Link,
   NavLink,
@@ -49,6 +49,34 @@ export default function ProjectDetailLayout() {
   })
   useRememberTeam(project.data?.teamId)
 
+  const groupParam = params.get('groupId')
+  const messageParam = params.get('messageId')
+  const defaultGroup = groups.data?.find((group) => group.defaultGroup)
+  const activityAt = (group: { latestActivityAt?: string | null; lastMessageAt?: string | null }) =>
+    new Date(group.latestActivityAt ?? group.lastMessageAt ?? 0).getTime() || 0
+  // 出发板：置顶的先排，其余按最近动静排序 —— 有新消息的群会自己往上走。
+  const sortedGroups = [...(groups.data ?? [])].sort(
+    (a, b) =>
+      Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) ||
+      activityAt(b) - activityAt(a) ||
+      a.title.localeCompare(b.title),
+  )
+  const selectedId = groupParam || defaultGroup?.id || groups.data?.[0]?.id
+  // 变更的行亮着直到你看过：进入某个群就把它当前的时间记为已见，其余群只要变新就还是变更态。
+  const seenAt = useRef(new Map<string, number>())
+  useEffect(() => {
+    if (!groups.data) return
+    for (const group of groups.data) {
+      if (!seenAt.current.has(group.id)) seenAt.current.set(group.id, activityAt(group))
+    }
+    const selected = groups.data.find((group) => group.id === selectedId)
+    if (selected) seenAt.current.set(selected.id, activityAt(selected))
+  }, [groups.data, selectedId])
+  const isChanged = (group: { id: string } & Parameters<typeof activityAt>[0]) => {
+    const seen = seenAt.current.get(group.id)
+    return seen !== undefined && activityAt(group) > seen && group.id !== selectedId
+  }
+
   if (project.isPending)
     return (
       <div className="project-workspace__status">
@@ -66,16 +94,6 @@ export default function ProjectDetailLayout() {
         />
       </div>
     )
-
-  const groupParam = params.get('groupId')
-  const messageParam = params.get('messageId')
-  const defaultGroup = groups.data?.find((group) => group.defaultGroup)
-  const sortedGroups = [...(groups.data ?? [])].sort(
-    (a, b) =>
-      Number(Boolean(b.defaultGroup)) - Number(Boolean(a.defaultGroup)) ||
-      Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)),
-  )
-  const selectedId = groupParam || defaultGroup?.id || groups.data?.[0]?.id
   const keepGroupId = groupParam || (inChat ? selectedId : undefined)
   const preserved = new URLSearchParams()
   if (keepGroupId) preserved.set('groupId', keepGroupId)
@@ -103,7 +121,7 @@ export default function ProjectDetailLayout() {
       <Link
         key={group.id}
         to={PATHS.projectChat(projectId) + '?groupId=' + encodeURIComponent(group.id)}
-        className={`project-group${selectedId === group.id ? ' is-active' : ''}`}
+        className={`project-group${selectedId === group.id ? ' is-active' : ''}${isChanged(group) ? ' is-changed' : ''}`}
         aria-label={group.title}
         aria-current={selectedId === group.id ? 'page' : undefined}
         onClick={onNavigate}
@@ -125,6 +143,7 @@ export default function ProjectDetailLayout() {
           <span className="project-group__time">
             {formatRelativeTime(group.latestActivityAt ?? group.lastMessageAt ?? '')}
           </span>
+          {isChanged(group) ? <span className="project-group__flag">更新</span> : null}
           {group.unreadCount ? (
             <span className="project-group__unread">
               {group.unreadCount > 99 ? '99+' : group.unreadCount}
