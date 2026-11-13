@@ -4,7 +4,8 @@ import { EnterOutlined, FileOutlined, RobotOutlined } from '@ant-design/icons'
 import { AuthedImage } from '@/components/AuthedImage'
 import { attachmentApi } from '@/api/attachment'
 import { chatMessageText, messageField, type ChatMember, type ChatMessage } from '@/types/chat'
-import { ChatCodeBlock, ChatMarkdown } from './ChatMarkdown'
+import { ChatCodeBlock } from './ChatMarkdown'
+import { LazyChatMarkdown } from './LazyChatMarkdown'
 
 interface Props {
   item: ChatMessage
@@ -150,7 +151,7 @@ function MessageBody({
         </span>
       </button>
     )
-  if (agent) return <ChatMarkdown text={chatMessageText(item)} />
+  if (agent) return <LazyChatMarkdown text={chatMessageText(item)} />
   return (
     <div className="chat-message__text">
       <LinkedText text={chatMessageText(item)} />

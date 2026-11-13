@@ -56,6 +56,11 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
   const [awayFromBottom, setAwayFromBottom] = useState(false)
   const [seenSequence, setSeenSequence] = useState(0)
   const byId = useMemo(() => new Map(messages.map((item) => [item.id, item])), [messages])
+  // 空态只推已启用的 Agent：点一下就把它 @ 进输入框
+  const agents = useMemo(
+    () => (props.participants ?? []).filter((member) => member.memberType === 'AGENT').slice(0, 3),
+    [props.participants],
+  )
   const senders = useMemo(
     () =>
       new Map(props.participants?.map((member) => [`${member.memberType}:${member.id}`, member])),
@@ -195,9 +200,23 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
           <div className="chat-timeline__empty">
             <p className="chat-timeline__empty-title">还没有消息</p>
             <p className="chat-timeline__empty-text">
-              在下面写下第一句，或者用 @ 提到 Agent
-              让它开始干活。群聊内容会按天分组，长期有效的信息会自动进入群记忆。
+              在下面写下第一句，或者 @ 一个 Agent 让它开始干活。普通消息不会唤起
+              Agent，只有明确提到才触发。
             </p>
+            {agents.length ? (
+              <div className="chat-timeline__empty-actions">
+                {agents.map((agent) => (
+                  <Button
+                    key={agent.id}
+                    size="small"
+                    onClick={() => props.onMention?.(agent)}
+                    disabled={!props.onMention}
+                  >
+                    @ {agent.displayName}
+                  </Button>
+                ))}
+              </div>
+            ) : null}
           </div>
         ) : (
           <div

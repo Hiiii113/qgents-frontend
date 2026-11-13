@@ -57,7 +57,8 @@ describe('AgentRunProgress', () => {
     expect(screen.getByRole('status')).toHaveTextContent('执行中 · 第 2 轮')
     expect(screen.getByText('第一轮正文')).toBeInTheDocument()
     expect(screen.getByText('第二轮正文')).toBeInTheDocument()
-    expect(screen.getByText('run_command').closest('li')).toHaveTextContent('执行中')
+    // 工具名在板行的「动作」列和展开后的工具清单里各出现一次
+    expect(screen.getAllByText('run_command')[1].closest('li')).toHaveTextContent('执行中')
 
     await userEvent.click(screen.getByRole('button', { name: '停止Qgent的执行' }))
     expect(onStop).toHaveBeenCalledTimes(1)

@@ -1,4 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
+import { chatApi } from '@/api/chat'
+import { chatKeys } from '@/components/chat/useChatMessages'
 import { useQuery } from '@tanstack/react-query'
 import { projectApi, teamApi } from '@/api'
 import { useCurrentTeamId } from '@/store/appUiStore'
@@ -18,7 +20,7 @@ function projectIdFromPath(pathname: string): string | null {
  */
 export function Banner() {
   const teamId = useCurrentTeamId()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const projectId = projectIdFromPath(pathname)
   const teams = useQuery({ queryKey: ['teams', 'mine'], queryFn: teamApi.listMine })
   const team = teams.data?.find((item) => item.id === teamId)
@@ -27,6 +29,18 @@ export function Banner() {
     queryFn: () => projectApi.getById(projectId ?? ''),
     enabled: Boolean(projectId),
   })
+  // 聊天页把当前群也写进牌头带：离开聊天页后至少还知道刚才在哪个群。
+  const groupId = new URLSearchParams(search).get('groupId')
+  const inChat = pathname.endsWith('/chat')
+  const groups = useQuery({
+    queryKey: chatKeys.groups(projectId ?? ''),
+    queryFn: () => chatApi.groups(projectId ?? ''),
+    enabled: Boolean(projectId) && inChat,
+  })
+  const group =
+    groups.data?.find((item) => item.id === groupId) ??
+    groups.data?.find((item) => item.defaultGroup) ??
+    groups.data?.[0]
   const home = teamId ? PATHS.teamDetail(teamId) : PATHS.APP
 
   return (
@@ -43,6 +57,14 @@ export function Banner() {
             <span className="qg-banner__sep" aria-hidden />
             <span className="qg-banner__proj">
               项目 <b>{project.data.name}</b>
+            </span>
+          </>
+        )}
+        {group && (
+          <>
+            <span className="qg-banner__sep" aria-hidden />
+            <span className="qg-banner__proj">
+              <b># {group.title}</b>
             </span>
           </>
         )}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Alert, App, Avatar, Button, Drawer, List, Tag, Tooltip } from 'antd'
 import { PushpinOutlined, RobotOutlined, TeamOutlined } from '@ant-design/icons'
@@ -11,12 +11,16 @@ import { formatApiError } from '@/utils/formatApiError'
 import type { Page } from '@/types/api'
 import { messageField, type ChatMessage, type SendChatMessage } from '@/types/chat'
 import { GroupMembersModal } from './GroupMembersModal'
-import { AttachmentPreviewModal } from './AttachmentPreviewModal'
 import { ChatComposer, type ChatComposerHandle } from './ChatComposer'
-import { ChatMarkdown } from './ChatMarkdown'
 import { ChatMessageList } from './ChatMessageList'
+import { LazyChatMarkdown } from './LazyChatMarkdown'
 import { chatKeys, mergeChatMessages, useChatMessages } from './useChatMessages'
 import './ChatPanel.css'
+
+/** 附件预览只在真的打开时加载。 */
+const AttachmentPreviewModal = lazy(async () => ({
+  default: (await import('./AttachmentPreviewModal')).AttachmentPreviewModal,
+}))
 
 /** 项目聊天的组合入口；输入、消息列表和数据同步分别维护。 */
 export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: string }) {
@@ -109,7 +113,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   )
   const handleSend = useCallback((body: SendChatMessage) => sendAsync(body), [sendAsync])
   const loadOlder = chat.query.fetchNextPage
-  const renderMarkdown = useCallback((text: string) => <ChatMarkdown text={text} />, [])
+  const renderMarkdown = useCallback((text: string) => <LazyChatMarkdown text={text} />, [])
   const agentNames = useMemo(
     () =>
       new Map(
@@ -309,13 +313,15 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
         />
       )}
       {preview && (
-        <AttachmentPreviewModal
-          open
-          projectId={projectId}
-          attachmentId={messageField(preview, 'attachmentId')}
-          fileName={messageField(preview, 'name') || undefined}
-          onClose={() => setPreview(null)}
-        />
+        <Suspense fallback={null}>
+          <AttachmentPreviewModal
+            open
+            projectId={projectId}
+            attachmentId={messageField(preview, 'attachmentId')}
+            fileName={messageField(preview, 'name') || undefined}
+            onClose={() => setPreview(null)}
+          />
+        </Suspense>
       )}
     </section>
   )

@@ -9,11 +9,6 @@
   border-radius: var(--radius-card);
   background: var(--paper-sunken);
   color: var(--ink-900);
-  box-shadow: inset 3px 0 0 var(--rule-strong);
-}
-
-.qg-agent-run:has(.qg-agent-run__status--running) {
-  box-shadow: inset 3px 0 0 var(--warning);
 }
 
 .qg-agent-run__head {
@@ -73,25 +68,63 @@
 .qg-agent-run__round {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
+}
+
+/* 列头：出发板的板行语义 —— 轮次 / 动作 / 状态，三列固定 */
+.qg-agent-run__cols {
+  display: grid;
+  grid-template-columns: 10px 84px minmax(0, 1fr) 64px;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--ink-400);
+  letter-spacing: 0.04em;
 }
 
 .qg-agent-run__round-toggle {
-  display: flex;
+  display: grid;
+  grid-template-columns: 10px 84px minmax(0, 1fr) 64px;
   align-items: center;
-  gap: var(--space-1);
-  min-height: 28px;
-  padding: 0;
+  gap: var(--space-2);
+  width: 100%;
+  height: 48px;
+  padding: 0 var(--space-2);
   border: 0;
+  border-radius: var(--radius-s);
   background: none;
   color: var(--ink-500);
+  text-align: left;
   font-size: var(--text-xs);
   text-align: left;
   cursor: pointer;
 }
 
 .qg-agent-run__round-toggle:hover {
+  background: var(--paper-raised);
+  color: var(--ink-900);
+}
+
+.qg-agent-run__round-no {
+  font-size: var(--text-sm);
   color: var(--ink-700);
+  white-space: nowrap;
+}
+
+.qg-agent-run__round-action {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  color: var(--ink-900);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.qg-agent-run__round-state {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-400);
+  text-align: right;
+  white-space: nowrap;
 }
 
 /* 折叠三角用 clip-path 画，避免用左边框拼三角形。 */
@@ -116,6 +149,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  padding: 0 var(--space-2) var(--space-2) calc(10px + 84px + var(--space-4));
 }
 
 .qg-agent-run__markdown,

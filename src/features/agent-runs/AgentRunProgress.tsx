@@ -43,6 +43,22 @@ const STATUS_LABELS: Record<AgentRunStatus, string> = {
   FAILED: '失败',
 }
 
+/** 一轮的动作摘要：最后一个工具的调用名，没有工具就说明在出正文。 */
+function roundAction(round: RoundView): string {
+  const last = round.tools[round.tools.length - 1]
+  if (last) return last.tool
+  if (round.text) return '输出正文'
+  return '等待输出'
+}
+
+/** 一轮的状态：正在跑的那轮说进行中，否则沿用最后一个工具的终态。 */
+function roundState(round: RoundView, active: boolean): string {
+  if (active) return '进行中'
+  const last = round.tools[round.tools.length - 1]
+  if (last) return TOOL_STATE_LABELS[last.state]
+  return round.text ? '完成' : '等待'
+}
+
 function buildRounds(run: AgentRun): RoundView[] {
   const rounds = new Map<number, RoundView>()
   const view = (round: number): RoundView => {
@@ -109,6 +125,15 @@ export const AgentRunProgress = memo(function AgentRunProgress({
 
       {!rounds.length && running ? <p className="qg-agent-run__waiting">正在准备…</p> : null}
 
+      {rounds.length ? (
+        <div className="qg-agent-run__cols" aria-hidden>
+          <span />
+          <span>轮次</span>
+          <span>动作</span>
+          <span>状态</span>
+        </div>
+      ) : null}
+
       <div className="qg-agent-run__rounds">
         {rounds.map((round) => {
           const open = !collapsedRounds.includes(round.round)
@@ -128,8 +153,11 @@ export const AgentRunProgress = memo(function AgentRunProgress({
                 }
               >
                 <span className="qg-agent-run__caret" data-open={open} aria-hidden />
-                <span>第 {round.round} 轮</span>
-                {activeTool ? <span className="qg-agent-run__muted">进行中</span> : null}
+                <span className="qg-agent-run__round-no">第 {round.round} 轮</span>
+                <span className="qg-agent-run__round-action">{roundAction(round)}</span>
+                <span className="qg-agent-run__round-state">
+                  {roundState(round, activeTool)}
+                </span>
               </button>
               {open ? (
                 <div className="qg-agent-run__body">
