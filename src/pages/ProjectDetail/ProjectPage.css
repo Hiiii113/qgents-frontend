@@ -25,6 +25,7 @@
   font-size: var(--text-h2);
   font-weight: 600;
   letter-spacing: -0.02em;
+  text-wrap: balance;
   line-height: 1.2;
   min-width: 0;
   overflow-wrap: anywhere;

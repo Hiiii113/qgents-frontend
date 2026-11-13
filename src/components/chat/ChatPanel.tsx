@@ -169,9 +169,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
       <header className="chat-panel__header">
         <div className="chat-panel__identity">
           <h1>{group?.title || project.data?.name || '项目聊天'}</h1>
-          <p>
-            {group?.defaultGroup ? '默认群 · 全体项目成员' : '一起讨论，必要时 @Agent 开展工作'}
-          </p>
+          <p>{group?.defaultGroup ? '默认群 · 全体项目成员' : '项目群聊'}</p>
         </div>
         <div className="chat-panel__header-actions">
           <Tooltip title={group?.pinned ? '取消置顶' : '置顶聊天'}>

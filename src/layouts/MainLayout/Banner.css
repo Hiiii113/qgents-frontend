@@ -56,6 +56,8 @@
 
 .qg-banner__proj {
   font-size: var(--text-ui);
+  /* 深底浅字：多给一点字距，小字号在暗底上不会糊在一起 */
+  letter-spacing: 0.01em;
   color: var(--band-ink-muted);
   white-space: nowrap;
   overflow: hidden;
