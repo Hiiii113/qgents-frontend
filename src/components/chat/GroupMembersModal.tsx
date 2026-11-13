@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Alert, App, Button, Form, Input, Modal, Select } from 'antd'
+import { Alert, App, Avatar, Button, Checkbox, Form, Input, Modal } from 'antd'
+import { RobotOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { agentApi } from '@/api/agent'
 import { chatApi } from '@/api/chat'
@@ -9,6 +10,18 @@ import { useAuth } from '@/context/AuthContext'
 import { formatApiError } from '@/utils/formatApiError'
 import { chatKeys } from './useChatMessages'
 import type { ChatGroup } from '@/types/chat'
+import './GroupMembersModal.css'
+
+/** 一行候选成员；joined 表示已在群里，显示为勾选且不可再提交。 */
+interface MemberRow {
+  key: string
+  value: string
+  name: string
+  meta?: string
+  avatarUrl?: string | null
+  agent: boolean
+  joined: boolean
+}
 
 /** 建群与追加邀请共用成员选择；只提交选择的 ID，创建者由服务端自动入群。 */
 export function GroupMembersModal({
@@ -89,19 +102,60 @@ export function GroupMembersModal({
     agents.isPending ||
     (Boolean(group) && current.isPending)
   const failed = members.isError || teamMembers.isError || agents.isError || current.isError
-  // 人与 Agent 的 ID 各自从 1 开始，会撞号：按成员类型拼接后判断，避免把同号的 Agent 误隐藏。
-  const users = (members.data ?? [])
-    .filter((member) => member.userId !== user?.id && !existing.has(`USER:${member.userId}`))
+  // 人与 Agent 的 ID 各自从 1 开始，会撞号：按成员类型拼接后判断，避免把同号的 Agent 误判为已入群。
+  const users: MemberRow[] = (members.data ?? [])
+    .filter((member) => member.userId !== user?.id)
     .map((member) => {
       const detail = teamMembers.data?.find((item) => item.userId === member.userId)
       return {
+        key: `USER:${member.userId}`,
         value: member.userId,
-        label: detail?.displayName || member.displayName || detail?.email || member.userId,
+        name: detail?.displayName || member.displayName || detail?.email || member.userId,
+        meta: detail?.email || member.email || undefined,
+        avatarUrl: detail?.avatarUrl || member.avatarUrl,
+        agent: false,
+        joined: existing.has(`USER:${member.userId}`),
       }
     })
-  const agentOptions = (agents.data ?? [])
-    .filter((agent) => !existing.has(`AGENT:${agent.id}`))
-    .map((agent) => ({ value: agent.id, label: agent.name }))
+  const agentRows: MemberRow[] = (agents.data ?? []).map((agent) => ({
+    key: `AGENT:${agent.id}`,
+    value: agent.id,
+    name: agent.name,
+    meta: 'Agent',
+    avatarUrl: agent.avatarUrl,
+    agent: true,
+    joined: existing.has(`AGENT:${agent.id}`),
+  }))
+  const renderRows = (rows: MemberRow[], empty: string) =>
+    rows.length ? (
+      rows.map((row) => (
+        <Checkbox
+          key={row.key}
+          className="group-modal__row"
+          value={row.value}
+          checked={row.joined || undefined}
+          disabled={row.joined}
+          // 已入群的勾选只是展示，不能混进邀请的 userIds / agentIds。
+          skipGroup={row.joined}
+        >
+          <span className="group-modal__member">
+            <Avatar
+              src={row.avatarUrl}
+              icon={row.agent ? <RobotOutlined /> : undefined}
+              size="small"
+            >
+              {row.agent ? undefined : row.name.slice(0, 1)}
+            </Avatar>
+            <span className="group-modal__member-text">
+              <span className="group-modal__member-name">{row.name}</span>
+              {row.meta && <span className="group-modal__member-meta">{row.meta}</span>}
+            </span>
+          </span>
+        </Checkbox>
+      ))
+    ) : loading ? null : (
+      <p className="group-modal__empty">{empty}</p>
+    )
   return (
     <Modal
       open
@@ -119,11 +173,6 @@ export function GroupMembersModal({
       closable={!mutation.isPending}
       cancelButtonProps={{ disabled: mutation.isPending }}
     >
-      <p className="group-modal__intro">
-        {group
-          ? '邀请项目成员或项目 Agent，继续一起讨论。'
-          : '给这次讨论一个名字，邀请合适的伙伴。你会自动加入群聊。'}
-      </p>
       {(error || failed) && (
         <Alert
           type="error"
@@ -162,30 +211,16 @@ export function GroupMembersModal({
             </Form.Item>
           </>
         )}
-        {!group?.defaultGroup && (
-          <Form.Item name="userIds" label="项目成员">
-            <Select
-              mode="multiple"
-              loading={loading}
-              options={users}
-              optionFilterProp="label"
-              placeholder="选择要邀请的成员"
-            />
-          </Form.Item>
-        )}
-        <Form.Item name="agentIds" label="Agent">
-          <Select
-            mode="multiple"
-            loading={loading}
-            options={agentOptions}
-            optionFilterProp="label"
-            placeholder="选择要邀请的项目 Agent"
-            notFoundContent="暂无可邀请的 Agent"
-          />
+        <Form.Item name="userIds" label="项目成员">
+          <Checkbox.Group className="group-modal__options">
+            {renderRows(users, '暂无可邀请的项目成员')}
+          </Checkbox.Group>
         </Form.Item>
-        <p className="group-modal__hint">
-          只有已启用的项目 Agent 可以邀请；加入后可通过 @Agent 发起工作，普通消息不会触发执行。
-        </p>
+        <Form.Item name="agentIds" label="Agent">
+          <Checkbox.Group className="group-modal__options">
+            {renderRows(agentRows, '暂无可邀请的 Agent')}
+          </Checkbox.Group>
+        </Form.Item>
       </Form>
     </Modal>
   )

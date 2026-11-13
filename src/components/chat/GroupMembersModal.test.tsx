@@ -62,16 +62,14 @@ it('offers the project enabled agents and sends the chosen agent ids', async () 
     },
   )
   await user.type(screen.getByLabelText('群聊名称'), '设计')
-  await user.click(await screen.findByRole('combobox', { name: 'Agent' }))
-  await user.click(await screen.findByTitle('前端助手'))
+  await user.click(await screen.findByRole('checkbox', { name: /前端助手/ }))
   await user.click(screen.getByRole('button', { name: '创建群聊' }))
   await waitFor(() =>
     expect(create).toHaveBeenCalledWith('p1', { title: '设计', userIds: [], agentIds: ['102'] }),
   )
 })
 
-it('keeps an agent available when a user happens to share its numeric id', async () => {
-  const user = userEvent.setup()
+it('shows already joined members as checked and disabled instead of hiding them', async () => {
   renderWorkspace(
     <GroupMembersModal
       projectId="p1"
@@ -91,21 +89,19 @@ it('keeps an agent available when a user happens to share its numeric id', async
       )
       client.setQueryData(['teams', 't1', 'members'], [])
       client.setQueryData(chatKeys.agents('p1'), agents)
-      // 群里的用户 102 与 Agent 102 撞号：只该隐藏已入群的人，Agent 102 仍可选。
+      // 群里的用户 102 与 Agent 102 撞号：只该标记已入群的人，Agent 102 仍可选。
       client.setQueryData(chatKeys.members('p1', 'g1'), [
         { id: '102', displayName: '李工', memberType: 'USER' },
       ])
     },
   )
-  await user.click(await screen.findByRole('combobox', { name: 'Agent' }))
-  expect(await screen.findByTitle('前端助手')).toBeInTheDocument()
-  await user.click(screen.getByRole('combobox', { name: '项目成员' }))
-  expect(await screen.findByTitle('王工')).toBeInTheDocument()
-  expect(screen.queryByTitle('李工')).not.toBeInTheDocument()
+  expect(await screen.findByRole('checkbox', { name: /李工/ })).toBeChecked()
+  expect(screen.getByRole('checkbox', { name: /李工/ })).toBeDisabled()
+  expect(screen.getByRole('checkbox', { name: /王工/ })).toBeEnabled()
+  expect(screen.getByRole('checkbox', { name: /前端助手/ })).toBeEnabled()
 })
 
-it('does not offer agents that already joined the group', async () => {
-  const user = userEvent.setup()
+it('marks an agent that already joined the group as checked and disabled', async () => {
   renderWorkspace(
     <GroupMembersModal
       projectId="p1"
@@ -124,7 +120,34 @@ it('does not offer agents that already joined the group', async () => {
       ])
     },
   )
-  await user.click(await screen.findByRole('combobox', { name: 'Agent' }))
-  expect(await screen.findByTitle('前端助手')).toBeInTheDocument()
-  expect(screen.queryByTitle('Qgent')).not.toBeInTheDocument()
+  const joined = await screen.findByRole('checkbox', { name: /Qgent/ })
+  expect(joined).toBeChecked()
+  expect(joined).toBeDisabled()
+  expect(screen.getByRole('checkbox', { name: /前端助手/ })).toBeEnabled()
+})
+
+it('keeps the project member section in the default group with nothing to invite', async () => {
+  renderWorkspace(
+    <GroupMembersModal
+      projectId="p1"
+      teamId="t1"
+      group={{ id: 'g1', projectId: 'p1', title: '默认群', defaultGroup: true }}
+      onClose={vi.fn()}
+    />,
+    '/app',
+    '/app',
+    (client) => {
+      client.setQueryData(['projects', 'p1', 'members'], [])
+      client.setQueryData(['teams', 't1', 'members'], [])
+      client.setQueryData(chatKeys.agents('p1'), [])
+      client.setQueryData(chatKeys.members('p1', 'g1'), [
+        { id: 'u1', displayName: '我', memberType: 'USER' },
+      ])
+    },
+  )
+  // 默认群也显示项目成员一节：没有可邀请的人时只给一行短提示。
+  expect(screen.getByText('项目成员')).toBeInTheDocument()
+  expect(await screen.findByText('暂无可邀请的项目成员')).toBeInTheDocument()
+  expect(screen.getByText('暂无可邀请的 Agent')).toBeInTheDocument()
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
 })
