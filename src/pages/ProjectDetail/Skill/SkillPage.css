@@ -248,7 +248,36 @@
   border-top: 1px solid var(--rule);
 }
 
-/* 空态与加载：一行说明，动作留在工具栏里，不重复第二个主按钮。 */
+/* 空态与筛选空结果：无数据时给图形 + 一个主按钮，筛选/搜索无结果只留一行提示。 */
+.skill-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-16) var(--space-4);
+  text-align: center;
+}
+
+.skill-empty__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--radius-card);
+  background: var(--paper-sunken);
+  color: var(--ink-300);
+  font-size: 48px;
+  line-height: 1;
+}
+
+.skill-empty__title {
+  font-size: var(--text-lead);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
 .skill-note {
   padding: var(--space-2) 0;
   font-size: var(--text-sm);

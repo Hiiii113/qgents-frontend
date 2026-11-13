@@ -87,7 +87,6 @@ export function ProjectAgents() {
           </section>
         )}
         <section className="settings-section">
-          <h2 className="settings-section__title">已启用的 Agent</h2>
           {agents.isPending ? (
             <Skeleton active paragraph={{ rows: 3 }} />
           ) : !(agents.data ?? []).length ? (

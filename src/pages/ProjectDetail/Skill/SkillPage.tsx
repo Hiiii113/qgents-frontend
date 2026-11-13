@@ -18,7 +18,13 @@ import {
   Tag,
   Upload,
 } from 'antd'
-import { PlusOutlined, TagsOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons'
+import {
+  FileAddOutlined,
+  PlusOutlined,
+  TagsOutlined,
+  UploadOutlined,
+  UserOutlined,
+} from '@ant-design/icons'
 import { skillApi } from '@/api'
 import type { Skill, SkillPreview, SkillStatus, SkillVisibility } from '@/types'
 import { ProjectPage } from '../ProjectPage'
@@ -132,11 +138,19 @@ export function SkillPage() {
             action={<Button onClick={() => void refetch()}>重试</Button>}
           />
         ) : filtered.length === 0 ? (
-          <p className="skill-note">
-            {keyword.trim() || filter !== 'ALL'
-              ? '没有匹配的 Skill。'
-              : '还没有 Skill。导入 SKILL.md 即可创建。'}
-          </p>
+          keyword.trim() || filter !== 'ALL' ? (
+            <p className="skill-note">没有匹配的 Skill。</p>
+          ) : (
+            <div className="skill-empty">
+              <span className="skill-empty__icon">
+                <FileAddOutlined aria-hidden />
+              </span>
+              <p className="skill-empty__title">还没有 Skill</p>
+              <Button type="primary" onClick={() => setCreateOpen(true)}>
+                导入 Skill
+              </Button>
+            </div>
+          )
         ) : (
           <div className="skill-list">
             {filtered.map((s) => (
