@@ -185,9 +185,11 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
             <Button
               type="text"
               icon={<TeamOutlined aria-hidden />}
+              aria-label={`${group?.memberCount ?? members.data?.length ?? 0} 位成员`}
               onClick={() => setMembersOpen(true)}
             >
-              {group?.memberCount ?? members.data?.length ?? 0} 位成员
+              <span>{group?.memberCount ?? members.data?.length ?? 0}</span>
+              <span className="chat-panel__member-suffix"> 位成员</span>
             </Button>
           </div>
         </div>

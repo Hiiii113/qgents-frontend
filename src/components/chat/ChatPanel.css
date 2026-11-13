@@ -934,8 +934,14 @@
     display: none;
   }
 
+  /* 390px 下标题与 44px 菜单、置顶、成员数同排：标题用完 identity 的剩余宽度，
+   * 成员数在窄屏只留数字，给群名腾出空间。 */
   .chat-panel__identity h1 {
-    max-width: 45vw;
+    max-width: 100%;
+  }
+
+  .chat-panel__member-suffix {
+    display: none;
   }
 }
 
