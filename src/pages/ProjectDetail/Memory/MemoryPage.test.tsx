@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { App } from 'antd'
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { memoryApi } from '@/api'
 import type { ProjectMemory } from '@/types'
 import { MemoryPage } from './MemoryPage'
@@ -18,11 +18,6 @@ const memory: ProjectMemory = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 }
 
-function ChatAddress() {
-  const location = useLocation()
-  return <output>{location.pathname + location.search}</output>
-}
-
 function open(path = '/app/projects/p1/memory', content: ProjectMemory | null = memory) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } },
@@ -34,7 +29,6 @@ function open(path = '/app/projects/p1/memory', content: ProjectMemory | null = 
         <MemoryRouter initialEntries={[path]}>
           <Routes>
             <Route path="/app/projects/:projectId/memory" element={<MemoryPage />} />
-            <Route path="/app/projects/:projectId/chat" element={<ChatAddress />} />
           </Routes>
         </MemoryRouter>
       </App>
@@ -42,25 +36,15 @@ function open(path = '/app/projects/p1/memory', content: ProjectMemory | null = 
   )
 }
 
-it('shows project memory read-only and keeps meta inside the document', () => {
+it('shows the project memory title and keeps meta inside the document', () => {
   open()
+  expect(screen.getByRole('heading', { name: '项目记忆' })).toBeInTheDocument()
+  expect(screen.queryByText(/memory\.md 是项目长期记忆/)).not.toBeInTheDocument()
   expect(screen.getByText('旧内容')).toBeInTheDocument()
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /编\s*辑/ })).not.toBeInTheDocument()
   expect(screen.getByText('3 字符').closest('article')).toBeInTheDocument()
   expect(screen.getByText(/最后修改/).closest('article')).toBeInTheDocument()
-})
-
-it('opens the chat with the current group', () => {
-  open('/app/projects/p1/memory?groupId=g9')
-  fireEvent.click(screen.getByRole('button', { name: '去聊天' }))
-  expect(screen.getByText('/app/projects/p1/chat?groupId=g9')).toBeInTheDocument()
-})
-
-it('opens the project chat when no group is in the URL', () => {
-  open()
-  fireEvent.click(screen.getByRole('button', { name: '去聊天' }))
-  expect(screen.getByText('/app/projects/p1/chat')).toBeInTheDocument()
 })
 
 it('offers an empty state for a project without memory', () => {

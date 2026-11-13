@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState, type MouseEvent } from 'react'
 import {
   Link,
   NavLink,
@@ -8,15 +8,22 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom'
-import { Alert, Button, Drawer, Input } from 'antd'
-import { MenuOutlined, PlusOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons'
-import { useQuery } from '@tanstack/react-query'
+import { Alert, App, Button, Drawer, Input } from 'antd'
+import {
+  MenuOutlined,
+  PlusOutlined,
+  PushpinFilled,
+  PushpinOutlined,
+  SearchOutlined,
+  SettingOutlined,
+} from '@ant-design/icons'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
 import { chatApi } from '@/api/chat'
-import { chatKeys } from '@/components/chat/useChatMessages'
+import { chatKeys } from '@/query/chatKeys'
 import { GroupMembersModal } from '@/components/chat/GroupMembersModal'
 import { PATHS } from '@/routes/paths'
-import { chatPreview } from '@/types/chat'
+import { chatPreview, type ChatGroup } from '@/types/chat'
 import { formatApiError } from '@/utils/formatApiError'
 import { formatRelativeTime } from '@/utils/formatRelativeTime'
 import { useRememberTeam } from '@/hooks/useRememberTeam'
@@ -26,12 +33,14 @@ import './ProjectDetailLayout.scss'
 /**
  * 项目外壳：项目顶栏只承载一级导航，聊天页左侧承载群聊二级列表。
  * 项目名与切换都在牌头带的选择器里，这里不再重复一遍身份。
- * 设置、Agent、Skill、共享知识、仓库共用同一组直达路由，URL 不被导航改写。
+ * 设置、Agent、Skill、项目记忆、仓库共用同一组直达路由，URL 不被导航改写。
  */
 export default function ProjectDetailLayout() {
   const { projectId = '' } = useParams<{ projectId: string }>()
   const [params] = useSearchParams()
   const navigate = useNavigate()
+  const { message } = App.useApp()
+  const client = useQueryClient()
   const location = useLocation()
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
@@ -49,6 +58,18 @@ export default function ProjectDetailLayout() {
     enabled: Boolean(projectId) && inChat,
   })
   useRememberTeam(project.data?.teamId)
+
+  // 置顶从聊天标题栏搬到列表行：改完刷新群列表，顺序自己按置顶重排。
+  const pin = useMutation({
+    mutationFn: (group: ChatGroup) => chatApi.pin(projectId, group.id, !group.pinned),
+    onSuccess: () => void client.invalidateQueries({ queryKey: chatKeys.groups(projectId) }),
+    onError: (error) => void message.error(formatApiError(error)),
+  })
+  const togglePin = (event: MouseEvent<HTMLButtonElement>, group: ChatGroup) => {
+    event.preventDefault()
+    event.stopPropagation()
+    pin.mutate(group)
+  }
 
   const groupParam = params.get('groupId')
   const messageParam = params.get('messageId')
@@ -107,7 +128,7 @@ export default function ProjectDetailLayout() {
   const links = [
     { label: '聊天', to: PATHS.projectChat(projectId) + suffix },
     { label: 'Agent', to: PATHS.projectAgents(projectId) + suffix },
-    { label: '共享知识', to: PATHS.projectMemory(projectId) + suffix },
+    { label: '项目记忆', to: PATHS.projectMemory(projectId) + suffix },
     { label: 'Skill', to: PATHS.projectSkills(projectId) + suffix },
     { label: '仓库', to: PATHS.projectCode(projectId) + suffix },
   ]
@@ -119,39 +140,49 @@ export default function ProjectDetailLayout() {
 
   const groupLinks = (onNavigate?: () => void) =>
     visible.map((group) => (
-      <Link
+      <div
         key={group.id}
-        to={PATHS.projectChat(projectId) + '?groupId=' + encodeURIComponent(group.id)}
         className={`project-group${selectedId === group.id ? ' is-active' : ''}${isChanged(group) ? ' is-changed' : ''}`}
-        aria-label={group.title}
-        aria-current={selectedId === group.id ? 'page' : undefined}
-        onClick={onNavigate}
       >
-        <span className="project-group__body">
-          <span className="project-group__title">
-            {group.title}
-            {group.memberCount ? <em>{group.memberCount}</em> : null}
-          </span>
-          <span className="project-group__meta">
-            {group.defaultGroup
-              ? '默认群 · 全体项目成员'
-              : group.latestMessage?.text
-                ? chatPreview(group.latestMessage.text)
-                : '开始新的讨论'}
-          </span>
-        </span>
-        <span className="project-group__side">
-          <span className="project-group__time">
-            {formatRelativeTime(group.latestActivityAt ?? group.lastMessageAt ?? '')}
-          </span>
-          {isChanged(group) ? <span className="project-group__flag">更新</span> : null}
-          {group.unreadCount ? (
-            <span className="project-group__unread">
-              {group.unreadCount > 99 ? '99+' : group.unreadCount}
+        <Link
+          to={PATHS.projectChat(projectId) + '?groupId=' + encodeURIComponent(group.id)}
+          className="project-group__link"
+          aria-label={group.title}
+          aria-current={selectedId === group.id ? 'page' : undefined}
+          onClick={onNavigate}
+        >
+          <span className="project-group__body">
+            <span className="project-group__title">{group.title}</span>
+            <span className="project-group__meta">
+              {group.defaultGroup
+                ? '默认群 · 全体项目成员'
+                : group.latestMessage?.text
+                  ? chatPreview(group.latestMessage.text)
+                  : '开始新的讨论'}
             </span>
-          ) : null}
-        </span>
-      </Link>
+          </span>
+          <span className="project-group__side">
+            <span className="project-group__time">
+              {formatRelativeTime(group.latestActivityAt ?? group.lastMessageAt ?? '')}
+            </span>
+            {isChanged(group) ? <span className="project-group__flag">更新</span> : null}
+            {group.unreadCount ? (
+              <span className="project-group__unread">
+                {group.unreadCount > 99 ? '99+' : group.unreadCount}
+              </span>
+            ) : null}
+          </span>
+        </Link>
+        <button
+          type="button"
+          className="project-group__pin"
+          aria-label={group.pinned ? '取消置顶' : '置顶'}
+          aria-pressed={Boolean(group.pinned)}
+          onClick={(event) => togglePin(event, group)}
+        >
+          {group.pinned ? <PushpinFilled aria-hidden /> : <PushpinOutlined aria-hidden />}
+        </button>
+      </div>
     ))
 
   return (

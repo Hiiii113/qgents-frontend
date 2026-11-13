@@ -5,7 +5,7 @@ import { PageLoader } from '@/components/PageLoader'
 import { PATHS } from '@/routes/paths'
 import { ProjectPage } from '../ProjectPage'
 
-/** 项目设置只保留资料和成员；Agent、Skill、共享知识、仓库在项目一级导航。 */
+/** 项目设置只保留资料和成员；Agent、Skill、项目记忆、仓库在项目一级导航。 */
 export function ProjectSettingsLayout() {
   const { projectId = '' } = useParams()
   const navigate = useNavigate()

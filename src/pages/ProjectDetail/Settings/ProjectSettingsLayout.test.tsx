@@ -50,7 +50,7 @@ it('keeps only project information and members under settings', () => {
   openSettings('/app/projects/p1/settings?groupId=g2')
   expect(screen.getByRole('heading', { name: '项目设置' })).toBeInTheDocument()
   expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['基本信息', '成员管理'])
-  for (const label of ['Agent', 'Skill', '共享知识', '仓库']) {
+  for (const label of ['Agent', 'Skill', '项目记忆', '仓库']) {
     expect(screen.queryByRole('tab', { name: label })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: label })).not.toBeInTheDocument()
   }

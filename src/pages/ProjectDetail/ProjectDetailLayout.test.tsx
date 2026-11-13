@@ -1,12 +1,16 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useLocation } from 'react-router-dom'
 import { renderWorkspace } from '@/test/renderWorkspace'
-import { chatKeys } from '@/components/chat/useChatMessages'
+import { chatApi } from '@/api/chat'
+import { chatKeys } from '@/query/chatKeys'
 import ProjectDetailLayout from './ProjectDetailLayout'
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 
 function Address() {
   const location = useLocation()
@@ -50,7 +54,7 @@ describe('project navigation', () => {
       'href',
       '/app/projects/p1/agents?groupId=g2&messageId=m9',
     )
-    expect(screen.getByRole('link', { name: '共享知识' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '项目记忆' })).toHaveAttribute(
       'href',
       '/app/projects/p1/memory?groupId=g2&messageId=m9',
     )
@@ -71,8 +75,10 @@ describe('project navigation', () => {
     expect(header).not.toHaveTextContent('项目甲')
     expect(screen.queryByRole('link', { name: '返回团队项目' })).not.toBeInTheDocument()
 
-    expect(screen.getByRole('link', { name: '产品讨论' })).toHaveClass('is-active')
     expect(screen.getByRole('link', { name: '产品讨论' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: '产品讨论' }).closest('.project-group')).toHaveClass(
+      'is-active',
+    )
     expect(screen.getByRole('link', { name: '默认聊天' })).toHaveAttribute(
       'href',
       '/app/projects/p1/chat?groupId=g1',
@@ -131,10 +137,10 @@ describe('project navigation', () => {
     await user.click(trigger)
     const menu = await screen.findByRole('navigation', { name: '项目菜单' })
     expect(menu).toBeInTheDocument()
-    expect(screen.getAllByRole('link', { name: '共享知识' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: '项目记忆' }).length).toBeGreaterThan(0)
 
     const link = screen
-      .getAllByRole('link', { name: '共享知识' })
+      .getAllByRole('link', { name: '项目记忆' })
       .find((item) => menu.contains(item))
     expect(link).toBeDefined()
     link!.focus()
@@ -225,7 +231,43 @@ describe('group board', () => {
     const flag = await screen.findByText('更新')
     expect(flag).toBeInTheDocument()
     const g2 = screen.getByRole('link', { name: '安卓' })
-    expect(g2.className).toContain('is-changed')
+    expect(g2.closest('.project-group')).toHaveClass('is-changed')
     expect(screen.getAllByRole('link', { name: /瓦房|安卓/ })[0]).toBe(g2)
+  })
+
+  it('toggles the pin from the list row without leaving the chat', async () => {
+    const user = userEvent.setup()
+    const pin = vi.spyOn(chatApi, 'pin').mockResolvedValue(undefined)
+    // 置顶成功后列表会重新拉取，用同一份数据回答，避免测试依赖 Mock 服务。
+    vi.spyOn(chatApi, 'groups').mockResolvedValue([
+      { id: 'g1', projectId: 'p1', title: '瓦房', pinned: true },
+      { id: 'g2', projectId: 'p1', title: '安卓' },
+    ])
+    renderWorkspace(
+      <>
+        <ProjectDetailLayout />
+        <Address />
+      </>,
+      '/app/projects/p1/chat?groupId=g1',
+      '/app/projects/:projectId/*',
+      (client) => {
+        client.setQueryData(['projects', 'p1'], { id: 'p1', teamId: 't1', name: '项目' })
+        client.setQueryData(chatKeys.groups('p1'), [
+          { id: 'g1', projectId: 'p1', title: '瓦房', pinned: true },
+          { id: 'g2', projectId: 'p1', title: '安卓' },
+        ])
+      },
+    )
+
+    const pinned = screen.getByRole('button', { name: '取消置顶' })
+    expect(pinned).toHaveAttribute('aria-pressed', 'true')
+    const unpinned = screen.getByRole('button', { name: '置顶' })
+    expect(unpinned).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(unpinned)
+
+    expect(pin).toHaveBeenCalledWith('p1', 'g2', true)
+    // 只切换置顶，不跳转
+    expect(screen.getByText('/app/projects/p1/chat?groupId=g1')).toBeInTheDocument()
   })
 })
