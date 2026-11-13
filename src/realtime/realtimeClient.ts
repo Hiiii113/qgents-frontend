@@ -18,6 +18,12 @@ import type { RealtimeFrame } from '@/types'
 export const REALTIME_RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000] as const
 export type RealtimeConnectionStatus = 'idle' | 'connecting' | 'connected' | 'disconnected'
 
+/**
+ * 群级 Agent SSE 断开时，项目 WS 的 agent-run.updated/tool 作为“立刻拉一次快照”的信号。
+ * SSE 已连接时忽略（它自己带全部事件），避免每个工具事件多一次 REST。
+ */
+export const AGENT_RUN_REFRESH_EVENT = 'qgents:agent-run-refresh'
+
 let connectionStatus: RealtimeConnectionStatus = 'idle'
 const connectionStatusListeners = new Set<() => void>()
 
@@ -97,6 +103,11 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
   // scope === 'project'
   const projectId = typeof frame.projectId === 'string' && frame.projectId ? frame.projectId : null
   if (!projectId) return
+  if (type === 'agent-run.updated' || type === 'agent-run.tool') {
+    if (typeof window !== 'undefined')
+      window.dispatchEvent(new CustomEvent(AGENT_RUN_REFRESH_EVENT))
+    return
+  }
   if (type === 'message.created' || type === 'message.updated') {
     const groupId =
       frame.groupId || (typeof frame.payload.groupId === 'string' ? frame.payload.groupId : null)

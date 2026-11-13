@@ -34,6 +34,8 @@ export interface ChatMessage {
   senderType: 'USER' | 'AGENT' | 'SYSTEM'
   senderName?: string | null
   replyToId?: string | null
+  /** 客户端生成的消息标识；Agent 最终回复为 `qgent-reply:<rootRunId>`，用于替换临时流式正文。 */
+  clientMessageId?: string | null
   mentions?: ChatMention[] | null
   createdAt: string
 }

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { queryClient } from '@/query'
-import { dispatchRealtimeFrame, realtimeWsUrl } from './realtimeClient'
+import { AGENT_RUN_REFRESH_EVENT, dispatchRealtimeFrame, realtimeWsUrl } from './realtimeClient'
 import type { RealtimeFrame } from '@/types'
 
 afterEach(() => vi.restoreAllMocks())
@@ -73,6 +73,23 @@ describe('dispatchRealtimeFrame', () => {
     expect(spy).not.toHaveBeenCalledWith({
       queryKey: ['chat', 'projects', '1', 'groups', '1', 'messages'],
     })
+  })
+
+  it('agent-run 事件只派发快照刷新信号，不 invalidate 查询', () => {
+    const spy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
+    const listener = vi.fn()
+    window.addEventListener(AGENT_RUN_REFRESH_EVENT, listener)
+    dispatchRealtimeFrame({
+      type: 'agent-run.updated',
+      scope: 'project',
+      projectId: '1',
+      groupId: '1',
+      resourceId: '123',
+      payload: { runId: '123' },
+    })
+    window.removeEventListener(AGENT_RUN_REFRESH_EVENT, listener)
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(spy).not.toHaveBeenCalled()
   })
 
   it('ignores removed task event types', () => {

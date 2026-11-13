@@ -1,0 +1,200 @@
+/* Agent 运行临时气泡：1px 发丝线 + 左侧 2px 强调线，靠字号与留白分层，不用底色块与阴影。 */
+.qg-agent-run {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 62ch;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-m);
+  background: var(--paper-raised);
+  color: var(--ink-900);
+}
+
+.qg-agent-run__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
+}
+
+.qg-agent-run__name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.qg-agent-run__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--ink-500);
+}
+
+.qg-agent-run__status--succeeded {
+  color: var(--success);
+}
+
+.qg-agent-run__status--failed {
+  color: var(--danger);
+}
+
+.qg-agent-run__stop {
+  margin-left: auto;
+  font-size: var(--text-xs);
+}
+
+.qg-agent-run__waiting {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--ink-500);
+}
+
+.qg-agent-run__rounds {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.qg-agent-run__round {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.qg-agent-run__round-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-500);
+  font-size: var(--text-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.qg-agent-run__round-toggle:hover {
+  color: var(--ink-700);
+}
+
+.qg-agent-run__caret {
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid currentColor;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.qg-agent-run__caret[data-open='true'] {
+  transform: rotate(90deg);
+}
+
+.qg-agent-run__muted {
+  color: var(--ink-400);
+}
+
+.qg-agent-run__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--rule);
+}
+
+.qg-agent-run__markdown,
+.qg-agent-run__result {
+  font-size: var(--text-base);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.qg-agent-run__result {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--rule);
+}
+
+.qg-agent-run__tools {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qg-agent-run__tool {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--ink-700);
+}
+
+.qg-agent-run__dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--ink-300);
+}
+
+.qg-agent-run__tool--ok .qg-agent-run__dot {
+  background: var(--success);
+}
+
+.qg-agent-run__tool--failed .qg-agent-run__dot {
+  background: var(--danger);
+}
+
+.qg-agent-run__tool-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.qg-agent-run__tool-state {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--ink-500);
+}
+
+.qg-agent-run__tool--failed .qg-agent-run__tool-state {
+  color: var(--danger);
+}
+
+.qg-agent-run__hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--danger);
+}
+
+/* 子 Agent：同一结构，收紧留白并用凹陷底色退到父运行之后。 */
+.qg-agent-run__children {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.qg-agent-run--child {
+  gap: var(--space-1);
+  margin-top: 0;
+  border-color: var(--rule);
+  border-left-color: var(--rule-strong);
+  background: var(--paper-sunken);
+}
+
+@media (max-width: 768px) {
+  .qg-agent-run__round-toggle {
+    min-height: 44px;
+  }
+}
