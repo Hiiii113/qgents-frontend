@@ -44,7 +44,7 @@ function Address() {
   return <output>{`${location.pathname}${location.search}`}</output>
 }
 
-async function openDrawer(items: Notification[]) {
+async function openPanel(items: Notification[]) {
   const user = userEvent.setup()
   renderWorkspace(
     <>
@@ -72,8 +72,15 @@ describe('notification routing', () => {
 })
 
 describe('notification list', () => {
+  it('opens an anchored panel, not a page drawer', async () => {
+    await openPanel([notification])
+    expect(document.querySelector('.ant-drawer')).not.toBeInTheDocument()
+    expect(document.querySelector('.qg-notice-panel')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /全部已读/ })).toBeEnabled()
+  })
+
   it('每条通知是一个可按 Enter 触发的按钮，点了标已读并跳到被提及的消息', async () => {
-    const user = await openDrawer([notification])
+    const user = await openPanel([notification])
     const item = screen.getByRole('button', { name: /提及你/ })
     expect(item).toHaveAttribute('type', 'button')
 
@@ -85,7 +92,7 @@ describe('notification list', () => {
   })
 
   it('已读通知不再重复标已读，邀请通知跳到加入团队页', async () => {
-    const user = await openDrawer([
+    const user = await openPanel([
       {
         ...notification,
         id: 'n2',
@@ -99,5 +106,11 @@ describe('notification list', () => {
 
     expect(notificationApi.markRead).not.toHaveBeenCalled()
     expect(screen.getByText('/app/teams/join')).toBeInTheDocument()
+  })
+
+  it('shows the empty state without the 全部已读 action', async () => {
+    await openPanel([])
+    expect(screen.getByText('暂无通知')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /全部已读/ })).not.toBeInTheDocument()
   })
 })

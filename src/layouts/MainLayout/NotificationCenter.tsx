@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Drawer, Badge, Button, Typography } from 'antd'
+import { Badge, Button, Popover, Typography } from 'antd'
 import { BellOutlined, CheckOutlined, UserAddOutlined, MessageOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificationApi } from '@/api'
@@ -27,7 +27,7 @@ const FALLBACK_META: { icon: ReactNode; color: string } = {
   color: 'var(--ink-300)',
 }
 
-/** 通知中心 —— 顶部铃铛 + 右侧抽屉
+/** 通知中心 —— 顶部铃铛 + 锚在铃铛下方的弹层
  * 通知列表与已读状态来自后端通知接口
  */
 export function NotificationCenter() {
@@ -96,69 +96,73 @@ export function NotificationCenter() {
   }
 
   return (
-    <>
-      <Badge count={unreadCount} size="small">
-        <Button
-          type="text"
-          icon={<BellOutlined />}
-          aria-label="通知"
-          onClick={() => setOpen(true)}
-        />
-      </Badge>
-
-      <Drawer
-        title="通知中心"
-        placement="right"
-        size={380}
+    <Badge count={unreadCount} size="small">
+      <Popover
+        trigger="click"
+        placement="bottomRight"
+        arrow={false}
         open={open}
-        onClose={() => setOpen(false)}
-        extra={
-          notifications.length > 0 && (
-            <Button
-              type="text"
-              size="small"
-              icon={<CheckOutlined />}
-              disabled={unreadCount === 0}
-              loading={markAllRead.isPending}
-              onClick={() => markAllRead.mutate()}
-            >
-              全部已读
-            </Button>
-          )
-        }
-        styles={{ body: { padding: 0 } }}
-      >
-        {notifications.length === 0 ? (
-          <div className="qg-notice-empty">
-            <p className="qg-notice-empty__title">暂无通知</p>
-            <p className="qg-notice-empty__hint">有人提到你、邀请你或项目有更新时会出现在这里。</p>
+        onOpenChange={setOpen}
+        rootClassName="qg-notice-pop"
+        styles={{ container: { padding: 0 } }}
+        content={
+          <div className="qg-notice-panel">
+            <div className="qg-notice-panel__head">
+              <span className="qg-notice-panel__title">通知中心</span>
+              {notifications.length > 0 && (
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<CheckOutlined />}
+                  disabled={unreadCount === 0}
+                  loading={markAllRead.isPending}
+                  onClick={() => markAllRead.mutate()}
+                >
+                  全部已读
+                </Button>
+              )}
+            </div>
+            {notifications.length === 0 ? (
+              <div className="qg-notice-empty">
+                <p className="qg-notice-empty__title">暂无通知</p>
+                <p className="qg-notice-empty__hint">
+                  有人提到你、邀请你或项目有更新时会出现在这里。
+                </p>
+              </div>
+            ) : (
+              <div className="qg-notice-list">
+                {notifications.map((n) => {
+                  const meta = KIND_META[n.kind] ?? FALLBACK_META
+                  return (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => handleItemClick(n)}
+                      className={`qg-notice${n.isRead ? '' : ' qg-notice--unread'}`}
+                    >
+                      <span className="qg-notice__icon" style={{ color: meta.color }}>
+                        {meta.icon}
+                      </span>
+                      <span className="qg-notice__body">
+                        <span className="qg-notice__head">
+                          {!n.isRead && <Badge status="processing" />}
+                          <Text strong={!n.isRead}>{n.title}</Text>
+                        </span>
+                        {n.description && (
+                          <span className="qg-notice__description">{n.description}</span>
+                        )}
+                        <span className="qg-notice__time">{formatRelativeTime(n.createdAt)}</span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
-        ) : (
-          notifications.map((n) => {
-            const meta = KIND_META[n.kind] ?? FALLBACK_META
-            return (
-              <button
-                key={n.id}
-                type="button"
-                onClick={() => handleItemClick(n)}
-                className={`qg-notice${n.isRead ? '' : ' qg-notice--unread'}`}
-              >
-                <span className="qg-notice__icon" style={{ color: meta.color }}>
-                  {meta.icon}
-                </span>
-                <span className="qg-notice__body">
-                  <span className="qg-notice__head">
-                    {!n.isRead && <Badge status="processing" />}
-                    <Text strong={!n.isRead}>{n.title}</Text>
-                  </span>
-                  {n.description && <span className="qg-notice__description">{n.description}</span>}
-                  <span className="qg-notice__time">{formatRelativeTime(n.createdAt)}</span>
-                </span>
-              </button>
-            )
-          })
-        )}
-      </Drawer>
-    </>
+        }
+      >
+        <Button type="text" icon={<BellOutlined />} aria-label="通知" />
+      </Popover>
+    </Badge>
   )
 }
