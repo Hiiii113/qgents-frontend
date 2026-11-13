@@ -96,6 +96,64 @@ describe('virtualized chat history', () => {
     view.rerender(<ChatMessageList {...base} messages={[trigger]} afterMessage={() => null} />)
     await waitFor(() => expect(screen.queryByTestId('run-progress')).not.toBeInTheDocument())
   })
+  it('groups consecutive messages from the same sender', async () => {
+    // 本地时间构造，避开时区把 5 分钟内的消息拆到不同日期。
+    const at = (minute: number) => new Date(2026, 9, 5, 10, minute).toISOString()
+    const message = (
+      id: string,
+      senderId: string,
+      senderName: string,
+      minute: number,
+      sequence: number,
+    ): ChatMessage => ({
+      id,
+      sequence,
+      groupId: 'g1',
+      type: 'TEXT',
+      content: { text: id },
+      senderId,
+      senderType: 'USER',
+      senderName,
+      createdAt: at(minute),
+    })
+    const view = render(
+      <ChatMessageList
+        messages={[
+          message('g1', 'u1', '张工', 0, 1),
+          message('g2', 'u1', '张工', 2, 2),
+          message('g3', 'u1', '张工', 4, 3),
+          message('g4', 'u2', '李工', 5, 4),
+          // 超过 5 分钟，即使还是同一个人也重新开组。
+          message('g5', 'u1', '张工', 12, 5),
+        ]}
+        loading={false}
+        hasMore={false}
+        loadingOlder={false}
+        targetId={null}
+        onLoadOlder={vi.fn()}
+        onReply={vi.fn()}
+        onPreview={vi.fn()}
+        onLocate={vi.fn()}
+      />,
+    )
+    await waitFor(() => expect(view.container.querySelectorAll('.chat-message').length).toBe(5))
+    // 组首才渲染作者行与头像：g1 / g4 / g5；组内的 g2 / g3 只留同尺寸占位。
+    expect(view.container.querySelectorAll('.chat-message__head')).toHaveLength(3)
+    expect(
+      Array.from(view.container.querySelectorAll('.chat-message__author')).map(
+        (node) => node.textContent,
+      ),
+    ).toEqual(['张工', '李工', '张工'])
+    expect(view.container.querySelectorAll('.chat-message__avatar-static')).toHaveLength(3)
+    expect(view.container.querySelectorAll('.chat-message__avatar-placeholder')).toHaveLength(2)
+    const rows = view.container.querySelectorAll('.chat-message')
+    expect(
+      Array.from(rows).map((row) => row.className.includes('chat-message--group-start')),
+    ).toEqual([true, false, false, true, true])
+    expect(
+      Array.from(rows).map((row) => row.className.includes('chat-message--group-end')),
+    ).toEqual([false, false, true, true, true])
+  })
   it('does not guess a stop action from a message that mentions an agent', async () => {
     const trigger: ChatMessage = {
       id: 'trigger',

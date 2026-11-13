@@ -25,7 +25,27 @@ interface Props {
 }
 
 /** 虚拟列表里的一行：真实消息，或挂在它后面的临时内容。 */
-type Entry = { key: string; message: ChatMessage; showDate: boolean; extra: ReactNode }
+type Entry = {
+  key: string
+  message: ChatMessage
+  showDate: boolean
+  extra: ReactNode
+  groupStart: boolean
+  groupEnd: boolean
+}
+
+/** 同一发送者 5 分钟内的连续发言算一组；跨天不合并。 */
+const GROUP_WINDOW_MS = 5 * 60 * 1000
+
+function continuesGroup(previous: ChatMessage, next: ChatMessage) {
+  if (previous.senderType === 'SYSTEM' || next.senderType === 'SYSTEM') return false
+  if (previous.senderId !== next.senderId || previous.senderType !== next.senderType) return false
+  const before = new Date(previous.createdAt)
+  const after = new Date(next.createdAt)
+  if (Number.isNaN(before.getTime()) || Number.isNaN(after.getTime())) return false
+  if (before.toDateString() !== after.toDateString()) return false
+  return after.getTime() - before.getTime() <= GROUP_WINDOW_MS
+}
 
 export const ChatMessageList = memo(function ChatMessageList(props: Props) {
   const { messages, targetId, onReadingLatestChange, afterMessage } = props
@@ -49,9 +69,24 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
       const date = new Date(message.createdAt)
       const showDate =
         !Number.isNaN(date.getTime()) && date.toDateString() !== previousDate?.toDateString()
-      rows.push({ key: message.id, message, showDate, extra: null })
+      rows.push({
+        key: message.id,
+        message,
+        showDate,
+        extra: null,
+        groupStart: index === 0 || !continuesGroup(messages[index - 1], message),
+        groupEnd: index === messages.length - 1 || !continuesGroup(message, messages[index + 1]),
+      })
       const extra = afterMessage?.(message)
-      if (extra) rows.push({ key: `${message.id}:runs`, message, showDate: false, extra })
+      if (extra)
+        rows.push({
+          key: `${message.id}:runs`,
+          message,
+          showDate: false,
+          extra,
+          groupStart: false,
+          groupEnd: false,
+        })
     })
     return rows
   }, [messages, afterMessage])
@@ -229,6 +264,8 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     onPreview={props.onPreview}
                     onLocate={props.onLocate}
                     onMention={props.onMention}
+                    groupStart={entry.groupStart}
+                    groupEnd={entry.groupEnd}
                   />
                 </div>
               )

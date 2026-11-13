@@ -1,6 +1,6 @@
 import { memo, useState } from 'react'
 import { Avatar, Button, Dropdown, Tag } from 'antd'
-import { FileOutlined, RobotOutlined } from '@ant-design/icons'
+import { EnterOutlined, FileOutlined, RobotOutlined } from '@ant-design/icons'
 import { AuthedImage } from '@/components/AuthedImage'
 import { attachmentApi } from '@/api/attachment'
 import { chatMessageText, messageField, type ChatMember, type ChatMessage } from '@/types/chat'
@@ -17,6 +17,9 @@ interface Props {
   onLocate: (id: string) => void
   /** 选中头像菜单里的「@名字」后，把该成员 @ 进输入框；右键本身不修改草稿。 */
   onMention?: (member: ChatMember) => void
+  /** 同一发送者连续发言时，只有组首渲染作者行与头像。 */
+  groupStart?: boolean
+  groupEnd?: boolean
 }
 
 function LinkedText({ text }: { text: string }) {
@@ -165,6 +168,8 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   onPreview,
   onLocate,
   onMention,
+  groupStart = true,
+  groupEnd = true,
 }: Props) {
   if (item.senderType === 'SYSTEM')
     return <div className="chat-system-message">{chatMessageText(item)}</div>
@@ -181,40 +186,58 @@ export const ChatMessageRow = memo(function ChatMessageRow({
     <article
       className={`chat-message${agent ? ' chat-message--agent' : ''}${
         own ? ' chat-message--own' : ''
+      }${groupStart ? ' chat-message--group-start' : ''}${
+        groupEnd ? ' chat-message--group-end' : ''
       }`}
       aria-label={`${name}的消息`}
     >
-      <MentionAvatar
-        name={name}
-        agent={agent}
-        avatarUrl={sender?.avatarUrl}
-        member={mentionTarget}
-        onMention={onMention}
-      />
+      {/* 自己不发自己的消息头像，网格退化成单列；他人的头像只在组首，组内其余用占位格保持列宽。 */}
+      {!own &&
+        (groupStart ? (
+          <MentionAvatar
+            name={name}
+            agent={agent}
+            avatarUrl={sender?.avatarUrl}
+            member={mentionTarget}
+            onMention={onMention}
+          />
+        ) : (
+          <span className="chat-message__avatar-placeholder" aria-hidden="true" />
+        ))}
       <div className="chat-message__main">
-        <div className="chat-message__head">
-          <strong className="chat-message__author">{name}</strong>
-          {agent && <Tag className="chat-message__tag">Agent</Tag>}
-          <time
-            dateTime={item.createdAt}
-            title={validTime ? timestamp.toLocaleString('zh-CN') : ''}
-          >
-            {time}
-          </time>
+        {groupStart && (
+          <div className="chat-message__head">
+            <strong className="chat-message__author">{name}</strong>
+            {agent && <Tag className="chat-message__tag">Agent</Tag>}
+            <time
+              dateTime={item.createdAt}
+              title={validTime ? timestamp.toLocaleString('zh-CN') : ''}
+            >
+              {time}
+            </time>
+          </div>
+        )}
+        <div className="chat-message__bubble">
+          {item.replyToId && (
+            <button className="chat-message__quote" onClick={() => onLocate(item.replyToId ?? '')}>
+              <strong>{reply?.senderName || '回复消息'}</strong>
+              <span>{reply ? chatMessageText(reply).slice(0, 160) : '点击查看原消息'}</span>
+            </button>
+          )}
+          <div className="chat-message__body">
+            <MessageBody item={item} projectId={projectId} agent={agent} onPreview={onPreview} />
+          </div>
           <div className="chat-message__actions">
-            <Button type="text" size="small" onClick={() => onReply(item)}>
-              回复
+            <Button
+              type="text"
+              size="small"
+              aria-label="回复这条消息"
+              onClick={() => onReply(item)}
+            >
+              <EnterOutlined className="chat-message__reply-icon" aria-hidden="true" />
+              <span className="chat-message__reply-label">回复</span>
             </Button>
           </div>
-        </div>
-        {item.replyToId && (
-          <button className="chat-message__quote" onClick={() => onLocate(item.replyToId ?? '')}>
-            <strong>{reply?.senderName || '回复消息'}</strong>
-            <span>{reply ? chatMessageText(reply).slice(0, 160) : '点击查看原消息'}</span>
-          </button>
-        )}
-        <div className="chat-message__body">
-          <MessageBody item={item} projectId={projectId} agent={agent} onPreview={onPreview} />
         </div>
       </div>
     </article>

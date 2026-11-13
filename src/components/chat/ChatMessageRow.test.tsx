@@ -198,13 +198,15 @@ it('leaves the stop action to the run progress card', () => {
 })
 
 it('offers no mention menu for own messages or senders outside the group', () => {
+  // 自己不发自己的消息头像，也不需要占位格（网格退化成单列）。
   const own = renderRow(humanMessage(), {
     sender: { id: 'u1', memberType: 'USER', displayName: '张工' },
     currentUserId: 'u1',
     onMention: vi.fn(),
   })
   expect(own.container.querySelector('.chat-message__avatar-hit')).toBeNull()
-  expect(own.container.querySelector('.chat-message__avatar-static')).not.toBeNull()
+  expect(own.container.querySelector('.chat-message__avatar-static')).toBeNull()
+  expect(own.container.querySelector('.chat-message__avatar-placeholder')).toBeNull()
   own.unmount()
 
   // 历史发送者不在当前参与者列表里：头像不可交互，右键也不会弹菜单。

@@ -1,4 +1,4 @@
-/* Agent 运行临时气泡：1px 发丝线 + 左侧 2px 强调线，靠字号与留白分层，不用底色块与阴影。 */
+/* Agent 运行临时气泡：1px 发丝线 + 圆角卡片，靠字号、留白与状态色分层，不用底色块与阴影。 */
 .qg-agent-run {
   display: flex;
   flex-direction: column;
@@ -7,8 +7,7 @@
   margin-top: var(--space-2);
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--rule);
-  border-left: 2px solid var(--accent);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-card);
   background: var(--paper-raised);
   color: var(--ink-900);
 }
@@ -85,12 +84,13 @@
   color: var(--ink-700);
 }
 
+/* 折叠三角用 clip-path 画，避免用左边框拼三角形。 */
 .qg-agent-run__caret {
-  width: 0;
-  height: 0;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  border-left: 5px solid currentColor;
+  flex-shrink: 0;
+  width: 5px;
+  height: 8px;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
   transition: transform var(--dur-fast) var(--ease);
 }
 
@@ -106,8 +106,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding-left: var(--space-2);
-  border-left: 1px solid var(--rule);
 }
 
 .qg-agent-run__markdown,
@@ -189,7 +187,6 @@
   gap: var(--space-1);
   margin-top: 0;
   border-color: var(--rule);
-  border-left-color: var(--rule-strong);
   background: var(--paper-sunken);
 }
 

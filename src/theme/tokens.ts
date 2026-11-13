@@ -56,10 +56,14 @@ export const cssVars: Record<string, string> = {
   '--space-16': '64px',
   '--space-24': '96px',
 
-  // 圆角：2/4px 为主，只有标签用 pill
+  // 圆角：2/4px 为主，只有标签用 pill；聊天气泡单独放宽
   '--radius-s': '2px',
   '--radius-m': '4px',
   '--radius-pill': '999px',
+  '--radius-avatar': '8px',
+  '--radius-bubble': '14px',
+  '--radius-inset': '10px',
+  '--radius-card': '12px',
 
   // 字号：正文 14px 起，最小可用字号 12px
   '--text-xs': '12px',
