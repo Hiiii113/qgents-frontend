@@ -3,7 +3,7 @@ import './ProjectPage.css'
 
 /**
  * 项目工具页的紧凑页头。项目一级导航已经标出当前位置，
- * 这里只保留一个 20px 标题和主操作，避免每个工具页都重复大标题与介绍。
+ * 这里只保留一个标题和主操作，靠留白分隔而不是分隔线。
  */
 export function ProjectPage({
   title,
@@ -20,7 +20,6 @@ export function ProjectPage({
         <h1 className="project-page__title">{title}</h1>
         {action && <div className="project-page__action">{action}</div>}
       </header>
-      <hr className="qg-rule" />
       <div className="project-page__content">{children}</div>
     </section>
   )
