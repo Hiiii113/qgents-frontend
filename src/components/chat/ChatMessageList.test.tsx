@@ -75,13 +75,10 @@ describe('virtualized chat history', () => {
       loading: false,
       hasMore: false,
       loadingOlder: false,
-      isAdmin: false,
       currentUserId: 'u1',
-      stoppedIds: new Set<string>(),
       targetId: null,
       onLoadOlder: vi.fn(),
       onReply: vi.fn(),
-      onStop: vi.fn(),
       onPreview: vi.fn(),
       onLocate: vi.fn(),
     }

@@ -10,23 +10,23 @@
 
 ## 1. Token
 
-| 用途 | 变量 | 值 |
-|---|---|---|
-| 正文 / 标题 | `--ink-900` | `#111312` |
-| 次要正文 | `--ink-700` | `#3A3D38` |
-| 说明 / 元信息 | `--ink-500` | `#6B6F66` |
-| 占位 / 极弱 | `--ink-300` | `#A8ACA3` |
-| 页面底色 | `--paper` | `#FAFAF7` |
-| 容器 | `--paper-raised` | `#FFFFFF` |
-| 凹陷区（表头/track） | `--paper-sunken` | `#F2F2EC` |
-| 发丝线 | `--rule` | `#E3E4DE` |
-| 强分隔线 | `--rule-strong` | `#C9CBC2` |
-| 强调 | `--accent` / `--accent-strong` / `--accent-soft` | `#4F7146` / `#3F5C38` / `#EDF1E9` |
-| 状态 | `--success` `--warning` `--danger` | `#2F7A4F` `#8A5A00` `#B3261E` |
-| 间距 | `--space-1..24` | 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96 |
-| 圆角 | `--radius-s` `--radius-m` `--radius-pill` | 2 / 4 / 999 |
-| 字号 | `--text-xs..display` | 12 / 13 / 14 / 16 / 20 / 26 / 34 / clamp(28,3.4vw,44) |
-| 动效 | `--dur-fast/base/slow`、`--ease` | 120 / 180 / 240ms、`cubic-bezier(.2,0,0,1)` |
+| 用途                 | 变量                                             | 值                                                    |
+| -------------------- | ------------------------------------------------ | ----------------------------------------------------- |
+| 正文 / 标题          | `--ink-900`                                      | `#111312`                                             |
+| 次要正文             | `--ink-700`                                      | `#3A3D38`                                             |
+| 说明 / 元信息        | `--ink-500`                                      | `#6B6F66`                                             |
+| 占位 / 极弱          | `--ink-300`                                      | `#A8ACA3`                                             |
+| 页面底色             | `--paper`                                        | `#FAFAF7`                                             |
+| 容器                 | `--paper-raised`                                 | `#FFFFFF`                                             |
+| 凹陷区（表头/track） | `--paper-sunken`                                 | `#F2F2EC`                                             |
+| 发丝线               | `--rule`                                         | `#E3E4DE`                                             |
+| 强分隔线             | `--rule-strong`                                  | `#C9CBC2`                                             |
+| 强调                 | `--accent` / `--accent-strong` / `--accent-soft` | `#4F7146` / `#3F5C38` / `#EDF1E9`                     |
+| 状态                 | `--success` `--warning` `--danger`               | `#2F7A4F` `#8A5A00` `#B3261E`                         |
+| 间距                 | `--space-1..24`                                  | 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96              |
+| 圆角                 | `--radius-s` `--radius-m` `--radius-pill`        | 2 / 4 / 999                                           |
+| 字号                 | `--text-xs..display`                             | 12 / 13 / 14 / 16 / 20 / 26 / 34 / clamp(28,3.4vw,44) |
+| 动效                 | `--dur-fast/base/slow`、`--ease`                 | 120 / 180 / 240ms、`cubic-bezier(.2,0,0,1)`           |
 
 ---
 
@@ -52,18 +52,20 @@
 
 ## 4. 组件配方
 
-| 组件 | 规则 |
-|---|---|
-| 卡片 | `1px solid var(--rule)`、`radius 4`、`padding 24`、`background: --paper-raised`；hover 只把边框变 `--rule-strong`；无阴影 |
-| 列表行 | 行高 48-56px，行间 1px 分隔线，hover 背景 `--paper-sunken`；行内标题 14/600 + 说明 13/`--ink-500` |
-| 表格 | antd `size="middle"`，表头 `--paper-sunken`，单元格 1px `--rule` 分隔，无斑马纹 |
-| 表单 | label 13px/600 在控件上方，字段间距 16；错误紧贴字段下方 12px `--danger` |
-| 主按钮 | 实心 `--accent`，白字，高 34，radius 4；hover 只变 `--accent-strong`，不做位移与阴影 |
-| 次按钮 | 1px 边框 + 透明底，hover 边框加深 |
-| 标签 | pill 或 2px 圆角，`--paper-sunken` 底、`--ink-700` 字，不填充饱和色 |
-| 提示条 | 左侧 2px 实线 + 正文色，不用整块彩色背景（`.workspace-page__note`） |
-| 空状态 | 一行说明 + 一个主按钮，不用插画 |
-| 聊天消息 | 不用气泡尾巴与彩色底色；靠头像列 + 1px 分隔线 + 时间戳区分；本人消息仅用左侧 2px `--accent` 边框标记 |
+| 组件       | 规则                                                                                                                                                           |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 卡片       | `1px solid var(--rule)`、`radius 4`、`padding 24`、`background: --paper-raised`；hover 只把边框变 `--rule-strong`；无阴影                                      |
+| 列表行     | 行高 48-56px，行间 1px 分隔线，hover 背景 `--paper-sunken`；行内标题 14/600 + 说明 13/`--ink-500`                                                              |
+| 表格       | antd `size="middle"`，表头 `--paper-sunken`，单元格 1px `--rule` 分隔，无斑马纹                                                                                |
+| 表单       | label 13px/600 在控件上方，字段间距 16；错误紧贴字段下方 12px `--danger`                                                                                       |
+| 主按钮     | 实心 `--accent`，白字，高 34，radius 4；hover 只变 `--accent-strong`，不做位移与阴影                                                                           |
+| 次按钮     | 1px 边框 + 透明底，hover 边框加深                                                                                                                              |
+| 标签       | pill 或 2px 圆角，`--paper-sunken` 底、`--ink-700` 字，不填充饱和色                                                                                            |
+| 提示条     | 左侧 2px 实线 + 正文色，不用整块彩色背景（`.workspace-page__note`）                                                                                            |
+| 空状态     | 一行说明 + 一个主按钮，不用插画                                                                                                                                |
+| 聊天消息   | 不用气泡尾巴与彩色底色；头像固定 32px 贴正文左上角（`align-self: start`），作者/时间/动作一行，正文独立；本人消息仅用左侧 2px `--accent` 边框标记              |
+| Agent 正文 | 走 Markdown：标题压到 20/16/14，段落与列表限 62ch，代码块带语言标签与复制，表格与代码在自身容器内横向滚动                                                      |
+| 运行进度   | 跟在触发消息下方：1px 边框 + 左侧 2px `--accent`，轮次可折叠，工具阶段用状态点（灰=进行中、`--success`=完成、`--danger`=失败），停止按钮只在真实运行中出现一次 |
 
 ---
 
@@ -105,19 +107,23 @@
 
 - 断点：375 / 768 / 1024 / 1440
 - 页面骨架在 ≤700px 收窄内边距到 16、标题降到 28、action 换行到说明下面
+- 项目一级导航在 ≤700px 收进 Drawer（菜单按钮打开，关闭后焦点回到按钮）；群聊列表只在聊天页出现
 - 聊天与表格在窄屏允许横向滚动，不压缩字号
 
 ---
 
-## 9. 分工
+## 9. 结构约定
 
-| 范围 | 归属 |
-|---|---|
-| `src/theme/*`、`src/styles/global.scss`、`src/providers/AppProviders.tsx`、`src/main.tsx`、`src/components/WorkspacePage.*`、`src/layouts/MainLayout/*`、公共组件（`EmptyState` / `PageLoader` / `StartupScreen` / `ErrorBoundary`） | 主 Agent |
-| `src/pages/Login`、`ForgotPassword`、`JoinTeam`、`CreateTeam`、`Welcome`、`Home`、`ForbiddenPage.tsx`、`NotFoundPage.tsx` | Agent A |
-| `src/pages/TeamDetail`、`src/pages/ProjectDetail`（含 Chat / Code / Memory / Overview / Settings / Skill / MergeRequest / DiffReview）、`src/pages/GitHubIntegration` | Agent B |
+| 目录                                              | 放什么                                                                 |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| `src/theme/*`                                     | token 与 antd 主题，任何颜色/字号/间距的新值只加在这里                 |
+| `src/styles/global.scss`                          | 全局重置、焦点环、滚动条、antd 弹层压平；不放页面专属规则              |
+| `src/layouts/MainLayout/*`                        | 顶栏、团队选择器、个人菜单、通知中心                                   |
+| `src/components/WorkspacePage.*`、`ProjectPage.*` | 页面骨架（团队级 / 项目级），页面不再自写页头与 padding                |
+| `src/components/chat/*`                           | 聊天消息、Markdown、输入区；运行进度组件在 `src/features/agent-runs/*` |
+| `src/pages/*`                                     | 各业务页面，只组合骨架与组件                                           |
 
-**子 Agent 只改自己名下的文件。** 需要改 token、全局样式、布局或公共组件时，写进汇报里，不要自己动。
+改 token、全局样式或页面骨架时，先确认所有引用方；这几处是全局契约，不是单页私有样式。
 
 ---
 
