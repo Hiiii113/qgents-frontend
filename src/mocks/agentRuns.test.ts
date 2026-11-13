@@ -1,14 +1,31 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { setupServer } from 'msw/node'
-import { agentRunHandlers } from './agentRuns'
+import { agentRunHandlers, resetAgentRunDemo } from './agentRuns'
 
 const server = setupServer(...agentRunHandlers)
 
 beforeAll(() => server.listen())
+beforeEach(() => resetAgentRunDemo())
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
 const base = location.origin
+const decoder = new TextDecoder()
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms)
+  })
+
+async function openDemoStream() {
+  const abort = new AbortController()
+  const response = await fetch(`${base}/api/projects/2/groups/901/agent-events`, {
+    signal: abort.signal,
+  })
+  expect(response.headers.get('content-type')).toContain('text/event-stream')
+  const reader = response.body?.getReader()
+  if (!reader) throw new Error('missing SSE body')
+  return { abort, reader }
+}
 
 describe('Agent 运行 mock', () => {
   it('演示群返回根+子运行快照，其它群为空', async () => {
@@ -27,15 +44,7 @@ describe('Agent 运行 mock', () => {
   })
 
   it('演示群 SSE 建连即推 snapshot，随后流式推 delta', async () => {
-    const abort = new AbortController()
-    const response = await fetch(`${base}/api/projects/2/groups/901/agent-events`, {
-      signal: abort.signal,
-    })
-    expect(response.headers.get('content-type')).toContain('text/event-stream')
-
-    const reader = response.body?.getReader()
-    if (!reader) throw new Error('missing SSE body')
-    const decoder = new TextDecoder()
+    const { abort, reader } = await openDemoStream()
     let received = ''
     while (!received.includes('agent-run.delta')) {
       const { value, done } = await reader.read()
@@ -50,4 +59,42 @@ describe('Agent 运行 mock', () => {
     expect(received).toContain('"runId":"9002"')
     expect(received).toContain('event: agent-run.delta')
   }, 10_000)
+
+  it('演示流响应停止：取消后 root/child 置 CANCELLED 且不再产生新 delta', async () => {
+    const { abort, reader } = await openDemoStream()
+    let received = ''
+    while (!received.includes('agent-run.delta')) {
+      const { value, done } = await reader.read()
+      if (done) break
+      received += decoder.decode(value, { stream: true })
+    }
+    expect(received).toContain('agent-run.delta')
+
+    const cancel = await fetch(`${base}/api/projects/2/groups/901/messages/9011/cancel-agent`, {
+      method: 'POST',
+    })
+    const cancelled = (await cancel.json()) as { data: { cancelledRuns: number } }
+    expect(cancelled.data.cancelledRuns).toBe(1)
+
+    // 取消后再观察约 1.2s：足够覆盖演示流下一批步骤，若仍播放会出现新 delta。
+    const deadline = Date.now() + 1200
+    while (Date.now() < deadline) {
+      const next = await Promise.race([reader.read(), wait(150).then(() => null)])
+      if (!next || next.done) continue
+      received += decoder.decode(next.value, { stream: true })
+    }
+    abort.abort()
+    void reader.cancel().catch(() => {})
+
+    expect(received.match(/"status":"CANCELLED"/g)).toHaveLength(2)
+    // CANCELLED 之后（含子运行完成前已入队的 delta 之后）不再有正文增量。
+    const afterCancel = received.slice(received.lastIndexOf('"status":"CANCELLED"'))
+    expect(afterCancel).not.toContain('event: agent-run.delta')
+
+    const snapshot = await fetch(`${base}/api/projects/2/agent-runs?groupId=901`)
+    const runs = ((await snapshot.json()) as { data: { status: string; tools: unknown[] }[] }).data
+    expect(runs).toHaveLength(2)
+    expect(runs.every((run) => run.status === 'CANCELLED')).toBe(true)
+    expect(runs.every((run) => run.tools.length === 0)).toBe(true)
+  }, 15_000)
 })
