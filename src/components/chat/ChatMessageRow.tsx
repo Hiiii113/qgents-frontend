@@ -1,6 +1,6 @@
 import { memo, useState } from 'react'
-import { Avatar, Button, Dropdown, Tag, Tooltip } from 'antd'
-import { FileOutlined, RobotOutlined, StopOutlined } from '@ant-design/icons'
+import { Avatar, Button, Dropdown, Tag } from 'antd'
+import { FileOutlined, RobotOutlined } from '@ant-design/icons'
 import { AuthedImage } from '@/components/AuthedImage'
 import { attachmentApi } from '@/api/attachment'
 import { chatMessageText, messageField, type ChatMember, type ChatMessage } from '@/types/chat'
@@ -12,10 +12,7 @@ interface Props {
   sender?: ChatMember
   reply?: ChatMessage
   currentUserId?: string
-  canStop: boolean
-  stopping: boolean
   onReply: (item: ChatMessage) => void
-  onStop: (item: ChatMessage) => void
   onPreview: (item: ChatMessage) => void
   onLocate: (id: string) => void
   /** 选中头像菜单里的「@名字」后，把该成员 @ 进输入框；右键本身不修改草稿。 */
@@ -164,10 +161,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   sender,
   reply,
   currentUserId,
-  canStop,
-  stopping,
   onReply,
-  onStop,
   onPreview,
   onLocate,
   onMention,
@@ -187,7 +181,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
     <article
       className={`chat-message${agent ? ' chat-message--agent' : ''}${
         own ? ' chat-message--own' : ''
-      }${canStop ? ' chat-message--stoppable' : ''}`}
+      }`}
       aria-label={`${name}的消息`}
     >
       <MentionAvatar
@@ -211,19 +205,6 @@ export const ChatMessageRow = memo(function ChatMessageRow({
             <Button type="text" size="small" onClick={() => onReply(item)}>
               回复
             </Button>
-            {canStop && (
-              <Tooltip title="停止这条消息启动的 Agent 工作">
-                <Button
-                  type="text"
-                  size="small"
-                  loading={stopping}
-                  icon={<StopOutlined />}
-                  onClick={() => onStop(item)}
-                >
-                  停止执行
-                </Button>
-              </Tooltip>
-            )}
           </div>
         </div>
         {item.replyToId && (

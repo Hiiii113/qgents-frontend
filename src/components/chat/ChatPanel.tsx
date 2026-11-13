@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Alert, App, Avatar, Button, Drawer, List, Tag, Tooltip } from 'antd'
 import { PushpinOutlined, RobotOutlined, TeamOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import { AgentRunProgress, useAgentRuns } from '@/features/agent-runs'
 import { chatApi } from '@/api/chat'
 import { projectApi } from '@/api/project'
 import { useAuth } from '@/context/AuthContext'
@@ -12,6 +13,7 @@ import { messageField, type ChatMessage, type SendChatMessage } from '@/types/ch
 import { GroupMembersModal } from './GroupMembersModal'
 import { AttachmentPreviewModal } from './AttachmentPreviewModal'
 import { ChatComposer, type ChatComposerHandle } from './ChatComposer'
+import { ChatMarkdown } from './ChatMarkdown'
 import { ChatMessageList } from './ChatMessageList'
 import { chatKeys, mergeChatMessages, useChatMessages } from './useChatMessages'
 import './ChatPanel.css'
@@ -29,7 +31,6 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   const [inviteOpen, setInviteOpen] = useState(false)
   const [readingLatest, setReadingLatest] = useState(true)
   const [targetId, setTargetId] = useState<string | null>(params.get('messageId'))
-  const [stoppedIds, setStoppedIds] = useState<ReadonlySet<string>>(new Set())
   const project = useQuery({
     queryKey: ['projects', projectId],
     queryFn: () => projectApi.getById(projectId),
@@ -54,6 +55,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
     onError: (error) => void message.error(formatApiError(error)),
   })
   const chat = useChatMessages(projectId, groupId, readingLatest)
+  const agentRuns = useAgentRuns({ projectId, groupId, messages: chat.messages })
   const sendAsync = chat.send.mutateAsync
   const isAdmin = project.data?.role === 'PROJECT_ADMIN'
   const recipients = useMemo(
@@ -64,14 +66,12 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   )
   const stop = useMutation({
     mutationFn: (item: ChatMessage) => chatApi.cancel(projectId, groupId, item.id),
-    onSuccess: (result, item) => {
-      setStoppedIds((current) => new Set([...current, item.id]))
+    onSuccess: (result) => {
       void message.success(result.cancelledRuns ? '已请求停止执行' : '这条消息的执行已结束')
     },
     onError: (error) => void message.error(formatApiError(error)),
   })
   const stopMessage = stop.mutate
-  const handleStop = useCallback((item: ChatMessage) => stopMessage(item), [stopMessage])
   const handleReply = useCallback((item: ChatMessage) => setReply(item), [])
   const clearReply = useCallback(() => setReply(null), [])
   const handlePreview = useCallback(
@@ -109,6 +109,51 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   )
   const handleSend = useCallback((body: SendChatMessage) => sendAsync(body), [sendAsync])
   const loadOlder = chat.query.fetchNextPage
+  const renderMarkdown = useCallback((text: string) => <ChatMarkdown text={text} />, [])
+  const agentNames = useMemo(
+    () =>
+      new Map(
+        (members.data ?? [])
+          .filter((member) => member.memberType === 'AGENT')
+          .map((member) => [member.id, member.displayName]),
+      ),
+    [members.data],
+  )
+  // 运行进度紧跟在触发消息后面；停止只在这里出现，按真实 run 状态决定，不再靠「提及但没回复」猜测。
+  const runsAfterMessage = useCallback(
+    (item: ChatMessage) => {
+      const roots = agentRuns.runs.filter(
+        (run) => run.triggerMessageId === item.id && run.parentRunId === null,
+      )
+      if (!roots.length) return null
+      const canCancel = item.senderId === user?.id || isAdmin
+      return (
+        <div className="chat-run-progress">
+          {roots.map((run) => (
+            <AgentRunProgress
+              key={run.runId}
+              run={run}
+              childrenRuns={agentRuns.runs.filter((child) => child.parentRunId === run.runId)}
+              agentName={agentNames.get(run.agentId)}
+              renderMarkdown={renderMarkdown}
+              onStop={canCancel ? () => stopMessage(item) : undefined}
+              stopping={stop.isPending && stop.variables?.id === item.id}
+            />
+          ))}
+        </div>
+      )
+    },
+    [
+      agentRuns.runs,
+      agentNames,
+      renderMarkdown,
+      isAdmin,
+      user?.id,
+      stopMessage,
+      stop.isPending,
+      stop.variables,
+    ],
+  )
   const linkedMessageId = params.get('messageId')
   const ready = chat.query.isSuccess
   useEffect(() => {
@@ -160,6 +205,15 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
           message="消息同步暂时中断，恢复连接后会自动补齐"
         />
       )}
+      {agentRuns.connectionStatus === 'error' && agentRuns.error && (
+        <Alert
+          className="chat-panel__notice"
+          type="warning"
+          showIcon
+          message={agentRuns.error}
+          action={<Button onClick={agentRuns.retry}>重试</Button>}
+        />
+      )}
       <ChatMessageList
         messages={chat.messages}
         projectId={projectId}
@@ -168,14 +222,11 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
         hasMore={chat.query.hasNextPage}
         loadingOlder={chat.query.isFetchingNextPage}
         currentUserId={user?.id}
-        isAdmin={isAdmin}
-        stoppedIds={stoppedIds}
-        stoppingId={stop.isPending ? stop.variables?.id : undefined}
         targetId={targetId}
+        afterMessage={runsAfterMessage}
         onReadingLatestChange={setReadingLatest}
         onLoadOlder={loadOlder}
         onReply={handleReply}
-        onStop={handleStop}
         onPreview={handlePreview}
         onLocate={onLocate}
         onMention={(member) => composerRef.current?.mention(member)}

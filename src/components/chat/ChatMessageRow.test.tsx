@@ -33,10 +33,7 @@ function renderRow(item: ChatMessage, props: Partial<Parameters<typeof ChatMessa
   return render(
     <ChatMessageRow
       item={item}
-      canStop={false}
-      stopping={false}
       onReply={vi.fn()}
-      onStop={vi.fn()}
       onPreview={vi.fn()}
       onLocate={vi.fn()}
       {...props}
@@ -191,17 +188,13 @@ it('supports keyboard opening, arrow selection and Escape', async () => {
   await waitFor(() => expect(reopened).toHaveAttribute('aria-expanded', 'false'))
 })
 
-it('keeps the stop action visible while the agent is still working', () => {
-  const onStop = vi.fn()
+it('leaves the stop action to the run progress card', () => {
+  // 只在消息里 @ 了 Agent 不代表它还在跑：行内不做猜测式停止，避免重启后永久假停止。
   const view = renderRow(humanMessage({ mentions: [{ type: 'AGENT', id: '102' }] }), {
     sender: { id: 'u1', memberType: 'USER', displayName: '张工' },
-    canStop: true,
-    onStop,
   })
-  // 进行中的执行不是悬停细节：作者行常驻显示停止入口。
-  expect(view.container.querySelector('.chat-message')).toHaveClass('chat-message--stoppable')
-  fireEvent.click(screen.getByRole('button', { name: /停止执行/ }))
-  expect(onStop).toHaveBeenCalledOnce()
+  expect(view.container.querySelector('.chat-message--stoppable')).toBeNull()
+  expect(screen.queryByRole('button', { name: /停止/ })).not.toBeInTheDocument()
 })
 
 it('offers no mention menu for own messages or senders outside the group', () => {

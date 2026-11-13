@@ -401,6 +401,55 @@ function seedAgentRunDemo() {
 }
 seedAgentRunDemo()
 
+/** 固定演示群的 ID 与触发消息；只有它们能收到模拟运行的正式回复。 */
+const DEMO_GROUP_ID = '901'
+const DEMO_TRIGGER_ID = '9011'
+
+/**
+ * 仅供 agent-runs 模拟 SSE 在终态调用：给演示群 901 补一条正式 Agent 回复。
+ * 正式消息带 clientMessageId=qgent-reply:<rootRunId>，hook 据此精确替换临时进度行。
+ * 其它群/触发消息不存在时返回 null，不伪造真实发送。
+ */
+export function appendDemoReply(input: {
+  rootRunId: string
+  agentId: string
+  agentName: string
+  text: string
+}): ChatMessage | null {
+  const group = groups.get(DEMO_GROUP_ID)
+  const history = group ? messages.get(group.id) : undefined
+  if (!group || !history?.some((item) => item.id === DEMO_TRIGGER_ID)) return null
+  const reply: ChatMessage = {
+    id: nextMockId(),
+    groupId: group.id,
+    sequence: (history.at(-1)?.sequence ?? 0) + 1,
+    type: 'TEXT',
+    content: { text: input.text },
+    senderId: input.agentId,
+    senderName: input.agentName,
+    senderType: 'AGENT',
+    replyToId: DEMO_TRIGGER_ID,
+    clientMessageId: `qgent-reply:${input.rootRunId}`,
+    createdAt: new Date().toISOString(),
+  }
+  history.push(reply)
+  group.lastMessageAt = reply.createdAt
+  group.latestActivityAt = reply.createdAt
+  group.latestMessage = {
+    type: reply.type,
+    text: chatMessageText(reply),
+    senderName: reply.senderName,
+  }
+  // mock 没有 WS：手动派发消息事件，让聊天页增量拉取这条正式回复，临时进度行才会消失。
+  if (typeof window !== 'undefined')
+    window.dispatchEvent(
+      new CustomEvent('qgents:message-event', {
+        detail: { projectId: group.projectId, groupId: group.id },
+      }),
+    )
+  return reply
+}
+
 export const projectChatHandlers = [
   http.get('/api/teams/:teamId/projects', ({ params }) =>
     HttpResponse.json({ data: MOCK_PROJECTS[String(params.teamId)] ?? [] }),

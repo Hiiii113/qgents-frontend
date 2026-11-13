@@ -46,12 +46,9 @@ describe('virtualized chat history', () => {
         loading={false}
         hasMore={false}
         loadingOlder={false}
-        isAdmin={false}
-        stoppedIds={new Set()}
         targetId={null}
         onLoadOlder={vi.fn()}
         onReply={vi.fn()}
-        onStop={vi.fn()}
         onPreview={vi.fn()}
         onLocate={vi.fn()}
       />,
@@ -102,7 +99,7 @@ describe('virtualized chat history', () => {
     view.rerender(<ChatMessageList {...base} messages={[trigger]} afterMessage={() => null} />)
     await waitFor(() => expect(screen.queryByTestId('run-progress')).not.toBeInTheDocument())
   })
-  it('keeps cancellation available until the mentioned agent has replied', async () => {
+  it('does not guess a stop action from a message that mentions an agent', async () => {
     const trigger: ChatMessage = {
       id: 'trigger',
       sequence: 1,
@@ -114,36 +111,22 @@ describe('virtualized chat history', () => {
       mentions: [{ type: 'AGENT', id: agentId }],
       createdAt: '2026-10-02T00:00:00Z',
     }
-    const first: ChatMessage = {
-      ...trigger,
-      id: 'reply1',
-      sequence: 2,
-      senderType: 'AGENT',
-      senderId: agentId,
-      mentions: [],
-      replyToId: trigger.id,
-    }
-    const props = {
-      loading: false,
-      hasMore: false,
-      loadingOlder: false,
-      isAdmin: false,
-      currentUserId: 'u1',
-      stoppedIds: new Set<string>(),
-      targetId: null,
-      onLoadOlder: vi.fn(),
-      onReply: vi.fn(),
-      onStop: vi.fn(),
-      onPreview: vi.fn(),
-      onLocate: vi.fn(),
-    }
-    const view = render(<ChatMessageList {...props} messages={[trigger]} />)
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /停止执行/ })).toBeInTheDocument(),
+    render(
+      <ChatMessageList
+        messages={[trigger]}
+        loading={false}
+        hasMore={false}
+        loadingOlder={false}
+        currentUserId="u1"
+        targetId={null}
+        onLoadOlder={vi.fn()}
+        onReply={vi.fn()}
+        onPreview={vi.fn()}
+        onLocate={vi.fn()}
+      />,
     )
-    view.rerender(<ChatMessageList {...props} messages={[trigger, first]} />)
-    await waitFor(() =>
-      expect(screen.queryByRole('button', { name: /停止执行/ })).not.toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.getByText('一起分析')).toBeInTheDocument())
+    // 停止入口只在真实运行进度卡里出现，消息行不再根据「提及但没回复」猜测。
+    expect(screen.queryByRole('button', { name: /停止/ })).not.toBeInTheDocument()
   })
 })

@@ -13,13 +13,9 @@ interface Props {
   hasMore: boolean
   loadingOlder: boolean
   currentUserId?: string
-  isAdmin: boolean
-  stoppingId?: string
-  stoppedIds: ReadonlySet<string>
   targetId: string | null
   onLoadOlder: () => Promise<unknown>
   onReply: (item: ChatMessage) => void
-  onStop: (item: ChatMessage) => void
   onPreview: (item: ChatMessage) => void
   onLocate: (id: string) => void
   onMention?: (member: ChatMember) => void
@@ -45,16 +41,6 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
       new Map(props.participants?.map((member) => [`${member.memberType}:${member.id}`, member])),
     [props.participants],
   )
-  const replies = useMemo(() => {
-    const completed = new Map<string, Set<string>>()
-    for (const item of messages) {
-      if (item.senderType !== 'AGENT' || !item.replyToId || !item.senderId) continue
-      const agents = completed.get(item.replyToId) ?? new Set<string>()
-      agents.add(item.senderId)
-      completed.set(item.replyToId, agents)
-    }
-    return completed
-  }, [messages])
   // 临时运行进度作为单独一行插在触发消息后面，和消息一起参与虚拟化。
   const entries = useMemo<Entry[]>(() => {
     const rows: Entry[] = []
@@ -205,15 +191,6 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                   </div>
                 )
               const date = new Date(item.createdAt)
-              const canStop =
-                item.senderType === 'USER' &&
-                (item.senderId === props.currentUserId || props.isAdmin) &&
-                Boolean(
-                  item.mentions?.some(
-                    (mention) => mention.type === 'AGENT' && !replies.get(item.id)?.has(mention.id),
-                  ),
-                ) &&
-                !props.stoppedIds.has(item.id)
               return (
                 <div
                   key={row.key}
@@ -248,10 +225,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     reply={item.replyToId ? byId.get(item.replyToId) : undefined}
                     sender={senders.get(`${item.senderType}:${item.senderId}`)}
                     currentUserId={props.currentUserId}
-                    canStop={canStop}
-                    stopping={props.stoppingId === item.id}
                     onReply={props.onReply}
-                    onStop={props.onStop}
                     onPreview={props.onPreview}
                     onLocate={props.onLocate}
                     onMention={props.onMention}
