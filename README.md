@@ -1,6 +1,6 @@
 # Qgents 前端
 
-React 19 + TypeScript strict + Ant Design 6。以项目聊天组织团队协作，每个项目拥有自己 ID 的默认 Agent 并可按需申请自定义 Agent，只有显式 @ 已启用的 Agent 才触发工作；按需维护 Skill、Memory 和 GitHub 仓库。GitHub 能力由项目管理员在项目设置中控制，默认开启。
+React 19 + TypeScript strict + Ant Design 6。以项目聊天组织团队协作，每个项目拥有自己 ID 的默认 Agent 并可按需申请自定义 Agent，只有显式 @ 已启用的 Agent 才触发工作；按需维护 Skill、共享知识和 GitHub 仓库。GitHub 使用团队 GitHub App 授权，项目管理员导入需要的仓库，没有项目级开关。
 
 ## 开发
 
@@ -22,4 +22,4 @@ npm run build
 - 页面目录及聊天性能：[docs/frontend/structure.md](docs/frontend/structure.md)
 - 部署：[docs/frontend/deployment.md](docs/frontend/deployment.md)
 
-后端仓库为 `../qgents`，方向参照其 `docs/target.md`，接口以当前 Controller / DTO / Service 为准。
+后端仓库为 `../qgents`，当前能力与领域词见其 `README.md`、`GLOSSARY.md`；接口以当前 Controller / DTO / Service 为准。
