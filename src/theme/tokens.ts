@@ -3,28 +3,36 @@
  *
  * 数值只在这里定义一次：`applyDesignTokens()` 把它们写成 :root 的 CSS 变量，
  * antd 主题从同一份对象取值，页面 CSS 只引用变量名。页面里不写死颜色、圆角、间距。
+ *
+ * 变量按语义命名（面 / 墨 / 线 / 状态），不按明暗命名：后续加深色主题时只换值，
+ * 不换结构，页面不用改一行。
  */
 export const T = {
   // 墨：正文与结构
-  ink900: '#111312',
-  ink700: '#3A3D38',
-  ink500: '#6B6F66',
-  ink400: '#8B8F86',
-  ink300: '#A8ACA3',
-  // 纸：背景与容器
-  paper: '#FAFAF7',
+  ink900: '#16181A',
+  ink700: '#3A4046',
+  ink500: '#5E666D',
+  ink400: '#7A858C',
+  ink300: '#A7AEB3',
+  // 面：页面底、容器、凹陷区
+  paper: '#FAFAF9',
   paperRaised: '#FFFFFF',
-  paperSunken: '#F2F2EC',
-  // 分隔线：1px 发丝线是这套设计的主要"阴影"
-  rule: '#E3E4DE',
-  ruleStrong: '#C9CBC2',
-  // 唯一强调色（品牌绿）；其余状态色一律低饱和
-  accent: '#4F7146',
-  accentStrong: '#3F5C38',
-  accentSoft: '#EDF1E9',
-  success: '#2F7A4F',
-  warning: '#8A5A00',
-  danger: '#B3261E',
+  paperSunken: '#F4F6F6',
+  // 线：只作行界，不做装饰
+  rule: '#EDEFF0',
+  ruleStrong: '#DDE1E3',
+  // 牌头带：深墨横贯顶栏，承担「你在哪个团队、哪个项目」
+  band: '#14202B',
+  bandInk: '#F4F6F7',
+  bandInkMuted: '#B9C2C8',
+  // 强调：牌头同族的蓝，只出现在主要动作与选中态
+  accent: '#2A5D8F',
+  accentStrong: '#1E4770',
+  accentSoft: '#EAF1F7',
+  // 状态：琥珀只表示变更/进行中，红只表示失败或叫停，完成用墨
+  success: '#0F7A6B',
+  warning: '#B06A00',
+  danger: '#A32020',
 } as const
 
 export const cssVars: Record<string, string> = {
@@ -38,6 +46,9 @@ export const cssVars: Record<string, string> = {
   '--paper-sunken': T.paperSunken,
   '--rule': T.rule,
   '--rule-strong': T.ruleStrong,
+  '--band': T.band,
+  '--band-ink': T.bandInk,
+  '--band-ink-muted': T.bandInkMuted,
   '--accent': T.accent,
   '--accent-strong': T.accentStrong,
   '--accent-soft': T.accentSoft,
@@ -56,29 +67,30 @@ export const cssVars: Record<string, string> = {
   '--space-16': '64px',
   '--space-24': '96px',
 
-  // 圆角：2/4px 为主，只有标签用 pill；聊天气泡单独放宽
-  '--radius-s': '2px',
-  '--radius-m': '4px',
+  // 圆角：控件 10–14px，只有标签用 pill
+  '--radius-s': '8px',
+  '--radius-m': '10px',
   '--radius-pill': '999px',
-  '--radius-avatar': '8px',
+  '--radius-avatar': '10px',
   '--radius-bubble': '14px',
   '--radius-inset': '10px',
-  '--radius-card': '12px',
+  '--radius-card': '14px',
 
-  // 字号：正文 14px 起，最小可用字号 12px
+  // 字号：正文 16px，控件 14px，最小可用字号 12px
   '--text-xs': '12px',
   '--text-sm': '13px',
-  '--text-base': '14px',
-  '--text-lead': '16px',
+  '--text-ui': '14px',
+  '--text-base': '16px',
+  '--text-lead': '18px',
   '--text-h3': '20px',
   '--text-h2': '26px',
-  '--text-h1': '34px',
-  '--text-display': 'clamp(28px, 3.4vw, 44px)',
+  '--text-h1': '32px',
+  '--text-display': 'clamp(30px, 3.2vw, 42px)',
 
-  // 等宽字体：代码块、行内代码与代码类消息
-  '--font-mono': "ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace",
+  // 等宽字体：时间、序号、代码 —— 出发板的数字列靠它对齐
+  '--font-mono': "'Geist Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace",
 
-  // 动效：短、克制、只动不透明度与颜色
+  // 动效：短、克制，只动不透明度与颜色
   '--ease': 'cubic-bezier(0.2, 0, 0, 1)',
   '--dur-fast': '120ms',
   '--dur-base': '180ms',
