@@ -1,68 +1,66 @@
 /**
- * 顶栏：纸底 + 1px 下边线，导航只用文字与下划线指示，不做胶囊高亮。
+ * 牌头带：深墨横贯，写着当前团队与项目。
+ * 只做定位，不做切换 —— 切换团队在团队设置的「所在团队」页签里。
  */
 .qg-banner {
-  flex: 0 0 56px;
-  height: 56px;
+  flex: 0 0 64px;
+  height: 64px;
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
   padding: 0 clamp(var(--space-4), 2.5vw, var(--space-8));
-  background: var(--paper-raised);
-  color: var(--ink-900);
-  border-bottom: 1px solid var(--rule);
+  background: var(--band);
+  color: var(--band-ink);
 }
 
 .qg-banner__brand {
   display: inline-flex;
   align-items: center;
-  color: var(--ink-900);
+  color: var(--band-ink);
   font-size: var(--text-lead);
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   flex-shrink: 0;
 }
 
-.qg-banner__brand:hover {
-  color: var(--accent-strong);
-}
-
-.qg-banner nav {
+.qg-banner__where {
   display: flex;
-  gap: var(--space-6);
+  align-items: center;
+  gap: var(--space-3);
   min-width: 0;
 }
 
-/* 选中态只加一条 2px 下划线，避免色块。 */
-.qg-banner nav a {
-  position: relative;
-  display: flex;
-  align-items: center;
-  height: 56px;
-  color: var(--ink-500);
-  font-size: var(--text-base);
+.qg-banner__team {
+  color: var(--band-ink);
+  font-size: var(--text-ui);
+  font-weight: 600;
   white-space: nowrap;
-  transition: color var(--dur-fast) var(--ease);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.qg-banner nav a::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: transparent;
-  transition: background-color var(--dur-fast) var(--ease);
+.qg-banner__team:hover {
+  color: #ffffff;
 }
 
-.qg-banner nav a:hover,
-.qg-banner nav a.active {
-  color: var(--ink-900);
+.qg-banner__sep {
+  width: 1px;
+  height: 16px;
+  background: rgb(255 255 255 / 22%);
+  flex-shrink: 0;
 }
 
-.qg-banner nav a.active::after {
-  background: var(--accent);
+.qg-banner__proj {
+  font-size: var(--text-ui);
+  color: var(--band-ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qg-banner__proj b {
+  color: var(--band-ink);
+  font-weight: 500;
 }
 
 .qg-banner__account {
@@ -72,13 +70,14 @@
   gap: var(--space-1);
 }
 
+/* 深底上的按钮与图标统一提到亮色，避免默认的墨色压不住 */
 .qg-banner__account .ant-btn {
-  color: var(--ink-700);
+  color: var(--band-ink-muted);
 }
 
 .qg-banner__account .ant-btn:hover {
-  color: var(--ink-900) !important;
-  background: var(--paper-sunken) !important;
+  color: var(--band-ink) !important;
+  background: rgb(255 255 255 / 10%) !important;
 }
 
 .qg-banner__account .ant-btn > span {
@@ -89,12 +88,12 @@
 
 @media (max-width: 700px) {
   .qg-banner {
-    gap: var(--space-2);
+    gap: var(--space-3);
     padding: 0 var(--space-4);
   }
 
-  .qg-banner nav {
-    gap: var(--space-2);
+  .qg-banner__proj {
+    display: none;
   }
 
   .qg-banner__account .ant-btn > .qg-banner__user-name {

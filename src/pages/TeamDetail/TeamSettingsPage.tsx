@@ -15,9 +15,9 @@ import {
   Upload,
   message,
 } from 'antd'
-import { CameraOutlined, UploadOutlined } from '@ant-design/icons'
+import { CameraOutlined, CheckOutlined, PlusOutlined, TeamOutlined, UploadOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { teamApi } from '@/api'
+import { authApi, teamApi } from '@/api'
 import { useAuth } from '@/context/AuthContext'
 import { useAppUiStore } from '@/store/appUiStore'
 import { PATHS } from '@/routes/paths'
@@ -58,7 +58,8 @@ function formatCreatedAt(iso?: string): string {
 /**
  * 团队设置沿用团队详情的纸张底色。
  * 顶部只保留解散团队；GitHub 授权与邀请入口在团队页头。
- * 下方 Tab：基本信息 / 成员管理，?tab=members 可直接打开邀请。
+ * 下方 Tab：基本信息 / 成员管理 / 所在团队，?tab=members 可直接打开邀请。
+ * 切换团队放在这一层：一级界面只呈现当前上下文，换上下文要进到这里。
  * 路由：/app/teams/:teamId/settings
  */
 export default function TeamSettingsPage() {
@@ -66,7 +67,8 @@ export default function TeamSettingsPage() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const queryClient = useQueryClient()
-  const activeTab = params.get('tab') === 'members' ? 'members' : 'basic'
+  const tabParam = params.get('tab')
+  const activeTab = tabParam === 'members' || tabParam === 'teams' ? tabParam : 'basic'
 
   const {
     data: team,
@@ -167,6 +169,11 @@ export default function TeamSettingsPage() {
                 isOwner={isOwner}
               />
             ),
+          },
+          {
+            key: 'teams',
+            label: '所在团队',
+            children: <TeamsTab currentTeamId={teamId} />,
           },
         ]}
       />
@@ -511,6 +518,75 @@ function MembersTab({
           )}
         </section>
       )}
+    </div>
+  )
+}
+
+/** ──── Tab 3：所在团队 ──── */
+/**
+ * 切换团队收在这一层：一级界面只显示当前团队，换团队要进到设置里。
+ * 创建与加入团队也走这里，不占顶栏。
+ */
+function TeamsTab({ currentTeamId }: { currentTeamId: string }) {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const teams = useQuery({ queryKey: ['teams', 'mine'], queryFn: teamApi.listMine })
+  const selectTeam = useMutation({
+    mutationFn: (id: string) => authApi.selectTeam(id),
+    onSuccess: (_data, id) => {
+      useAppUiStore.getState().setCurrentTeam(id)
+      queryClient.removeQueries({ queryKey: ['projects'] })
+      message.success('已切换团队')
+      navigate(PATHS.teamDetail(id))
+    },
+    onError: (err) => message.error(formatApiError(err)),
+  })
+
+  return (
+    <div className="team-settings__stack">
+      <p className="team-settings__hint">
+        切换后返回该团队的项目首页。当前团队：{teams.data?.find((t) => t.id === currentTeamId)?.name ?? '—'}
+      </p>
+      <div className="team-settings__teams">
+        {teams.isPending ? (
+          <p className="team-settings__hint">正在加载团队…</p>
+        ) : teams.isError ? (
+          <Button size="small" onClick={() => void teams.refetch()}>
+            重新加载团队
+          </Button>
+        ) : (
+          (teams.data ?? []).map((item) => {
+            const current = item.id === currentTeamId
+            return (
+              <div key={item.id} className="team-settings__team">
+                <Avatar size={32} shape="square" src={item.avatarUrl}>
+                  {item.name.slice(0, 1)}
+                </Avatar>
+                <span className="team-settings__team-name">{item.name}</span>
+                {current ? (
+                  <Tag icon={<CheckOutlined aria-hidden />}>当前团队</Tag>
+                ) : (
+                  <Button
+                    type="text"
+                    loading={selectTeam.isPending && selectTeam.variables === item.id}
+                    onClick={() => selectTeam.mutate(item.id)}
+                  >
+                    切换到该团队
+                  </Button>
+                )}
+              </div>
+            )
+          })
+        )}
+      </div>
+      <Space>
+        <Button icon={<PlusOutlined />} onClick={() => navigate(PATHS.CREATE_TEAM)}>
+          创建团队
+        </Button>
+        <Button icon={<TeamOutlined />} onClick={() => navigate(PATHS.JOIN_TEAM)}>
+          加入团队
+        </Button>
+      </Space>
     </div>
   )
 }

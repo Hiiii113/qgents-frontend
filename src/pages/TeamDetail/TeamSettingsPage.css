@@ -110,3 +110,27 @@
     flex-direction: column;
   }
 }
+
+/* 所在团队：一行一个团队，当前团队用标签而非高亮色块 */
+.team-settings__teams {
+  display: flex;
+  flex-direction: column;
+}
+
+.team-settings__team {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.team-settings__team-name {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.team-settings__team .ant-btn,
+.team-settings__team .ant-tag {
+  margin-left: auto;
+}
