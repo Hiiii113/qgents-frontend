@@ -174,7 +174,8 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   if (item.senderType === 'SYSTEM')
     return <div className="chat-system-message">{chatMessageText(item)}</div>
   const agent = item.senderType === 'AGENT'
-  const own = item.senderId === currentUserId
+  // 人和 Agent 的 id 各自从 1 开始，会撞号；只比 id 会把 Agent 当成自己在说话。
+  const own = item.senderType === 'USER' && item.senderId === currentUserId
   const name = sender?.displayName || item.senderName || (agent ? 'Agent' : '成员')
   const timestamp = new Date(item.createdAt)
   const validTime = !Number.isNaN(timestamp.getTime())

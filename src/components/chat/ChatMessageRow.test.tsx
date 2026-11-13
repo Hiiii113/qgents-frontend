@@ -41,6 +41,25 @@ function renderRow(item: ChatMessage, props: Partial<Parameters<typeof ChatMessa
   )
 }
 
+it('does not treat an agent as the current user when their numeric ids collide', () => {
+  const view = renderRow(
+    {
+      id: 'm9',
+      groupId: 'g1',
+      type: 'TEXT',
+      content: { text: '执行完成' },
+      senderId: '1',
+      senderType: 'AGENT',
+      senderName: 'Qgent',
+      createdAt: '2026-10-04T00:00:00Z',
+    },
+    { currentUserId: '1' },
+  )
+  const article = view.container.querySelector('.chat-message')
+  expect(article?.className).toContain('chat-message--agent')
+  expect(article?.className).not.toContain('chat-message--own')
+})
+
 it('shows each agent with its own member profile and marks it as an agent', () => {
   renderRow(
     {
