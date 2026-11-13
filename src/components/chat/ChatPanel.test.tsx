@@ -70,7 +70,12 @@ it('lists every agent joined to the group with its own name', async () => {
   expect(await screen.findByRole('menuitem', { name: /Qgent/ })).toBeInTheDocument()
   expect(await screen.findByRole('menuitem', { name: /前端助手/ })).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: /位成员/ }))
+  expect(await screen.findByRole('complementary', { name: '群聊成员' })).toBeInTheDocument()
   expect(await screen.findByText('前端助手')).toBeInTheDocument()
+  // 默认群不再写同步说明，成员名单自己说明事实。
+  expect(screen.queryByText('默认群成员与项目成员同步。')).not.toBeInTheDocument()
+  await user.keyboard('{Escape}')
+  await waitFor(() => expect(screen.queryByText('前端助手')).not.toBeInTheDocument())
 })
 
 it('opens the mention menu from an agent avatar without touching the draft', async () => {

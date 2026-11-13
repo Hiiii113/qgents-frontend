@@ -3,10 +3,12 @@
  * 作者行与头像只在组首，本人头像在右侧与他人对称。数值一律取 tokens 变量；正文 16px，元信息 12–13px。
  */
 .chat-panel {
+  position: relative;
   height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: var(--paper-raised);
   color: var(--ink-900);
 }
@@ -69,7 +71,6 @@
 .chat-panel__composer {
   flex-shrink: 0;
   padding: var(--space-3) var(--space-6) var(--space-4);
-  border-top: 1px solid var(--rule);
 }
 
 /* ──── 消息时间线 ──── */
@@ -81,14 +82,17 @@
   min-height: 0;
 }
 
+/* 加载历史时的指示浮在内容上方，不占位，避免滚动位置跳动。 */
 .chat-timeline__history {
-  flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  padding-top: var(--space-2);
+  position: absolute;
+  top: var(--space-2);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
 }
 
 .chat-timeline__scroll {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow: auto;
@@ -168,11 +172,39 @@
   max-width: 56ch;
 }
 
+/* 回到最新：水平居中的圆形箭头，有新消息时在右上角挂条数。 */
 .chat-timeline__latest {
   position: absolute;
   bottom: var(--space-4);
-  right: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1;
+  animation: chat-latest-in 140ms var(--ease);
+}
+
+@keyframes chat-latest-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.chat-timeline__latest .ant-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--rule-strong);
+  background: var(--paper-raised);
+  color: var(--ink-700);
+}
+
+.chat-timeline__latest .ant-btn:hover {
+  border-color: var(--ink-300);
+  color: var(--ink-900);
 }
 
 /* ──── 单条消息 ────
@@ -834,41 +866,128 @@
   color: var(--ink-400);
 }
 
-/* 成员抽屉：行式列表，1px 分隔，头像浅底，状态标签保持安静。 */
-.chat-members .ant-drawer-header {
+/* 群聊成员：聊天面板内的右侧侧栏，无蒙层、无阴影，靠 1px 边线分界。 */
+.chat-members {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: min(340px, 88%);
+  border-left: 1px solid var(--rule);
+  background: var(--paper-raised);
+  animation: chat-members-in 140ms var(--ease);
+}
+
+@keyframes chat-members-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes chat-members-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.chat-members__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
   border-bottom: 1px solid var(--rule);
 }
 
-.chat-members .ant-drawer-title {
-  font-size: var(--text-lead);
+.chat-members__head h2 {
+  font-size: var(--text-base);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  color: var(--ink-900);
 }
 
-.chat-members .ant-drawer-body {
-  padding: var(--space-4) var(--space-6);
+.chat-members__list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
 }
 
-.chat-members__hint {
-  margin-bottom: var(--space-4);
-  font-size: var(--text-sm);
-  line-height: 1.7;
-  color: var(--ink-500);
+.chat-members__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-s);
+  transition: background-color var(--dur-fast) var(--ease);
 }
 
-.chat-members .ant-list-item {
-  padding: var(--space-3) 0;
-  border-block-end: 1px solid var(--rule);
+.chat-members__item:hover,
+.chat-members__item:focus-within {
+  background: var(--paper-sunken);
 }
 
-.chat-members .ant-avatar {
+.chat-members__item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.chat-members__item .ant-avatar {
+  flex-shrink: 0;
   background: var(--paper-sunken);
   color: var(--ink-500);
 }
 
-.chat-members .ant-list-item-meta-title {
+.chat-members__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chat-members__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--text-base);
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--ink-900);
+}
+
+.chat-members__name .ant-tag {
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.chat-members__email {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-sm);
+  color: var(--ink-500);
+}
+
+.chat-members__foot {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+.chat-members__foot .ant-btn {
+  width: 100%;
 }
 
 @media (max-width: 800px) {
@@ -890,10 +1009,6 @@
 
   .chat-panel__composer {
     padding: var(--space-2) var(--space-4) var(--space-3);
-  }
-
-  .chat-timeline__latest {
-    right: var(--space-4);
   }
 
   /* 触屏没有悬停：动作回到行内可见，避免浮层盖住正文。 */
@@ -948,8 +1063,18 @@
 @media (prefers-reduced-motion: reduce) {
   .chat-message__actions,
   .chat-composer,
-  .chat-message__file {
+  .chat-message__file,
+  .chat-members__item {
     transition: none;
+  }
+
+  /* 减少动效时成员侧栏只保留淡入，回到最新按钮直接出现。 */
+  .chat-members {
+    animation-name: chat-members-fade;
+  }
+
+  .chat-timeline__latest {
+    animation: none;
   }
 }
 

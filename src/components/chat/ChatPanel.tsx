@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Alert, App, Avatar, Button, Drawer, List, Tag, Tooltip } from 'antd'
-import { PushpinOutlined, RobotOutlined, TeamOutlined } from '@ant-design/icons'
+import { Alert, App, Avatar, Button, Tag, Tooltip } from 'antd'
+import { CloseOutlined, PushpinOutlined, RobotOutlined, TeamOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { AgentRunProgress, useAgentRuns } from '@/features/agent-runs'
 import { chatApi } from '@/api/chat'
@@ -158,6 +158,16 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
       stop.variables,
     ],
   )
+  // 成员侧栏是内嵌面板，没有 antd Drawer 的焦点管理，自己接 Esc；邀请弹窗打开时交给弹窗处理。
+  useEffect(() => {
+    if (!membersOpen || inviteOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMembersOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [membersOpen, inviteOpen])
+
   const linkedMessageId = params.get('messageId')
   const ready = chat.query.isSuccess
   useEffect(() => {
@@ -265,45 +275,48 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
           }
         />
       </div>
-      <Drawer
-        className="chat-members"
-        title="群聊成员"
-        open={membersOpen}
-        onClose={() => setMembersOpen(false)}
-        extra={
-          <Button
-            onClick={() => setInviteOpen(true)}
-            disabled={project.data?.status === 'ARCHIVED'}
-          >
-            邀请成员 / Agent
-          </Button>
-        }
-      >
-        {group?.defaultGroup && <p className="chat-members__hint">默认群成员与项目成员同步。</p>}
-        <List
-          dataSource={members.data ?? []}
-          renderItem={(member) => (
-            <List.Item>
-              <List.Item.Meta
-                avatar={
-                  <Avatar
-                    src={member.avatarUrl}
-                    icon={member.memberType === 'AGENT' ? <RobotOutlined /> : undefined}
-                  >
-                    {member.memberType === 'USER' ? member.displayName.slice(0, 1) : undefined}
-                  </Avatar>
-                }
-                title={
-                  <>
-                    {member.displayName} {member.memberType === 'AGENT' && <Tag>Agent</Tag>}
-                  </>
-                }
-                description={member.memberType === 'USER' ? member.email || undefined : undefined}
-              />
-            </List.Item>
-          )}
-        />
-      </Drawer>
+      {membersOpen && (
+        <aside className="chat-members" aria-label="群聊成员">
+          <header className="chat-members__head">
+            <h2>群聊成员</h2>
+            <Button
+              type="text"
+              icon={<CloseOutlined aria-hidden />}
+              aria-label="关闭成员列表"
+              onClick={() => setMembersOpen(false)}
+            />
+          </header>
+          <ul className="chat-members__list">
+            {(members.data ?? []).map((member) => (
+              <li key={`${member.memberType}:${member.id}`} className="chat-members__item">
+                <Avatar
+                  src={member.avatarUrl}
+                  icon={member.memberType === 'AGENT' ? <RobotOutlined /> : undefined}
+                >
+                  {member.memberType === 'USER' ? member.displayName.slice(0, 1) : undefined}
+                </Avatar>
+                <div className="chat-members__text">
+                  <span className="chat-members__name">
+                    {member.displayName}
+                    {member.memberType === 'AGENT' && <Tag>Agent</Tag>}
+                  </span>
+                  {member.memberType === 'USER' && member.email && (
+                    <span className="chat-members__email">{member.email}</span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="chat-members__foot">
+            <Button
+              onClick={() => setInviteOpen(true)}
+              disabled={project.data?.status === 'ARCHIVED'}
+            >
+              邀请成员 / Agent
+            </Button>
+          </div>
+        </aside>
+      )}
       {inviteOpen && group && project.data && (
         <GroupMembersModal
           projectId={projectId}
