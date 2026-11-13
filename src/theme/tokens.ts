@@ -19,7 +19,7 @@ export const T = {
   ink900: '#16181A',
   ink700: '#3A4046',
   ink500: '#5E666D',
-  ink400: '#7A858C',
+  ink400: '#68717A',
   ink300: '#A7AEB3',
   // 面：页面底、容器、凹陷区
   paper: '#FAFAF9',
@@ -38,7 +38,7 @@ export const T = {
   accentSoft: '#EAF1F7',
   // 状态：琥珀只表示变更/进行中，红只表示失败或叫停，完成用墨
   success: '#0F7A6B',
-  warning: '#B06A00',
+  warning: '#8A5200',
   danger: '#A32020',
 } as const
 

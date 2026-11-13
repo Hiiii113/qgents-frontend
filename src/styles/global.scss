@@ -81,6 +81,18 @@ textarea:-webkit-autofill:focus {
   transition: background-color 9999s ease-out;
 }
 
+/* 占位文字用 --ink-400：足够读，又明显弱于正文；不用更浅的 --ink-300 承载文字。 */
+::placeholder {
+  color: var(--ink-400);
+  opacity: 1;
+}
+
+/* 选中文本：用强调色浅底，不留给浏览器默认的蓝灰。 */
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink-900);
+}
+
 /* 键盘可达性：统一 2px 环形焦点，鼠标点击不显示。 */
 :focus-visible {
   outline: 2px solid var(--accent);

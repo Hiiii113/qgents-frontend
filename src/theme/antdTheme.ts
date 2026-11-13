@@ -16,6 +16,7 @@ export const antdTheme: ThemeConfig = {
     colorTextSecondary: T.ink500,
     colorTextTertiary: T.ink400,
     colorTextQuaternary: T.ink300,
+    colorTextPlaceholder: T.ink400,
     colorBorder: T.ruleStrong,
     colorBorderSecondary: T.rule,
     colorBgLayout: T.paper,
