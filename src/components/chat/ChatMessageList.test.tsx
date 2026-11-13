@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ChatMessageList } from './ChatMessageList'
 import type { ChatMessage } from '@/types/chat'
@@ -183,5 +183,78 @@ describe('virtualized chat history', () => {
     await waitFor(() => expect(screen.getByText('一起分析')).toBeInTheDocument())
     // 停止入口只在真实运行进度卡里出现，消息行不再根据「提及但没回复」猜测。
     expect(screen.queryByRole('button', { name: /停止/ })).not.toBeInTheDocument()
+  })
+
+  it('loads older history at the top and shows a spinner instead of a button', async () => {
+    const onLoadOlder = vi.fn(() => new Promise<void>(() => {}))
+    const message: ChatMessage = {
+      id: 'm1',
+      sequence: 2,
+      groupId: 'g1',
+      type: 'TEXT',
+      content: { text: '最新一条' },
+      senderType: 'USER',
+      senderId: 'u1',
+      senderName: '成员',
+      createdAt: '2026-10-02T00:00:00Z',
+    }
+    const base = {
+      messages: [message],
+      loading: false,
+      hasMore: true,
+      loadingOlder: false,
+      targetId: null,
+      onReply: vi.fn(),
+      onPreview: vi.fn(),
+      onLocate: vi.fn(),
+      onLoadOlder,
+    }
+    const view = render(<ChatMessageList {...base} />)
+    const scroll = screen.getByRole('log', { name: '聊天消息' })
+    Object.defineProperty(scroll, 'scrollHeight', { configurable: true, value: 1200 })
+    Object.defineProperty(scroll, 'clientHeight', { configurable: true, value: 600 })
+    scroll.scrollTop = 0
+    fireEvent.scroll(scroll)
+    await waitFor(() => expect(onLoadOlder).toHaveBeenCalledTimes(1))
+    // 请求进行中的重复滚动不再触发第二页。
+    fireEvent.scroll(scroll)
+    expect(onLoadOlder).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('button', { name: '加载更早消息' })).not.toBeInTheDocument()
+    view.rerender(<ChatMessageList {...base} loadingOlder />)
+    expect(screen.getByRole('status', { name: '正在加载更早消息' })).toBeInTheDocument()
+  })
+  it('shows a centered jump-to-latest button with the unread count', async () => {
+    const message = (id: string, sequence: number): ChatMessage => ({
+      id,
+      sequence,
+      groupId: 'g1',
+      type: 'TEXT',
+      content: { text: id },
+      senderType: 'USER',
+      senderId: 'u1',
+      senderName: '成员',
+      createdAt: '2026-10-02T00:00:00Z',
+    })
+    const base = {
+      loading: false,
+      hasMore: false,
+      loadingOlder: false,
+      targetId: null,
+      onLoadOlder: vi.fn(),
+      onReply: vi.fn(),
+      onPreview: vi.fn(),
+      onLocate: vi.fn(),
+    }
+    const view = render(<ChatMessageList {...base} messages={[message('m1', 1)]} />)
+    const scroll = screen.getByRole('log', { name: '聊天消息' })
+    Object.defineProperty(scroll, 'scrollHeight', { configurable: true, value: 1200 })
+    Object.defineProperty(scroll, 'clientHeight', { configurable: true, value: 600 })
+    scroll.scrollTop = 100
+    fireEvent.scroll(scroll)
+    expect(await screen.findByRole('button', { name: '回到最新消息' })).toBeInTheDocument()
+    view.rerender(<ChatMessageList {...base} messages={[message('m1', 1), message('m2', 2)]} />)
+    await waitFor(() =>
+      expect(view.container.querySelector('.ant-badge-count')?.textContent).toBe('1'),
+    )
   })
 })

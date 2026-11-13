@@ -1,5 +1,5 @@
 import { memo, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Button } from 'antd'
+import { Badge, Button, Spin } from 'antd'
 import { ArrowDownOutlined } from '@ant-design/icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { ChatMessageRow } from './ChatMessageRow'
@@ -55,6 +55,8 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
   const locatedId = useRef<string | null>(null)
   const [awayFromBottom, setAwayFromBottom] = useState(false)
   const [seenSequence, setSeenSequence] = useState(0)
+  // 历史页请求进行中：props.loadingOlder 要等重新渲染才变，滚动事件可能先到。
+  const loadingOlderRef = useRef(false)
   const byId = useMemo(() => new Map(messages.map((item) => [item.id, item])), [messages])
   // 空态只推已启用的 Agent：点一下就把它 @ 进输入框
   const agents = useMemo(
@@ -168,13 +170,6 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
   }
   return (
     <div className="chat-timeline">
-      {props.hasMore && (
-        <div className="chat-timeline__history">
-          <Button type="text" loading={props.loadingOlder} onClick={() => void loadOlder()}>
-            加载更早消息
-          </Button>
-        </div>
-      )}
       <div
         className="chat-timeline__scroll"
         ref={scrollRef}
@@ -190,8 +185,25 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
             if (away) setSeenSequence(latestSequence)
             props.onReadingLatestChange?.(!away)
           }
+          // 滑到顶自动续一页；内容一屏放得下时不触发，否则空列表也会一直请求。
+          if (
+            element.scrollTop <= 32 &&
+            props.hasMore &&
+            !loadingOlderRef.current &&
+            element.scrollHeight > element.clientHeight
+          ) {
+            loadingOlderRef.current = true
+            void loadOlder().finally(() => {
+              loadingOlderRef.current = false
+            })
+          }
         }}
       >
+        {props.loadingOlder && (
+          <div className="chat-timeline__history" role="status" aria-label="正在加载更早消息">
+            <Spin size="small" />
+          </div>
+        )}
         {props.loading ? (
           <div className="chat-timeline__empty" role="status">
             <p className="chat-timeline__empty-text">正在加载消息…</p>
@@ -293,13 +305,19 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
         )}
       </div>
       {awayFromBottom && (
-        <Button
+        <Badge
+          count={newMessages}
+          offset={[-2, 2]}
+          color="var(--accent)"
           className="chat-timeline__latest"
-          icon={<ArrowDownOutlined />}
-          onClick={jumpToBottom}
         >
-          {newMessages ? `${newMessages} 条新消息` : '回到最新'}
-        </Button>
+          <Button
+            shape="circle"
+            icon={<ArrowDownOutlined />}
+            aria-label="回到最新消息"
+            onClick={jumpToBottom}
+          />
+        </Badge>
       )}
     </div>
   )
