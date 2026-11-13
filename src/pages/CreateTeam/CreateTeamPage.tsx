@@ -10,11 +10,8 @@ import { WorkspacePage } from '@/components/WorkspacePage'
 import './CreateTeamPage.css'
 
 /**
- * 创建新团队 —— 对齐 / （团队头像）
- *
- * POST /teams 创建团队（创建者自动成为 TEAM_OWNER）
- * 头像：创建成功后以返回的 teamId 走 credential → OSS 直传 → confirm，再 PATCH 回写
- * 邀请成员是后续操作（POST /teams/{teamId}/invitations），创建后跳团队详情再操作
+ * 创建团队：先创建团队，再按返回的 teamId 上传头像。
+ * 创建者是团队所有者；成员邀请在团队设置里继续。
  */
 export default function CreateTeamPage() {
   const { message } = App.useApp()
@@ -87,7 +84,7 @@ export default function CreateTeamPage() {
   }
 
   return (
-    <WorkspacePage title="创建新团队" description="为你的伙伴建一个空间，创建项目，开始讨论。">
+    <WorkspacePage title="创建新团队" description="创建后你是团队所有者，可以创建项目并邀请成员。">
       <form className="create-team__form" onSubmit={handleSubmit}>
         {/* 头像 —— 创建成功后回写；本地先预览 */}
         <div className="create-team__avatar-row">
@@ -115,7 +112,7 @@ export default function CreateTeamPage() {
           </label>
           <div className="create-team__avatar-hint">
             <span className="create-team__label">团队头像</span>
-            <p>可选，图片不超过 5MB。上传失败不影响团队创建。</p>
+            <p>可选，不超过 5MB；上传失败不影响创建。</p>
           </div>
         </div>
 

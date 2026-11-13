@@ -21,16 +21,10 @@ const CHOICES = [
 
 export default function WelcomePage() {
   return (
-    <WorkspacePage
-      title="好想法，从一起聊开始。"
-      description="先找一个团队空间，再与伙伴和 Qgent 一起开展工作。"
-    >
+    <WorkspacePage title="好想法，从一起聊开始。">
       <div className="welcome-choices">
-        {CHOICES.map((choice, index) => (
+        {CHOICES.map((choice) => (
           <Link key={choice.to} className="welcome-choice" to={choice.to}>
-            <span className="welcome-choice__index qg-num">
-              {String(index + 1).padStart(2, '0')}
-            </span>
             <span className="welcome-choice__body">
               <strong>{choice.title}</strong>
               <span className="welcome-choice__desc">{choice.description}</span>
@@ -39,7 +33,6 @@ export default function WelcomePage() {
           </Link>
         ))}
       </div>
-      <p className="workspace-page__note">在聊天中讨论想法，@Qgent 帮你把它往前推进。</p>
     </WorkspacePage>
   )
 }

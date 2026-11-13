@@ -52,7 +52,7 @@ export function GitHubIntegrationPage() {
   return (
     <WorkspacePage
       title="GitHub 连接"
-      description="团队通过 GitHub App 授权仓库。项目按需导入，Qgent 可在聊天中使用这些能力。"
+      description="团队连接 GitHub App 并授权仓库；项目导入后，Qgent 才能在聊天里使用。"
       action={
         owner && (
           <Button
@@ -74,7 +74,7 @@ export function GitHubIntegrationPage() {
         <Alert
           type="error"
           showIcon
-          message={formatApiError(connections.error)}
+          title={formatApiError(connections.error)}
           action={<Button onClick={() => void connections.refetch()}>重试</Button>}
         />
       ) : !connections.data.length ? (
@@ -91,7 +91,7 @@ export function GitHubIntegrationPage() {
                 <GithubOutlined aria-hidden /> {connection.accountLogin}
               </span>
               <span className="github-connection__meta">
-                {connection.accountType === 'ORGANIZATION' ? '组织账号' : '个人账号'} · GitHub App
+                {connection.accountType === 'ORGANIZATION' ? '组织' : '个人'}账号
               </span>
               <span className={`github-pill${connection.suspended ? ' github-pill--paused' : ''}`}>
                 {connection.suspended ? '已暂停' : '已连接'}
@@ -111,10 +111,6 @@ export function GitHubIntegrationPage() {
           ))}
         </ul>
       )}
-      <p className="workspace-page__note">
-        连接后，在项目仓库页导入 Qgent 可使用的仓库；Qgent 只使用团队 App
-        授权、且已导入当前项目的仓库。导入仓库不会自动执行代码操作。
-      </p>
     </WorkspacePage>
   )
 }

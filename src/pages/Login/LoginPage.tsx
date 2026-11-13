@@ -9,7 +9,7 @@ import './LoginPage.css'
 
 type AuthTab = 'login' | 'register'
 
-/** 品牌区只放纯排版：编号 + 中文短句，不用插画和图标。 */
+/** 品牌区只放纯排版：三条协作方式，不用插画和图标。 */
 const FEATURES = [
   { title: '从项目聊天开始', description: '成员共同讨论，@Qgent 协助分析与执行' },
   { title: '按需使用 Qgent', description: '在群聊中 @Qgent 发起协作，保留上下文与成果' },
@@ -125,11 +125,8 @@ export function LoginPage() {
         <h1 className="login-page__headline">团队与 Qgent，在同一个项目现场协作</h1>
 
         <ul className="login-page__features">
-          {FEATURES.map((feature, index) => (
+          {FEATURES.map((feature) => (
             <li key={feature.title}>
-              <span className="login-page__feature-index qg-num">
-                {String(index + 1).padStart(2, '0')}
-              </span>
               <div className="login-page__feature-text">
                 <strong>{feature.title}</strong>
                 <p>{feature.description}</p>
@@ -300,8 +297,6 @@ export function LoginPage() {
               {tab === 'login' ? '立即注册' : '去登录'}
             </button>
           </p>
-
-          <p className="login-form__footnote">登录后可选择或创建团队</p>
         </div>
       </section>
     </div>

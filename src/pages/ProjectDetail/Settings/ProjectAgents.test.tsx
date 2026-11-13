@@ -49,6 +49,7 @@ it('lists the enabled agents of the project and marks the default one', async ()
   expect(await screen.findByText('Qgent')).toBeInTheDocument()
   expect(screen.getByText('前端助手')).toBeInTheDocument()
   expect(screen.getByText('默认 Agent')).toBeInTheDocument()
+  expect(screen.queryByText('已启用')).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: /申请新 Agent/ })).toBeInTheDocument()
 })
 
@@ -74,7 +75,7 @@ it('submits a custom agent application and shows it waits for admin approval', a
       avatarUrl: 'https://example.com/a.png',
     }),
   )
-  expect(await screen.findByText('「测试助手」申请已提交，待审批')).toBeInTheDocument()
+  expect(await screen.findByText('「测试助手」已提交，待审批')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: '去默认群跟进' })).toHaveAttribute(
     'href',
     '/app/projects/p1/chat?groupId=g1',

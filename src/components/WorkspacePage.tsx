@@ -12,7 +12,7 @@ export function WorkspacePage({
   children,
 }: {
   title: string
-  description: string
+  description?: string
   action?: ReactNode
   children: ReactNode
 }) {
@@ -21,7 +21,7 @@ export function WorkspacePage({
       <header className="workspace-page__header">
         <div className="workspace-page__heading">
           <h1 className="workspace-page__title">{title}</h1>
-          <p className="workspace-page__description">{description}</p>
+          {description && <p className="workspace-page__description">{description}</p>}
         </div>
         {action && <div className="workspace-page__action">{action}</div>}
       </header>

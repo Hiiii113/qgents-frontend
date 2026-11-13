@@ -11,12 +11,8 @@ import './ForgotPasswordPage.css'
 type Stage = 'request' | 'reset' | 'done'
 
 /**
- * 忘记密码 —— 对齐
- *
- * 第一步：输入邮箱 → POST /auth/password-reset-requests 发起找回密码邮件
- *          （后端邮件内含重置令牌/验证码）
- * 第二步：输入验证码（重置令牌）+ 新密码 → POST /auth/password-resets
- *          newPassword 使用平台 RSA 公钥加密后提交
+ * 忘记密码：先发验证码，再用验证码设置新密码。
+ * 新密码用平台 RSA 公钥加密后提交。
  */
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
@@ -52,7 +48,6 @@ export default function ForgotPasswordPage() {
     try {
       await authApi.resetPasswordRequest(email.trim())
       setStage('reset')
-      // 演示友好：发送成功后提供 60s 倒计时，可重发
       setCountdown(60)
       if (countdownTimerRef.current !== null) window.clearInterval(countdownTimerRef.current)
       countdownTimerRef.current = window.setInterval(() => {
@@ -92,7 +87,7 @@ export default function ForgotPasswordPage() {
     }
     setSubmitting(true)
     try {
-      // ：newPassword 必须为 RSA 加密后的 Base64 密文
+      // newPassword 必须为 RSA 加密后的 Base64 密文
       const encryptedPassword = await encryptPassword(newPassword)
       await authApi.resetPassword({
         email: email.trim(),
@@ -123,7 +118,7 @@ export default function ForgotPasswordPage() {
           </h1>
           <p className="forgot-page__desc">
             {stage === 'request' && '输入注册邮箱，我们将发送验证码到你的邮箱'}
-            {stage === 'reset' && `验证码已发送至 ${email}，请查收邮件`}
+            {stage === 'reset' && `验证码已发送至 ${email}`}
             {stage === 'done' && '新密码已生效，现在可以用新密码登录了'}
           </p>
         </header>
@@ -252,19 +247,21 @@ export default function ForgotPasswordPage() {
 
         {stage === 'done' && (
           <div className="forgot-done">
-            <p className="forgot-done__note">新密码已生效。建议使用新密码重新登录后再继续协作。</p>
+            <p className="forgot-done__note">新密码已生效，请用新密码登录。</p>
             <Link className="forgot-done__link" to={PATHS.LOGIN}>
               返回登录
             </Link>
           </div>
         )}
 
-        <p className="forgot-page__footnote">
-          想起来了？
-          <Link className="forgot-link" to={PATHS.LOGIN}>
-            返回登录
-          </Link>
-        </p>
+        {stage !== 'done' && (
+          <p className="forgot-page__footnote">
+            想起来了？
+            <Link className="forgot-link" to={PATHS.LOGIN}>
+              返回登录
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   )

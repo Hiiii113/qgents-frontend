@@ -1,4 +1,5 @@
 import { SkillActions } from '@/components/SkillActions'
+import { ChatMarkdown } from '@/components/chat/ChatMarkdown'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -12,6 +13,7 @@ import {
   Modal,
   Segmented,
   Select,
+  Skeleton,
   Spin,
   Tag,
   Upload,
@@ -20,6 +22,7 @@ import { PlusOutlined, TagsOutlined, UploadOutlined, UserOutlined } from '@ant-d
 import { skillApi } from '@/api'
 import type { Skill, SkillPreview, SkillStatus, SkillVisibility } from '@/types'
 import { ProjectPage } from '../ProjectPage'
+import { stripFrontmatter } from './frontmatter'
 import './SkillPage.css'
 
 /** 状态筛选维度 */
@@ -100,11 +103,13 @@ export function SkillPage() {
     >
       <div className="skill-page">
         <div className="skill-toolbar">
-          <Segmented
-            options={FILTERS.map((f) => ({ label: f.label, value: f.key }))}
-            value={filter}
-            onChange={(v) => setFilter(v as FilterKey)}
-          />
+          <div className="skill-toolbar__filters">
+            <Segmented
+              options={FILTERS.map((f) => ({ label: f.label, value: f.key }))}
+              value={filter}
+              onChange={(v) => setFilter(v as FilterKey)}
+            />
+          </div>
           <div className="skill-toolbar__actions">
             <Input.Search
               className="skill-toolbar__search"
@@ -118,24 +123,24 @@ export function SkillPage() {
         </div>
 
         {isLoading ? (
-          <Spin delay={180} />
+          <Skeleton active paragraph={{ rows: 5 }} />
         ) : isError ? (
-          <>
-            <p className="skill-note">Skill 加载失败，请检查网络后重试。</p>
-            <div>
-              <Button onClick={() => void refetch()}>重新加载</Button>
-            </div>
-          </>
+          <Alert
+            type="error"
+            showIcon
+            title="Skill 加载失败"
+            action={<Button onClick={() => void refetch()}>重试</Button>}
+          />
         ) : filtered.length === 0 ? (
           <p className="skill-note">
             {keyword.trim() || filter !== 'ALL'
-              ? '没有匹配的 Skill，可以更换关键词或状态筛选。'
-              : '暂无共享 Skill。用右上角导入 SKILL.md，创建私有 Skill 或项目共享 Skill。'}
+              ? '没有匹配的 Skill。'
+              : '还没有 Skill。导入 SKILL.md 即可创建。'}
           </p>
         ) : (
           <div className="skill-list">
-            {filtered.map((s, i) => (
-              <SkillCard key={s.id} skill={s} index={i + 1} onClick={() => setDetailId(s.id)} />
+            {filtered.map((s) => (
+              <SkillCard key={s.id} skill={s} onClick={() => setDetailId(s.id)} />
             ))}
           </div>
         )}
@@ -173,21 +178,12 @@ export function SkillPage() {
 }
 
 /** 列表卡片。整行可点，用原生 button 拿到键盘焦点与 Enter 触发。 */
-function SkillCard({
-  skill,
-  index,
-  onClick,
-}: {
-  skill: Skill
-  index: number
-  onClick: () => void
-}) {
+function SkillCard({ skill, onClick }: { skill: Skill; onClick: () => void }) {
   const status = STATUS_LABEL[skill.status] ?? skill.status
   const visibility = VISIBILITY_LABEL[skill.visibility] ?? skill.visibility
   return (
     <button type="button" className="skill-card" onClick={onClick}>
       <span className="skill-card__main">
-        <span className="skill-card__index">{String(index).padStart(2, '0')}</span>
         <span className="skill-card__body">
           <span className="skill-card__name">{skill.name}</span>
           <span className="skill-card__description">{skill.description}</span>
@@ -248,7 +244,9 @@ function SkillDetail({
           )}
         </div>
 
-        <p className="skill-detail__content">{skill.content}</p>
+        <div className="skill-detail__content">
+          <ChatMarkdown text={stripFrontmatter(skill.content)} />
+        </div>
 
         <div className="skill-detail__meta">
           <span>
@@ -421,7 +419,7 @@ function CreateSkillModal({
         <Form.Item name="tags" label="标签（逗号分隔）">
           <Input placeholder="如 java, backend" />
         </Form.Item>
-        {error && <Alert type="error" showIcon message={error} />}
+        {error && <Alert type="error" showIcon title={error} />}
       </Form>
     </Modal>
   )

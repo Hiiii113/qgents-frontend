@@ -39,6 +39,12 @@
   color: var(--ink-500);
 }
 
+.code-card__branch {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-700);
+}
+
 .code-card__actions {
   display: flex;
   align-items: center;
@@ -50,6 +56,31 @@
 
 .code-select {
   width: 100%;
+}
+
+/* 少量候选项：搜索框 + 复选框行，比下拉更容易一次勾选多个。 */
+.code-repo-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.code-repo-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 280px;
+  overflow-y: auto;
+  padding: var(--space-1);
+}
+
+.code-repo-list .ant-checkbox-wrapper {
+  font-size: var(--text-ui);
+  overflow-wrap: anywhere;
+}
+
+.code-repo-list .ant-checkbox + span {
+  padding-inline-end: 0;
 }
 
 .code-empty {

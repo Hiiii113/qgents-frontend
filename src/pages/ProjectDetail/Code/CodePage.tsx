@@ -1,6 +1,18 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Alert, App, Button, Input, Modal, Popconfirm, Select, Spin, Tag } from 'antd'
+import {
+  Alert,
+  App,
+  Button,
+  Checkbox,
+  Input,
+  Modal,
+  Popconfirm,
+  Select,
+  Skeleton,
+  Spin,
+  Tag,
+} from 'antd'
 import { GithubOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
@@ -17,6 +29,7 @@ export function CodePage() {
   const client = useQueryClient()
   const [importOpen, setImportOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [repoSearch, setRepoSearch] = useState('')
   const [selected, setSelected] = useState<string[]>([])
   const project = useQuery({
     queryKey: ['projects', projectId],
@@ -40,6 +53,14 @@ export function CodePage() {
     [imported.data],
   )
   const options = (available.data ?? []).filter((repo) => !importedIds.has(repo.repositoryId))
+  const importedRepos = (imported.data ?? []).filter((repo) =>
+    repo.fullName.toLowerCase().includes(search.toLowerCase()),
+  )
+  const matchesSearch = (repo: AvailableRepository) =>
+    repo.fullName.toLowerCase().includes(repoSearch.trim().toLowerCase())
+  // 少量候选用可搜索的复选框列表，一眼勾选；候选多时仍用下拉搜索。
+  const smallList = options.length <= 8
+  const optionKey = (repo: AvailableRepository) => `${repo.installationId}:${repo.repositoryId}`
   const importRepos = useMutation({
     mutationFn: async (repos: AvailableRepository[]) => {
       for (const repo of repos)
@@ -88,102 +109,121 @@ export function CodePage() {
           </Link>
         </div>
       </div>
-      {imported.isError && (
+      {imported.isError ? (
         <Alert
           type="error"
           showIcon
-          message={formatApiError(imported.error)}
+          title={formatApiError(imported.error)}
           action={<Button onClick={() => void imported.refetch()}>重试</Button>}
         />
-      )}
-      {imported.isPending ? (
+      ) : imported.isPending ? (
         <Spin delay={180} />
       ) : !(imported.data ?? []).length ? (
-        <p className="code-empty">还没有导入仓库。可以从 GitHub 导入，或直接在聊天里讨论。</p>
+        <p className="code-empty">还没有导入仓库。</p>
+      ) : importedRepos.length === 0 ? (
+        <p className="code-empty">没有匹配的仓库。</p>
       ) : (
         <div className="workspace-page__grid">
-          {(imported.data ?? [])
-            .filter((repo) => repo.fullName.toLowerCase().includes(search.toLowerCase()))
-            .map((repo) => (
-              <article className="code-card" key={repo.id}>
-                <h2 className="code-card__title">
-                  <GithubOutlined aria-hidden /> {repo.fullName}
-                </h2>
-                <Tag>{repo.privateRepository ? '私有仓库' : '公开仓库'}</Tag>
-                <p className="code-card__meta">默认分支 · {repo.defaultBranch || '尚未设置'}</p>
-                <div className="code-card__actions">
-                  <Button
-                    type="text"
-                    size="small"
-                    href={repo.htmlUrl}
-                    target="_blank"
-                    rel="noreferrer"
+          {importedRepos.map((repo) => (
+            <article className="code-card" key={repo.id}>
+              <h2 className="code-card__title">
+                <GithubOutlined aria-hidden /> {repo.fullName}
+              </h2>
+              {repo.privateRepository && <Tag>私有</Tag>}
+              <p className="code-card__meta">
+                默认分支 <span className="code-card__branch">{repo.defaultBranch || '未设置'}</span>
+              </p>
+              <div className="code-card__actions">
+                <Button
+                  type="text"
+                  size="small"
+                  href={repo.htmlUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  打开 GitHub
+                </Button>
+                {canManage && (
+                  <Popconfirm
+                    title="从项目移除这个仓库？"
+                    description="不会删除 GitHub 上的仓库。"
+                    onConfirm={() => remove.mutateAsync(repo.id)}
                   >
-                    打开 GitHub
-                  </Button>
-                  {canManage && (
-                    <Popconfirm
-                      title="从项目移除这个仓库？"
-                      description="不会删除 GitHub 上的仓库。"
-                      onConfirm={() => remove.mutateAsync(repo.id)}
+                    <Button
+                      type="text"
+                      danger
+                      size="small"
+                      loading={remove.isPending && remove.variables === repo.id}
                     >
-                      <Button
-                        type="text"
-                        danger
-                        size="small"
-                        loading={remove.isPending && remove.variables === repo.id}
-                      >
-                        移除
-                      </Button>
-                    </Popconfirm>
-                  )}
-                </div>
-              </article>
-            ))}
+                      移除
+                    </Button>
+                  </Popconfirm>
+                )}
+              </div>
+            </article>
+          ))}
         </div>
       )}
-      <p className="workspace-page__note">
-        导入只登记可用仓库，不会自动克隆。需要查看改动、提交或创建 PR 时，在聊天里 @Qgent 说明目标。
-      </p>
       <Modal
         title="导入 GitHub 仓库"
         open={importOpen}
-        onCancel={() => setImportOpen(false)}
+        onCancel={() => {
+          setImportOpen(false)
+          setRepoSearch('')
+        }}
         okText="导入所选仓库"
         cancelText="取消"
         confirmLoading={importRepos.isPending}
         okButtonProps={{ disabled: !selected.length }}
         onOk={() =>
-          importRepos.mutate(
-            options.filter((repo) =>
-              selected.includes(`${repo.installationId}:${repo.repositoryId}`),
-            ),
-          )
+          importRepos.mutate(options.filter((repo) => selected.includes(optionKey(repo))))
         }
       >
-        <p>选择团队 GitHub App 已授权的仓库。</p>
         {available.isError ? (
-          <Alert type="error" message={formatApiError(available.error)} />
+          <Alert
+            type="error"
+            showIcon
+            title={formatApiError(available.error)}
+            action={<Button onClick={() => void available.refetch()}>重试</Button>}
+          />
+        ) : available.isPending ? (
+          <Skeleton active paragraph={{ rows: 3 }} />
+        ) : !options.length ? (
+          <p className="code-empty">
+            没有可导入的仓库。<Link to={PATHS.githubIntegration(teamId)}>管理团队 GitHub 授权</Link>
+          </p>
+        ) : smallList ? (
+          <div className="code-repo-picker">
+            <Input
+              prefix={<SearchOutlined />}
+              placeholder="搜索仓库"
+              aria-label="搜索可导入仓库"
+              value={repoSearch}
+              onChange={(event) => setRepoSearch(event.target.value)}
+              allowClear
+            />
+            <Checkbox.Group className="code-repo-list" value={selected} onChange={setSelected}>
+              {options.filter(matchesSearch).map((repo) => (
+                <Checkbox key={optionKey(repo)} value={optionKey(repo)}>
+                  {repo.fullName}
+                </Checkbox>
+              ))}
+            </Checkbox.Group>
+            {!options.some(matchesSearch) && <p className="code-empty">没有匹配的仓库。</p>}
+          </div>
         ) : (
           <Select
             mode="multiple"
             className="code-select"
             optionFilterProp="label"
             placeholder="搜索并选择仓库"
-            loading={available.isPending}
             value={selected}
             onChange={setSelected}
             options={options.map((repo) => ({
-              value: `${repo.installationId}:${repo.repositoryId}`,
+              value: optionKey(repo),
               label: repo.fullName,
             }))}
           />
-        )}
-        {!available.isPending && !options.length && (
-          <p>
-            没有可导入的仓库。
-            <Link to={PATHS.githubIntegration(teamId)}>管理团队 GitHub 授权</Link>
-          </p>
         )}
       </Modal>
     </ProjectPage>

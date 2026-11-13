@@ -17,6 +17,17 @@
   flex-wrap: wrap;
 }
 
+/* 状态筛选在窄屏横向滚动，不换行挤压搜索框。 */
+.skill-toolbar__filters {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.skill-toolbar__filters .ant-segmented {
+  white-space: nowrap;
+}
+
 .skill-toolbar__actions {
   display: flex;
   align-items: center;
@@ -58,14 +69,6 @@
   gap: var(--space-3);
 }
 
-.skill-card__index {
-  flex-shrink: 0;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--ink-300);
-  font-variant-numeric: tabular-nums;
-}
-
 .skill-card__body {
   display: flex;
   flex-direction: column;
@@ -77,6 +80,7 @@
 .skill-card__name {
   font-size: var(--text-lead);
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .skill-card__description {
@@ -122,12 +126,109 @@
   flex-wrap: wrap;
 }
 
-.skill-detail__content {
+/* 详情正文复用聊天 Markdown 组件；聊天样式不随组件加载，补文档级排版。 */
+.skill-detail__content .chat-md {
   font-size: var(--text-base);
   line-height: 1.7;
   color: var(--ink-700);
-  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.skill-detail__content .chat-md > * + * {
+  margin-top: var(--space-3);
+}
+
+.skill-detail__content .chat-md > :first-child {
+  margin-top: 0;
+}
+
+.skill-detail__content .chat-md > :last-child {
+  margin-bottom: 0;
+}
+
+.skill-detail__content .chat-md p,
+.skill-detail__content .chat-md ul,
+.skill-detail__content .chat-md ol {
   max-width: 62ch;
+}
+
+.skill-detail__content .chat-md ul,
+.skill-detail__content .chat-md ol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-4);
+}
+
+.skill-detail__content .chat-md h1,
+.skill-detail__content .chat-md h2,
+.skill-detail__content .chat-md h3,
+.skill-detail__content .chat-md h4 {
+  margin-top: var(--space-4);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink-900);
+}
+
+.skill-detail__content .chat-md h1 {
+  font-size: var(--text-h3);
+}
+
+.skill-detail__content .chat-md h2 {
+  font-size: var(--text-lead);
+}
+
+.skill-detail__content .chat-md h3,
+.skill-detail__content .chat-md h4 {
+  font-size: var(--text-base);
+}
+
+.skill-detail__content .chat-md a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.skill-detail__content .chat-md :not(pre) > code {
+  padding: 1px var(--space-1);
+  border-radius: var(--radius-s);
+  background: var(--paper-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.skill-detail__content .chat-md__code {
+  margin-top: var(--space-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-inset);
+  background: var(--paper-sunken);
+  overflow: hidden;
+}
+
+.skill-detail__content .chat-md__code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  height: var(--space-8);
+  padding: 0 var(--space-1) 0 var(--space-3);
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-raised);
+}
+
+.skill-detail__content .chat-md__code pre {
+  margin: 0;
+  padding: var(--space-3);
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.skill-detail__content .chat-md__code code {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  white-space: pre;
 }
 
 .skill-detail__meta {
@@ -201,7 +302,6 @@
     flex-wrap: wrap;
   }
 }
-
 /* 文件选择：隐藏原生控件，用按钮 + 文件名说明。 */
 .skill-file {
   display: flex;

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Alert, Form, Input, Modal, Select } from 'antd'
+import { Alert, Button, Form, Input, Modal, Select } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
 import { teamApi } from '@/api/team'
@@ -55,8 +55,7 @@ export function CreateProjectModal({
       okText="创建"
       cancelText="取消"
     >
-      <p>创建后即可在项目聊天中与成员和 Qgent 一起协作。</p>
-      {error && <Alert type="error" showIcon message={error} />}
+      {error && <Alert type="error" showIcon title={error} />}
       <Form
         form={form}
         layout="vertical"
@@ -68,16 +67,17 @@ export function CreateProjectModal({
           label="项目名称"
           rules={[{ required: true, whitespace: true, message: '请输入项目名称' }, { max: 255 }]}
         >
-          <Input maxLength={255} />
+          <Input maxLength={255} placeholder="例如：新版控制台" />
         </Form.Item>
         <Form.Item name="description" label="项目描述">
-          <Input.TextArea maxLength={16000} rows={3} />
+          <Input.TextArea maxLength={16000} rows={3} placeholder="项目要解决的问题或范围（可选）" />
         </Form.Item>
         <Form.Item name="memberIds" label="邀请团队成员">
           <Select
             mode="multiple"
             loading={members.isPending}
             optionFilterProp="label"
+            placeholder="选择团队成员（可选）"
             options={members.data
               ?.filter((member) => member.userId !== user?.id && member.role !== 'TEAM_OWNER')
               .map((member) => ({
@@ -86,7 +86,13 @@ export function CreateProjectModal({
               }))}
           />
         </Form.Item>
-        {members.isError && <Alert type="warning" message="团队成员加载失败，可创建后再添加成员" />}
+        {members.isError && (
+          <Alert
+            type="warning"
+            title="团队成员加载失败，可创建后再添加成员"
+            action={<Button onClick={() => void members.refetch()}>重试</Button>}
+          />
+        )}
       </Form>
     </Modal>
   )

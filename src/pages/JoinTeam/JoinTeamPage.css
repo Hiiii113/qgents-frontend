@@ -23,12 +23,13 @@
 .join-team__input {
   width: 100%;
   min-width: 0;
-  padding: var(--space-2) var(--space-3);
+  min-height: 36px;
+  padding: 0 var(--space-3);
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius-m);
   background: var(--paper-raised);
   color: var(--ink-900);
-  font-size: var(--text-base);
+  font-size: var(--text-ui);
   transition: border-color var(--dur-fast) var(--ease);
 }
 
@@ -55,7 +56,6 @@
 }
 
 .join-team__note--error {
-  border-left-color: var(--danger);
   color: var(--danger);
 }
 
@@ -172,11 +172,6 @@
   font-size: var(--text-sm);
   color: var(--ink-500);
   overflow-wrap: anywhere;
-}
-
-.join-team__expired {
-  font-size: var(--text-xs);
-  color: var(--danger);
 }
 
 @media (max-width: 700px) {

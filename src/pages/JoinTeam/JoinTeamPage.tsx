@@ -15,11 +15,7 @@ const ROLE_LABEL: Record<TeamRole, string> = {
   TEAM_MEMBER: '成员',
 }
 
-/**
- * 加入已有团队 —— 当前接口
- *
- * 用户粘贴邮件邀请中的邀请令牌，调 POST /team-invitations/{token}/accept
- */
+/** 加入已有团队：粘贴邀请令牌，或直接接受待处理邀请。 */
 export default function JoinTeamPage() {
   const navigate = useNavigate()
   const { message } = App.useApp()
@@ -79,7 +75,7 @@ export default function JoinTeamPage() {
   }
 
   return (
-    <WorkspacePage title="加入已有团队" description="输入团队邀请邮件中的邀请令牌，即可加入团队。">
+    <WorkspacePage title="加入已有团队">
       <form className="join-team__form" onSubmit={handleSubmit}>
         {error && (
           <p className="join-team__note join-team__note--error" role="alert">
@@ -146,10 +142,9 @@ export default function JoinTeamPage() {
                     <div className="join-team__row-head">
                       <strong>{inv.teamName}</strong>
                       <Tag>{ROLE_LABEL[inv.role]}</Tag>
-                      {expired && <span className="join-team__expired">已过期</span>}
                     </div>
                     <p className="join-team__row-meta">
-                      邀请人：{inv.inviterDisplayName} · {inv.createdAt}
+                      邀请人：{inv.inviterDisplayName} · {formatInviteDate(inv.createdAt)}
                     </p>
                   </div>
                   <Button
@@ -169,4 +164,10 @@ export default function JoinTeamPage() {
       </section>
     </WorkspacePage>
   )
+}
+
+/** 邀请时间只展示到日期；后端返回的不是 ISO 时不显示。 */
+function formatInviteDate(iso: string): string {
+  const date = new Date(iso)
+  return Number.isNaN(date.getTime()) ? iso : date.toLocaleDateString()
 }

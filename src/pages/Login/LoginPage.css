@@ -47,21 +47,13 @@
 }
 
 .login-page__features li {
-  display: grid;
-  grid-template-columns: var(--space-8) minmax(0, 1fr);
-  gap: var(--space-4);
+  display: block;
   padding: var(--space-4) 0;
   border-top: 1px solid var(--rule);
 }
 
 .login-page__features li:last-child {
   border-bottom: 1px solid var(--rule);
-}
-
-.login-page__feature-index {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--ink-500);
 }
 
 .login-page__feature-text {
@@ -180,16 +172,17 @@
   align-items: stretch;
 }
 
+/* 输入框与 antd 控件同高 36，label 与按钮基线才对得齐。 */
 .login-field__input {
   width: 100%;
   min-width: 0;
-  padding-right: var(--space-8);
-  padding: var(--space-2) var(--space-3);
+  min-height: 36px;
+  padding: 0 var(--space-8) 0 var(--space-3);
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius-m);
   background: var(--paper-raised);
   color: var(--ink-900);
-  font-size: var(--text-base);
+  font-size: var(--text-ui);
   transition: border-color var(--dur-fast) var(--ease);
 }
 
@@ -279,12 +272,6 @@
   align-items: baseline;
   font-size: var(--text-sm);
   color: var(--ink-500);
-}
-
-.login-form__footnote {
-  text-align: center;
-  font-size: var(--text-xs);
-  color: var(--ink-400);
 }
 
 @media (max-width: 900px) {

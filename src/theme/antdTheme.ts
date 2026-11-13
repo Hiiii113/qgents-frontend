@@ -51,6 +51,8 @@ export const antdTheme: ThemeConfig = {
     },
     Modal: { contentBg: T.paperRaised, headerBg: T.paperRaised },
     Drawer: { colorBgElevated: T.paperRaised },
+    // 全局小圆角 8 会把 16px 复选框渲染成圆形，多选看起来像单选。
+    Checkbox: { borderRadiusSM: 4 },
     Tag: { defaultBg: T.paperSunken, borderRadiusSM: 6 },
     Input: { activeShadow: 'none', hoverBorderColor: T.ink300 },
     Select: { optionSelectedBg: T.accentSoft },

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Alert, App, Avatar, Button, Form, Input, Modal, Tag } from 'antd'
+import { Alert, App, Avatar, Button, Form, Input, Modal, Skeleton, Tag } from 'antd'
 import { PlusOutlined, RobotOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { agentApi } from '@/api/agent'
@@ -59,13 +59,18 @@ export function ProjectAgents() {
       }
     >
       <div className="settings-page">
-        {agents.isError && <Alert type="error" showIcon message={formatApiError(agents.error)} />}
+        {agents.isError && (
+          <Alert
+            type="error"
+            showIcon
+            title={formatApiError(agents.error)}
+            action={<Button onClick={() => void agents.refetch()}>重试</Button>}
+          />
+        )}
         {application && (
           <section className="settings-application">
-            <p>{`「${application.name}」申请已提交，${statusLabel[application.status]}`}</p>
-            <p className="settings-hint">
-              请在项目默认群说明申请内容，项目管理员回复并 @Agent 后即可邀请入群。
-            </p>
+            <p>{`「${application.name}」已提交，${statusLabel[application.status]}`}</p>
+            <p className="settings-hint">项目管理员在默认群回复并 @Agent 后生效。</p>
             <div className="settings-application__actions">
               {defaultGroup && (
                 <Link
@@ -83,11 +88,8 @@ export function ProjectAgents() {
         )}
         <section className="settings-section">
           <h2 className="settings-section__title">已启用的 Agent</h2>
-          <p className="settings-hint">
-            只有这里列出的 Agent 才能被邀请进群，并在被提及时参与对话。
-          </p>
           {agents.isPending ? (
-            <p className="settings-hint">正在加载 Agent…</p>
+            <Skeleton active paragraph={{ rows: 3 }} />
           ) : !(agents.data ?? []).length ? (
             <p className="settings-hint">项目暂无已启用的 Agent。</p>
           ) : (
@@ -105,7 +107,7 @@ export function ProjectAgents() {
                       {agent.description || '暂无描述'}
                     </span>
                   </div>
-                  <Tag>{agent.defaultAgent ? '默认 Agent' : '已启用'}</Tag>
+                  {agent.defaultAgent && <Tag>默认 Agent</Tag>}
                 </li>
               ))}
             </ul>
