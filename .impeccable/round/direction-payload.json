@@ -1,0 +1,133 @@
+{
+  "title": "选一个视觉世界",
+  "question": "抽签指定的是「采集标签」。保留它、换一个候选、重新抽，都行。",
+  "options": [
+    {
+      "id": "assigned",
+      "kind": "assigned",
+      "label": "采集标签",
+      "kicker": "THE ROLL",
+      "lineage": "植物标本纸与采集签",
+      "thesis": "界面是一张标本纸：一条分隔线都不用，靠留白和一枚贴签分组。",
+      "palette": ["#FCFCFB", "#16171A", "#2E3D4D", "#8A5A00", "#A32020"],
+      "materials": ["冷白纸面", "印刷贴签", "等宽数字"],
+      "viewport": "顶栏只放一枚贴签（团队·项目·群·编号），工作区没有一条硬线；运行卡是一张带切角和编号的签。",
+      "risk": "标签化容易滑向档案感，让人以为这里只读不干活。",
+      "raised": [
+        { "from": "中轴校订本", "raise": "全屏只有一个会移动的轴——当前对象；其余全部固定，不跟着刷新挪位置。" },
+        { "from": "发射线轨道", "raise": "状态也用线形说一遍：实线在跑、虚线待跑、半高已过期、删除线作废，不只靠颜色。" },
+        { "from": "Crouwel 网格字样", "raise": "字号和间距由同一个 4px 单元推导，不是各调各的。" },
+        { "from": "竖向满屏媒体流", "raise": "切上下文是硬切，不保留半截滚动位置——换群不回到旧阅读点。" }
+      ],
+      "html": ".impeccable/mocks/decision/assigned.html"
+    },
+    {
+      "id": "model-pick",
+      "kind": "pick",
+      "label": "站台牌",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "车站旅客信息系统（出发板）",
+      "thesis": "把群聊和运行状态做成一班一班的出发板：谁在跑、谁在等、谁误点了。",
+      "palette": ["#FFFFFF", "#14202B", "#4A5157", "#B06A00", "#A32020"],
+      "materials": ["深色牌头带", "固定行高", "等宽数字"],
+      "viewport": "顶栏一条深墨牌头带写下团队与项目，左列会话像时刻表逐行对齐，右侧聊天区 16px 正文，运行行固定在 56px 高。",
+      "risk": "时刻表化会让页面读起来像在排队等待，活泼度偏低。",
+      "html": ".impeccable/mocks/decision/model-pick.html"
+    },
+    {
+      "id": "challenger-gate-board",
+      "kind": "challenger",
+      "catalogId": "vernacular-ephemera-boarding-pass-and-gate-board",
+      "verdict": "wins",
+      "label": "登机牌 + 登机口屏",
+      "lineage": "机票与登机口显示屏",
+      "thesis": "群聊顶栏是一张分段登机牌，运行列表是登机口屏：变更的行原地重排并保持高亮，直到你看过。",
+      "palette": ["#FFFFFF", "#1B2430", "#6B7178", "#B06A00", "#A32020"],
+      "materials": ["分段票面", "等宽数字", "变更高亮"],
+      "viewport": "顶栏按段切分：团队｜项目｜群｜状态，段间是留白不是线；下方运行行按时间重排，改过的行停在原地发亮。",
+      "risk": "票面分段一多就变成表格式噪音，段数必须压到四段以内。",
+      "case": "融合得最干净：团队/项目/群正好是票面的三段，运行列表正好是登机口屏；两个轴（识别度、清晰度）都赢过抽签指定的方向。",
+      "html": ".impeccable/mocks/decision/challenger-gate-board.html"
+    },
+    {
+      "id": "challenger-orienteering",
+      "kind": "challenger",
+      "catalogId": "notation-diagram-systems-orienteering-map",
+      "verdict": "competitive",
+      "label": "定向越野图",
+      "lineage": "定向越野地图与图例",
+      "thesis": "下层是固定的地形色（团队/项目/群），上层只有一条紫色的活动路线（当前运行）。",
+      "palette": ["#FFFFFF", "#D9C48A", "#7A8C63", "#8C5AA8", "#1C1C1C"],
+      "materials": ["等值线底图", "紫色活动层", "符号图例"],
+      "viewport": "上下文层用四块极浅的地形色区分范围，当前运行是压在上面的一条紫色折线，站点编号在折点旁。",
+      "risk": "五色地形在白屏上会变成装饰；色板一收就失去识别度。",
+      "case": "清晰度这一轴站得住：固定层与活动层的分离正好对应当前上下文与正在跑的任务；识别度上输——定向越野不是开发团队的共同记忆。",
+      "html": ".impeccable/mocks/decision/challenger-orienteering.html"
+    },
+    {
+      "id": "challenger-centre-rail",
+      "kind": "challenger",
+      "catalogId": "rw-centre-rail-reference-setting",
+      "verdict": "declined",
+      "label": "中轴校订本",
+      "lineage": "双语校勘本的居中键轴",
+      "palette": ["#F5F1E8", "#1A1A1A", "#C0392B"],
+      "materials": ["双栏排字", "朱红键轴", "零圆角"],
+      "thesis": "两栏夹一条朱红键轴，全部细线切分。",
+      "case": "融合失败：零圆角加全细线正是这个产品要摆脱的「太硬太直」，与 12px 圆角的既定约束直接冲突。",
+      "kept": "全屏只有一个移动轴的纪律。"
+    },
+    {
+      "id": "challenger-crouwel",
+      "kind": "challenger",
+      "catalogId": "crouwel-grid-specimen",
+      "verdict": "declined",
+      "label": "Crouwel 网格字样",
+      "lineage": "Wim Crouwel 的网格构造字体样张",
+      "palette": ["#FFFFFF", "#1E3A8A", "#111111"],
+      "materials": ["可见构造网格", "巨型字形"],
+      "thesis": "网格露在外面，字形由格子一块块搭出来。",
+      "case": "融合失败：巨型字形在聊天界面没有用武之地，可见网格会变成第二套线条。",
+      "kept": "字号与间距由同一个单元推导的自律。"
+    },
+    {
+      "id": "challenger-vertical-feed",
+      "kind": "challenger",
+      "catalogId": "pop-culture-shelf-vertical-video-feed-surface",
+      "verdict": "declined",
+      "label": "竖向满屏媒体流",
+      "lineage": "竖屏短视频的满屏单条",
+      "palette": ["#000000", "#FFFFFF", "#3B9BFF"],
+      "materials": ["满屏媒体", "右侧动作栏", "硬切页"],
+      "thesis": "一条占满全屏，往下一划就是下一条。",
+      "case": "融合失败：聊天必须同时看到多条和上下文，满屏单条把协作抹掉了。",
+      "kept": "硬切页、不保留半截滚动位置的干净切换。"
+    },
+    {
+      "id": "challenger-emission-rail",
+      "kind": "challenger",
+      "catalogId": "operate-c-emission-line-rail",
+      "verdict": "declined",
+      "label": "发射线轨道",
+      "lineage": "光谱图与发射线标尺",
+      "palette": ["#24262A", "#D8D4CC", "#546E00", "#B0722A", "#3F6FA8"],
+      "materials": ["炭灰连续底", "1px 发光细线", "骨白图例"],
+      "thesis": "一切挂在一条偏心轨道上，状态靠线的形态表达而不是颜色。",
+      "case": "融合失败：炭灰连续底压过浅色第一的既定方向，光谱记忆也不属于开发团队。",
+      "kept": "状态用线形表达（实线/虚线/半高/删除线），不只靠颜色。"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code" },
+  "canon": true,
+  "canonCard": {
+    "kind": "canon",
+    "label": "这个品类的标准做法",
+    "thesis": "白底、左侧导航、蓝色强调、圆角卡片加柔和投影，做得无可挑剔。",
+    "palette": ["#FFFFFF", "#111827", "#2563EB", "#F3F4F6"],
+    "materials": ["干净网格", "柔和投影", "常规圆角"],
+    "viewport": "左侧竖向导航 + 顶栏 + 卡片式内容区，投影分层，蓝色只用在主按钮和选中态。",
+    "risk": "按设计就是和同类区分不开，也最容易读作「AI 做的」那种界面。"
+  },
+  "steer": true
+}
