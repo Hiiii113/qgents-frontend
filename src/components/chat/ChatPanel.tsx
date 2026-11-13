@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Alert, App, Avatar, Button, Tag, Tooltip } from 'antd'
-import { CloseOutlined, PushpinOutlined, RobotOutlined, TeamOutlined } from '@ant-design/icons'
+import { Alert, App, Avatar, Button, Tag } from 'antd'
+import { CloseOutlined, RobotOutlined, TeamOutlined } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { AgentRunProgress, useAgentRuns } from '@/features/agent-runs'
 import { chatApi } from '@/api/chat'
@@ -51,13 +51,6 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
     enabled: Boolean(groupId),
   })
   const group = groups.data?.find((item) => item.id === groupId)
-  const pin = useMutation({
-    mutationFn: () => chatApi.pin(projectId, groupId, !group?.pinned),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
-    },
-    onError: (error) => void message.error(formatApiError(error)),
-  })
   const chat = useChatMessages(projectId, groupId, readingLatest)
   const agentRuns = useAgentRuns({ projectId, groupId, messages: chat.messages })
   const sendAsync = chat.send.mutateAsync
@@ -183,15 +176,6 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
             {group?.defaultGroup && <p>默认群 · 全体项目成员</p>}
           </div>
           <div className="chat-panel__header-actions">
-            <Tooltip title={group?.pinned ? '取消置顶' : '置顶聊天'}>
-              <Button
-                type="text"
-                icon={<PushpinOutlined />}
-                aria-label={group?.pinned ? '取消置顶' : '置顶聊天'}
-                loading={pin.isPending}
-                onClick={() => pin.mutate()}
-              />
-            </Tooltip>
             <Button
               type="text"
               icon={<TeamOutlined aria-hidden />}
