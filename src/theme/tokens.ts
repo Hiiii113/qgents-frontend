@@ -32,6 +32,7 @@ export const T = {
   band: '#14202B',
   bandInk: '#F4F6F7',
   bandInkMuted: '#B9C2C8',
+  bandInkStrong: '#FFFFFF',
   // 强调：牌头同族的蓝，只出现在主要动作与选中态
   accent: '#2A5D8F',
   accentStrong: '#1E4770',
@@ -56,6 +57,7 @@ export const cssVars: Record<string, string> = {
   '--band': T.band,
   '--band-ink': T.bandInk,
   '--band-ink-muted': T.bandInkMuted,
+  '--band-ink-strong': T.bandInkStrong,
   '--accent': T.accent,
   '--accent-strong': T.accentStrong,
   '--accent-soft': T.accentSoft,

@@ -219,13 +219,16 @@ input[type='password']::-moz-reveal {
   border: 0;
 }
 
+/* 减少动效偏好：只关掉位移与循环动画，保留颜色与底色的短过渡，
+   否则「变更行变亮」这类状态提示会变成瞬变，反而更难察觉。 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-property: color, background-color, border-color, box-shadow, opacity !important;
+    transition-duration: 120ms !important;
     scroll-behavior: auto !important;
   }
 }

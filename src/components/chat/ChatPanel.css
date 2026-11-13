@@ -829,7 +829,7 @@
 
 .chat-composer__hint {
   font-size: var(--text-xs);
-  color: var(--ink-300);
+  color: var(--ink-400);
 }
 
 /* 成员抽屉：行式列表，1px 分隔，头像浅底，状态标签保持安静。 */
@@ -958,4 +958,19 @@
   .chat-message__reply-icon {
     display: inline-flex;
   }
+}
+
+/* Markdown 未加载时的纯文本兜底：内容先出来，格式随后补齐 */
+.chat-panel__markdown-pending {
+  margin: 0;
+  font-size: var(--text-base);
+  white-space: pre-wrap;
+}
+
+/* 空态的可执行入口：把 Agent 直接 @ 进输入框，不用先背规则 */
+.chat-timeline__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }

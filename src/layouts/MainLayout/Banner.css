@@ -31,6 +31,10 @@
 }
 
 .qg-banner__team {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 0;
   color: var(--band-ink);
   font-size: var(--text-ui);
   font-weight: 600;
@@ -40,7 +44,7 @@
 }
 
 .qg-banner__team:hover {
-  color: #ffffff;
+  color: var(--band-ink-strong);
 }
 
 .qg-banner__sep {

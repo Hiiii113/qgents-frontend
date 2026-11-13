@@ -229,11 +229,11 @@ export default function ProjectDetailLayout() {
             </nav>
           </aside>
         )}
-        <main className="project-content">
+        <div className="project-content">
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>
-        </main>
+        </div>
       </div>
       <Drawer
         title={project.data.name}

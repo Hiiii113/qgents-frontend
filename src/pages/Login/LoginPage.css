@@ -152,10 +152,11 @@
   gap: var(--space-4);
 }
 
-/* 表单级错误：左侧 2px 实线代替整块彩色底。 */
+/* 表单级错误：凹陷面 + 圆角，不用彩色竖线。 */
 .login-form__error {
-  border-left: 2px solid var(--danger);
-  padding: var(--space-1) 0 var(--space-1) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-m);
+  background: var(--paper-sunken);
   font-size: var(--text-sm);
   line-height: 1.6;
   color: var(--danger);
@@ -283,7 +284,7 @@
 .login-form__footnote {
   text-align: center;
   font-size: var(--text-xs);
-  color: var(--ink-300);
+  color: var(--ink-400);
 }
 
 @media (max-width: 900px) {

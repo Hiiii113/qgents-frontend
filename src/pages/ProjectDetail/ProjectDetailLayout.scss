@@ -207,13 +207,31 @@
 
 /* 出发板行：固定 56px 高，三栏对齐，当前行左侧一根琥珀短标 */
 .project-group {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   height: 56px;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-3) 0 22px;
   border-radius: var(--radius-m);
   color: var(--ink-700);
+}
+
+/* 当前群：一枚 6px 琥珀圆点，不用彩色竖条 */
+.project-group::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.project-group.is-active::before {
+  background: var(--warning);
 }
 
 .project-group:hover {
@@ -224,16 +242,6 @@
 .project-group.is-active {
   background: var(--paper-sunken);
   color: var(--ink-900);
-}
-
-.project-group.is-active::before {
-  content: '';
-  flex: 0 0 3px;
-  width: 3px;
-  height: 22px;
-  border-radius: 2px;
-  background: var(--warning);
-  margin-left: calc(var(--space-3) * -1);
 }
 
 .project-group__body {
@@ -260,7 +268,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   font-weight: 400;
-  color: var(--ink-300);
+  color: var(--ink-400);
 }
 
 .project-group__meta {
@@ -331,7 +339,7 @@
 }
 
 .project-drawer__link.active {
-  border-left: 2px solid var(--accent);
+  background: var(--paper-sunken);
   color: var(--ink-900);
   font-weight: 600;
 }

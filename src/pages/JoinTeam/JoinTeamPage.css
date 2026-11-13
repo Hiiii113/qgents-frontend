@@ -44,10 +44,11 @@
   border-color: var(--accent);
 }
 
-/* 表单级提示：左侧 2px 实线，不用整块彩色底。 */
+/* 表单级提示：凹陷面 + 圆角，不用彩色竖线。 */
 .join-team__note {
-  border-left: 2px solid var(--accent);
-  padding: var(--space-1) 0 var(--space-1) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-m);
+  background: var(--accent-soft);
   font-size: var(--text-sm);
   line-height: 1.6;
   color: var(--ink-700);
