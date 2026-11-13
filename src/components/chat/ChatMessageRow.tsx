@@ -18,7 +18,7 @@ interface Props {
   onLocate: (id: string) => void
   /** 选中头像菜单里的「@名字」后，把该成员 @ 进输入框；右键本身不修改草稿。 */
   onMention?: (member: ChatMember) => void
-  /** 同一发送者连续发言时，只有组首渲染作者行与头像。 */
+  /** 同一发送者连续发言时，只有组首渲染作者行与头像；本人头像在右侧。 */
   groupStart?: boolean
   groupEnd?: boolean
 }
@@ -183,6 +183,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   const time = validTime
     ? timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
     : ''
+  // sender 就是 participants 里与发送者匹配的那条成员记录；本人即当前用户的那条，头像与昵称取自它。
   const mentionTarget: ChatMember | null = !own && sender ? sender : null
   return (
     <article
@@ -193,19 +194,19 @@ export const ChatMessageRow = memo(function ChatMessageRow({
       }`}
       aria-label={`${name}的消息`}
     >
-      {/* 自己不发自己的消息头像，网格退化成单列；他人的头像只在组首，组内其余用占位格保持列宽。 */}
-      {!own &&
-        (groupStart ? (
-          <MentionAvatar
-            name={name}
-            agent={agent}
-            avatarUrl={sender?.avatarUrl}
-            member={mentionTarget}
-            onMention={onMention}
-          />
-        ) : (
-          <span className="chat-message__avatar-placeholder" aria-hidden="true" />
-        ))}
+      {/* 每个人都有头像：他人靠左、本人靠右（own 时 mentionTarget 为空，只显示静态头像）；
+          组内其余消息用同尺寸占位格，避免列宽塌陷导致气泡横移。 */}
+      {groupStart ? (
+        <MentionAvatar
+          name={name}
+          agent={agent}
+          avatarUrl={sender?.avatarUrl}
+          member={mentionTarget}
+          onMention={onMention}
+        />
+      ) : (
+        <span className="chat-message__avatar-placeholder" aria-hidden="true" />
+      )}
       <div className="chat-message__main">
         {groupStart && (
           <div className="chat-message__head">

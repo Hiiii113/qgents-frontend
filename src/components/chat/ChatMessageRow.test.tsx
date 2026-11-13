@@ -217,15 +217,24 @@ it('leaves the stop action to the run progress card', () => {
 })
 
 it('offers no mention menu for own messages or senders outside the group', () => {
-  // 自己不发自己的消息头像，也不需要占位格（网格退化成单列）。
+  // 本人头像靠右照常显示（取自当前用户那条成员记录），但自己不能被提及：无可交互头像与菜单。
   const own = renderRow(humanMessage(), {
-    sender: { id: 'u1', memberType: 'USER', displayName: '张工' },
+    sender: {
+      id: 'u1',
+      memberType: 'USER',
+      displayName: '张工',
+      avatarUrl: 'https://example.com/me.png',
+    },
     currentUserId: 'u1',
     onMention: vi.fn(),
   })
+  const ownAvatar = own.container.querySelector('.chat-message__avatar-static')
+  expect(ownAvatar).not.toBeNull()
+  expect(ownAvatar?.querySelector('img')).toHaveAttribute('src', 'https://example.com/me.png')
   expect(own.container.querySelector('.chat-message__avatar-hit')).toBeNull()
-  expect(own.container.querySelector('.chat-message__avatar-static')).toBeNull()
   expect(own.container.querySelector('.chat-message__avatar-placeholder')).toBeNull()
+  fireEvent.contextMenu(ownAvatar as Element)
+  expect(screen.queryByRole('menuitem')).toBeNull()
   own.unmount()
 
   // 历史发送者不在当前参与者列表里：头像不可交互，右键也不会弹菜单。

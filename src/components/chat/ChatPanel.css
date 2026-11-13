@@ -1,6 +1,6 @@
 /**
  * 聊天：iMessage 式气泡。他人靠左、本人靠右，同一发送者连续发言合并成组，
- * 作者行只在组首、头像只在组末。数值一律取 tokens 变量；正文 16px，元信息 12–13px。
+ * 作者行与头像只在组首，本人头像在右侧与他人对称。数值一律取 tokens 变量；正文 16px，元信息 12–13px。
  */
 .chat-panel {
   height: 100%;
@@ -116,7 +116,8 @@
   gap: var(--space-2);
 }
 
-/* 日期分隔：两侧发丝线，中间日期；不做药丸底。 */
+/* 日期分隔：两侧发丝线，中间日期；不做药丸底。
+ * 日期行与消息在同一个虚拟行里，下面的 8px 加上组首 28px，正好是分隔后 36px。 */
 .chat-timeline__date {
   display: flex;
   align-items: center;
@@ -168,8 +169,8 @@
 }
 
 /* ──── 单条消息 ────
- * 两列栅格：32px 头像列 + 气泡列。本人消息没有头像，网格退化成单列、气泡靠右。
- * 组内相邻 2px、组间 20px（日期分隔后 32px），由 --group-start 承担上间距。
+ * 两列栅格：32px 头像列 + 气泡列。他人头像在左，本人镜像到右，两侧网格对称。
+ * 同人连发 12px、跨人 28px、日期分隔后第一条 36px，都由 --group-start 承担上间距。
  */
 .chat-message {
   position: relative;
@@ -177,21 +178,18 @@
   grid-template-columns: var(--space-8) minmax(0, 1fr);
   column-gap: var(--space-3);
   align-items: start;
-  padding-top: 2px;
+  padding-top: var(--space-3);
   max-width: 1120px;
   margin: 0 auto;
 }
 
 .chat-message--group-start {
-  padding-top: 20px;
+  padding-top: calc(var(--space-6) + var(--space-1));
 }
 
-.chat-timeline__date + .chat-message--group-start {
-  padding-top: var(--space-8);
-}
-
+/* 本人消息把 32px 头像列挪到右侧，内容列在左，与他人形成镜像。 */
 .chat-message--own {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) var(--space-8);
 }
 
 /* 头像：贴作者行顶部；组内后续消息用同尺寸占位格，避免列宽塌陷导致气泡横移。 */
@@ -215,6 +213,12 @@
   width: var(--space-8);
   height: var(--space-8);
   visibility: hidden;
+}
+
+.chat-message--own .chat-message__avatar-hit,
+.chat-message--own .chat-message__avatar-static,
+.chat-message--own .chat-message__avatar-placeholder {
+  grid-column: 2;
 }
 
 .chat-message__avatar-hit {
@@ -261,7 +265,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-width: min(680px, 76%);
+  max-width: min(760px, 78%);
   padding: 10px 14px;
   border: 1px solid var(--rule);
   border-radius: var(--radius-bubble);
@@ -270,7 +274,7 @@
 
 /* Agent 正文更宽，但给气泡外侧的回复浮层留出 52px，避免浮层把聊天区撑出横向滚动。 */
 .chat-message--agent .chat-message__bubble {
-  max-width: min(760px, calc(100% - 52px));
+  max-width: min(840px, calc(100% - 52px));
 }
 
 .chat-message--own .chat-message__bubble {
