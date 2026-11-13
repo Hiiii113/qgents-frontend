@@ -51,7 +51,7 @@ export function GroupMembersModal({
     queryKey: chatKeys.agents(projectId),
     queryFn: () => agentApi.list(projectId),
   })
-  const existing = new Set(current.data?.map((member) => member.id))
+  const existing = new Set(current.data?.map((member) => `${member.memberType}:${member.id}`))
   const mutation = useMutation({
     mutationFn: async () => {
       const values = await form.validateFields()
@@ -89,8 +89,9 @@ export function GroupMembersModal({
     agents.isPending ||
     (Boolean(group) && current.isPending)
   const failed = members.isError || teamMembers.isError || agents.isError || current.isError
+  // 人与 Agent 的 ID 各自从 1 开始，会撞号：按成员类型拼接后判断，避免把同号的 Agent 误隐藏。
   const users = (members.data ?? [])
-    .filter((member) => member.userId !== user?.id && !existing.has(member.userId))
+    .filter((member) => member.userId !== user?.id && !existing.has(`USER:${member.userId}`))
     .map((member) => {
       const detail = teamMembers.data?.find((item) => item.userId === member.userId)
       return {
@@ -99,7 +100,7 @@ export function GroupMembersModal({
       }
     })
   const agentOptions = (agents.data ?? [])
-    .filter((agent) => !existing.has(agent.id))
+    .filter((agent) => !existing.has(`AGENT:${agent.id}`))
     .map((agent) => ({ value: agent.id, label: agent.name }))
   return (
     <Modal

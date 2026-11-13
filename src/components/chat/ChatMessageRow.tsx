@@ -145,10 +145,7 @@ function MessageBody({
         disabled={!attachmentId}
       >
         <FileOutlined aria-hidden="true" />
-        <span>
-          <strong>{messageField(item, 'name') || '附件'}</strong>
-          <small>点击预览或下载</small>
-        </span>
+        <strong>{messageField(item, 'name') || '附件'}</strong>
       </button>
     )
   if (agent) return <LazyChatMarkdown text={chatMessageText(item)} />

@@ -15,15 +15,22 @@
   padding: var(--space-6);
 }
 
-/* 头部：标题 + 一句说明，动作退到右侧，与消息列同样留白。 */
+/* 头部：底色与分隔线铺满整行，内盒与消息正文、输入器同宽（1120）居中，宽屏下标题和动作不再顶到窗口边。 */
 .chat-panel__header {
   flex-shrink: 0;
+  padding: var(--space-2) var(--space-6);
+  border-bottom: 1px solid var(--rule);
+}
+
+.chat-panel__header-inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-2) var(--space-6);
-  border-bottom: 1px solid var(--rule);
+  width: 100%;
+  min-width: 0;
+  max-width: 1120px;
+  margin: 0 auto;
 }
 
 .chat-panel__identity {
@@ -176,6 +183,8 @@
   position: relative;
   display: grid;
   grid-template-columns: var(--space-8) minmax(0, 1fr);
+  /* 用命名区固定头像与正文：本人消息的 DOM 顺序仍是头像在前，靠自动排布会把正文挤到第二行。 */
+  grid-template-areas: 'avatar main';
   column-gap: var(--space-3);
   align-items: start;
   padding-top: var(--space-3);
@@ -190,12 +199,13 @@
 /* 本人消息把 32px 头像列挪到右侧，内容列在左，与他人形成镜像。 */
 .chat-message--own {
   grid-template-columns: minmax(0, 1fr) var(--space-8);
+  grid-template-areas: 'main avatar';
 }
 
-/* 头像：贴作者行顶部；组内后续消息用同尺寸占位格，避免列宽塌陷导致气泡横移。 */
+/* 头像：与组首作者行同排；组内后续消息用同尺寸占位格，避免列宽塌陷导致气泡横移。 */
 .chat-message__avatar-hit,
 .chat-message__avatar-static {
-  grid-column: 1;
+  grid-area: avatar;
   align-self: start;
   display: flex;
   align-items: center;
@@ -209,16 +219,10 @@
 }
 
 .chat-message__avatar-placeholder {
-  grid-column: 1;
+  grid-area: avatar;
   width: var(--space-8);
   height: var(--space-8);
   visibility: hidden;
-}
-
-.chat-message--own .chat-message__avatar-hit,
-.chat-message--own .chat-message__avatar-static,
-.chat-message--own .chat-message__avatar-placeholder {
-  grid-column: 2;
 }
 
 .chat-message__avatar-hit {
@@ -247,7 +251,7 @@
 }
 
 .chat-message__main {
-  grid-column: 2;
+  grid-area: main;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -255,7 +259,6 @@
 }
 
 .chat-message--own .chat-message__main {
-  grid-column: 1;
   align-items: flex-end;
 }
 
@@ -413,21 +416,10 @@
   font-size: var(--text-lead);
 }
 
-.chat-message__file span {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .chat-message__file strong {
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--ink-900);
-}
-
-.chat-message__file small {
-  font-size: var(--text-xs);
-  color: var(--ink-500);
 }
 
 .chat-message__image {

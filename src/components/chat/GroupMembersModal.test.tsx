@@ -70,6 +70,40 @@ it('offers the project enabled agents and sends the chosen agent ids', async () 
   )
 })
 
+it('keeps an agent available when a user happens to share its numeric id', async () => {
+  const user = userEvent.setup()
+  renderWorkspace(
+    <GroupMembersModal
+      projectId="p1"
+      teamId="t1"
+      group={{ id: 'g1', projectId: 'p1', title: '讨论' }}
+      onClose={vi.fn()}
+    />,
+    '/app',
+    '/app',
+    (client) => {
+      client.setQueryData(
+        ['projects', 'p1', 'members'],
+        [
+          { userId: '101', displayName: '王工' },
+          { userId: '102', displayName: '李工' },
+        ],
+      )
+      client.setQueryData(['teams', 't1', 'members'], [])
+      client.setQueryData(chatKeys.agents('p1'), agents)
+      // 群里的用户 102 与 Agent 102 撞号：只该隐藏已入群的人，Agent 102 仍可选。
+      client.setQueryData(chatKeys.members('p1', 'g1'), [
+        { id: '102', displayName: '李工', memberType: 'USER' },
+      ])
+    },
+  )
+  await user.click(await screen.findByRole('combobox', { name: 'Agent' }))
+  expect(await screen.findByTitle('前端助手')).toBeInTheDocument()
+  await user.click(screen.getByRole('combobox', { name: '项目成员' }))
+  expect(await screen.findByTitle('王工')).toBeInTheDocument()
+  expect(screen.queryByTitle('李工')).not.toBeInTheDocument()
+})
+
 it('does not offer agents that already joined the group', async () => {
   const user = userEvent.setup()
   renderWorkspace(

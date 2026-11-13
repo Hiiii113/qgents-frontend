@@ -167,27 +167,29 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
   return (
     <section className="chat-panel">
       <header className="chat-panel__header">
-        <div className="chat-panel__identity">
-          <h1>{group?.title || project.data?.name || '项目聊天'}</h1>
-          <p>{group?.defaultGroup ? '默认群 · 全体项目成员' : '项目群聊'}</p>
-        </div>
-        <div className="chat-panel__header-actions">
-          <Tooltip title={group?.pinned ? '取消置顶' : '置顶聊天'}>
+        <div className="chat-panel__header-inner">
+          <div className="chat-panel__identity">
+            <h1>{group?.title || project.data?.name || '项目聊天'}</h1>
+            {group?.defaultGroup && <p>默认群 · 全体项目成员</p>}
+          </div>
+          <div className="chat-panel__header-actions">
+            <Tooltip title={group?.pinned ? '取消置顶' : '置顶聊天'}>
+              <Button
+                type="text"
+                icon={<PushpinOutlined />}
+                aria-label={group?.pinned ? '取消置顶' : '置顶聊天'}
+                loading={pin.isPending}
+                onClick={() => pin.mutate()}
+              />
+            </Tooltip>
             <Button
               type="text"
-              icon={<PushpinOutlined />}
-              aria-label={group?.pinned ? '取消置顶' : '置顶聊天'}
-              loading={pin.isPending}
-              onClick={() => pin.mutate()}
-            />
-          </Tooltip>
-          <Button
-            type="text"
-            icon={<TeamOutlined aria-hidden />}
-            onClick={() => setMembersOpen(true)}
-          >
-            {group?.memberCount ?? members.data?.length ?? 0} 位成员
-          </Button>
+              icon={<TeamOutlined aria-hidden />}
+              onClick={() => setMembersOpen(true)}
+            >
+              {group?.memberCount ?? members.data?.length ?? 0} 位成员
+            </Button>
+          </div>
         </div>
       </header>
       {chat.query.isError && (
@@ -275,9 +277,7 @@ export function ChatPanel({ projectId, groupId }: { projectId: string; groupId: 
           </Button>
         }
       >
-        <p className="chat-members__hint">
-          {group?.defaultGroup ? '默认群的用户与项目成员同步。' : '这个群聊中的成员与 Agent。'}
-        </p>
+        {group?.defaultGroup && <p className="chat-members__hint">默认群成员与项目成员同步。</p>}
         <List
           dataSource={members.data ?? []}
           renderItem={(member) => (
