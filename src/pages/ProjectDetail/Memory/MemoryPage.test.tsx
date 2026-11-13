@@ -1,8 +1,10 @@
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
+import { App } from 'antd'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { memoryApi } from '@/api'
-import { ApiError } from '@/api/client'
-import { renderWorkspace } from '@/test/renderWorkspace'
+import type { ProjectMemory } from '@/types'
 import { MemoryPage } from './MemoryPage'
 
 afterEach(() => {
@@ -10,103 +12,71 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-const memory = {
+const memory: ProjectMemory = {
   projectId: 'p1',
   content: '旧内容',
-  version: 'v1',
   updatedAt: '2026-01-01T00:00:00.000Z',
 }
 
-function open(role: 'PROJECT_ADMIN' | 'PROJECT_MEMBER' = 'PROJECT_ADMIN') {
-  return renderWorkspace(
-    <MemoryPage />,
-    '/app/projects/p1/memory',
-    '/app/projects/:projectId/memory',
-    (client) => {
-      client.setQueryData(['projects', 'p1'], {
-        id: 'p1',
-        teamId: 't1',
-        name: '项目',
-        role,
-      })
-      client.setQueryData(['memory', 'p1'], memory)
-    },
+function ChatAddress() {
+  const location = useLocation()
+  return <output>{location.pathname + location.search}</output>
+}
+
+function open(path = '/app/projects/p1/memory', content: ProjectMemory | null = memory) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } },
+  })
+  if (content) client.setQueryData(['memory', 'p1'], content)
+  return render(
+    <QueryClientProvider client={client}>
+      <App>
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route path="/app/projects/:projectId/memory" element={<MemoryPage />} />
+            <Route path="/app/projects/:projectId/chat" element={<ChatAddress />} />
+          </Routes>
+        </MemoryRouter>
+      </App>
+    </QueryClientProvider>,
   )
 }
 
-it('keeps the captured version and draft when the server content refreshes during editing', async () => {
-  const save = vi.spyOn(memoryApi, 'save').mockRejectedValue(
-    new ApiError('版本冲突', 409, {
-      error: { code: 'MEMORY_VERSION_CONFLICT', message: '内容已被更新' },
-    }),
-  )
-  const view = open()
-  expect(screen.getByText('旧内容')).toBeInTheDocument()
-  expect(screen.queryByRole('textbox', { name: '项目记忆内容' })).not.toBeInTheDocument()
-
-  fireEvent.click(screen.getByRole('button', { name: /^编\s*辑$/ }))
-  const editor = screen.getByRole('textbox', { name: '项目记忆内容' })
-  expect(editor).toHaveValue('旧内容')
-  fireEvent.change(editor, { target: { value: '我的草稿' } })
-
-  // 后台刷新拿到新版本，但用户正在编辑的草稿与保存基准不能被替换。
-  view.client.setQueryData(['memory', 'p1'], {
-    ...memory,
-    content: '服务器新版',
-    version: 'v2',
-  })
-  expect(editor).toHaveValue('我的草稿')
-
-  fireEvent.click(screen.getByRole('button', { name: /保\s*存/ }))
-  await waitFor(() =>
-    expect(save).toHaveBeenCalledWith('p1', { content: '我的草稿', version: 'v1' }),
-  )
-  expect(await screen.findByText('内容已被更新，草稿仍保留')).toBeInTheDocument()
-  expect(editor).toHaveValue('我的草稿')
-
-  fireEvent.click(screen.getByRole('button', { name: '取消编辑' }))
-  expect(screen.queryByRole('textbox', { name: '项目记忆内容' })).not.toBeInTheDocument()
-  expect(screen.getByText('服务器新版')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: /^编\s*辑$/ })).toBeInTheDocument()
-})
-
-it('confirms before reloading over an unsaved draft', async () => {
-  const latest = { ...memory, content: '服务器最新', version: 'v3' }
-  vi.spyOn(memoryApi, 'get').mockResolvedValue(latest)
+it('shows project memory read-only and keeps meta inside the document', () => {
   open()
-  fireEvent.click(screen.getByRole('button', { name: /^编\s*辑$/ }))
-  const editor = screen.getByRole('textbox', { name: '项目记忆内容' })
-  fireEvent.change(editor, { target: { value: '未保存草稿' } })
-
-  const toolbar = () => within(document.querySelector('.memory-page__actions') as HTMLElement)
-  fireEvent.click(toolbar().getByRole('button', { name: /重新加载/ }))
-  const dialog = await screen.findByRole('dialog')
-  expect(within(dialog).getAllByText('放弃未保存的修改？').length).toBeGreaterThan(0)
-  fireEvent.click(within(dialog).getByRole('button', { name: '继续编辑' }))
-  expect(editor).toHaveValue('未保存草稿')
-})
-
-it('reloads the latest content after the user confirms discarding the draft', async () => {
-  const latest = { ...memory, content: '服务器最新', version: 'v3' }
-  vi.spyOn(memoryApi, 'get').mockResolvedValue(latest)
-  open()
-  fireEvent.click(screen.getByRole('button', { name: /^编\s*辑$/ }))
-  fireEvent.change(screen.getByRole('textbox', { name: '项目记忆内容' }), {
-    target: { value: '未保存草稿' },
-  })
-  fireEvent.click(screen.getByRole('button', { name: /重新加载/ }))
-  const dialog = await screen.findByRole('dialog')
-  fireEvent.click(within(dialog).getByRole('button', { name: /重新加载/ }))
-  await waitFor(() =>
-    expect(screen.queryByRole('textbox', { name: '项目记忆内容' })).not.toBeInTheDocument(),
-  )
-  expect(await screen.findByText('服务器最新')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: /^编\s*辑$/ })).toBeInTheDocument()
-})
-
-it('keeps ordinary project members in read-only mode', () => {
-  open('PROJECT_MEMBER')
   expect(screen.getByText('旧内容')).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /^编\s*辑$/ })).not.toBeInTheDocument()
-  expect(screen.getByText(/项目记忆只有项目管理员可以编辑/)).toBeInTheDocument()
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /编\s*辑/ })).not.toBeInTheDocument()
+  expect(screen.getByText('3 字符').closest('article')).toBeInTheDocument()
+  expect(screen.getByText(/最后修改/).closest('article')).toBeInTheDocument()
+})
+
+it('opens the chat with the current group', () => {
+  open('/app/projects/p1/memory?groupId=g9')
+  fireEvent.click(screen.getByRole('button', { name: '去聊天' }))
+  expect(screen.getByText('/app/projects/p1/chat?groupId=g9')).toBeInTheDocument()
+})
+
+it('opens the project chat when no group is in the URL', () => {
+  open()
+  fireEvent.click(screen.getByRole('button', { name: '去聊天' }))
+  expect(screen.getByText('/app/projects/p1/chat')).toBeInTheDocument()
+})
+
+it('offers an empty state for a project without memory', () => {
+  open('/app/projects/p1/memory', { ...memory, content: '', updatedAt: null })
+  expect(screen.getByText(/项目还没有记录长期记忆/)).toBeInTheDocument()
+  expect(screen.queryByText(/最后修改/)).not.toBeInTheDocument()
+})
+
+it('retries after the memory request fails', async () => {
+  const get = vi
+    .spyOn(memoryApi, 'get')
+    .mockRejectedValueOnce(new Error('网络中断'))
+    .mockResolvedValue(memory)
+  open('/app/projects/p1/memory', null)
+  expect(await screen.findByText('网络中断')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /重\s*试/ }))
+  expect(await screen.findByText('旧内容')).toBeInTheDocument()
+  expect(get).toHaveBeenCalledTimes(2)
 })
