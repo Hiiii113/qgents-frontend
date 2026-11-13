@@ -18,6 +18,7 @@ import { GroupMembersModal } from '@/components/chat/GroupMembersModal'
 import { PATHS } from '@/routes/paths'
 import { chatPreview } from '@/types/chat'
 import { formatApiError } from '@/utils/formatApiError'
+import { formatRelativeTime } from '@/utils/formatRelativeTime'
 import { useRememberTeam } from '@/hooks/useRememberTeam'
 import { PageLoader } from '@/components/PageLoader'
 import './ProjectDetailLayout.scss'
@@ -108,7 +109,10 @@ export default function ProjectDetailLayout() {
         onClick={onNavigate}
       >
         <span className="project-group__body">
-          <span className="project-group__title">{group.title}</span>
+          <span className="project-group__title">
+            {group.title}
+            {group.memberCount ? <em>{group.memberCount}</em> : null}
+          </span>
           <span className="project-group__meta">
             {group.defaultGroup
               ? '默认群 · 全体项目成员'
@@ -117,11 +121,16 @@ export default function ProjectDetailLayout() {
                 : '开始新的讨论'}
           </span>
         </span>
-        {group.unreadCount ? (
-          <span className="project-group__unread">
-            {group.unreadCount > 99 ? '99+' : group.unreadCount}
+        <span className="project-group__side">
+          <span className="project-group__time">
+            {formatRelativeTime(group.latestActivityAt ?? group.lastMessageAt ?? '')}
           </span>
-        ) : null}
+          {group.unreadCount ? (
+            <span className="project-group__unread">
+              {group.unreadCount > 99 ? '99+' : group.unreadCount}
+            </span>
+          ) : null}
+        </span>
       </Link>
     ))
 

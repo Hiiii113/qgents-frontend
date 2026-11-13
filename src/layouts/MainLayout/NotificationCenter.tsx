@@ -8,6 +8,7 @@ import { useNotificationEvents } from '@/realtime/useNotificationEvents'
 import { useRealtimeConnectionStatus } from '@/realtime/realtimeClient'
 import './NotificationCenter.css'
 import { notificationTargetPath } from './notificationTargetPath'
+import { formatRelativeTime } from '@/utils/formatRelativeTime'
 import type { Notification, NotificationKind } from '@/types'
 
 const { Text } = Typography
@@ -26,19 +27,7 @@ const FALLBACK_META: { icon: ReactNode; color: string } = {
   color: 'var(--ink-300)',
 }
 
-/** 相对时间（演示用） */
-function formatRelativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const min = Math.floor(diff / 60000)
-  if (min < 1) return '刚刚'
-  if (min < 60) return `${min} 分钟前`
-  const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr} 小时前`
-  return `${Math.floor(hr / 24)} 天前`
-}
-
-/**
- * 通知中心 —— 顶部铃铛 + 右侧抽屉
+/** 通知中心 —— 顶部铃铛 + 右侧抽屉
  * 通知列表与已读状态来自后端通知接口
  */
 export function NotificationCenter() {

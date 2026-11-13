@@ -1,6 +1,6 @@
 /**
  * 聊天：iMessage 式气泡。他人靠左、本人靠右，同一发送者连续发言合并成组，
- * 作者行只在组首、头像只在组末。数值一律取 tokens 变量；正文 14px，元信息 12–13px。
+ * 作者行只在组首、头像只在组末。数值一律取 tokens 变量；正文 16px，元信息 12–13px。
  */
 .chat-panel {
   height: 100%;
@@ -89,14 +89,14 @@
   overflow-anchor: none;
 }
 
-/* 阅读宽度：聊天正文与日期分隔统一 820px 居中，避免宽屏一行过长。 */
+/* 阅读宽度：聊天正文与日期分隔统一 1120px 居中；16px 正文下约 80ch，宽屏不再挤成一条窄栏。 */
 .chat-timeline__row {
   padding: 0 var(--space-6);
 }
 
 .chat-timeline__row > * {
   width: 100%;
-  max-width: 820px;
+  max-width: 1120px;
   margin: 0 auto;
 }
 
@@ -141,7 +141,7 @@
   align-items: flex-start;
   justify-content: center;
   gap: var(--space-2);
-  max-width: 820px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: var(--space-6);
 }
@@ -177,7 +177,7 @@
   column-gap: var(--space-3);
   align-items: start;
   padding-top: 2px;
-  max-width: 820px;
+  max-width: 1120px;
   margin: 0 auto;
 }
 
@@ -651,7 +651,7 @@
 
 /* 系统消息：居中一行小字，不抢占视觉。 */
 .chat-system-message {
-  max-width: 820px;
+  max-width: 1120px;
   margin: var(--space-4) auto;
   text-align: center;
   color: var(--ink-500);
@@ -661,7 +661,7 @@
 
 /* ──── 输入区 ──── */
 .chat-composer {
-  max-width: 820px;
+  max-width: 1120px;
   margin: 0 auto;
   border: 1px solid var(--rule-strong);
   border-radius: var(--radius-m);
