@@ -13,7 +13,6 @@ export function StartupScreen({ state, onRetry }: { state: StartupState; onRetry
   return (
     <main className="qg-startup" role={failed ? 'alert' : 'status'} aria-live="polite">
       <div className="qg-startup__inner">
-        <span className="qg-eyebrow">Qgents</span>
         <h1 className="qg-startup__title">{failed ? '应用初始化失败' : '应用初始化中'}</h1>
         <p className="qg-startup__message">
           {failed ? state.message : '正在准备请求服务，请稍候。'}

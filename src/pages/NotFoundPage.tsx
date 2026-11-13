@@ -12,7 +12,6 @@ export default function NotFoundPage() {
   return (
     <main className="status-page">
       <div className="status-page__inner">
-        <span className="qg-eyebrow">NOT FOUND</span>
         <p className="status-page__code qg-num">404</p>
         <h1 className="status-page__title">页面未找到</h1>
         <p className="status-page__desc">你访问的页面不存在或已被移除。</p>

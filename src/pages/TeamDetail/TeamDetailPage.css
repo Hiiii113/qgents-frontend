@@ -20,6 +20,11 @@
   border-bottom: 1px solid var(--rule);
 }
 
+.team-hero__sub {
+  font-size: var(--text-base);
+  color: var(--ink-500);
+}
+
 .team-hero__head {
   display: flex;
   flex-direction: column;

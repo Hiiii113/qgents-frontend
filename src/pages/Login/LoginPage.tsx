@@ -122,7 +122,6 @@ export function LoginPage() {
         <p className="login-page__wordmark">
           <span className="login-page__mark">Q</span>gents
         </p>
-        <span className="qg-eyebrow">TEAM × AGENT</span>
         <h1 className="login-page__headline">团队与 Qgent，在同一个项目现场协作</h1>
 
         <ul className="login-page__features">
@@ -143,7 +142,6 @@ export function LoginPage() {
       <section className="login-page__panel">
         <div className="login-form">
           <header className="login-form__header">
-            <span className="qg-eyebrow">{tab === 'login' ? 'SIGN IN' : 'CREATE ACCOUNT'}</span>
             <h2 className="login-form__title">{tab === 'login' ? '登录 Qgents' : '注册 Qgents'}</h2>
             <p className="login-form__desc">
               {tab === 'login' ? '使用个人账号进入你的团队' : '创建账号，开始团队协作'}

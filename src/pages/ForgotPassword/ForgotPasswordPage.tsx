@@ -116,7 +116,6 @@ export default function ForgotPasswordPage() {
         </p>
 
         <header className="forgot-page__header">
-          <span className="qg-eyebrow">PASSWORD RESET</span>
           <h1 className="forgot-page__title">
             {stage === 'request' && '找回密码'}
             {stage === 'reset' && '设置新密码'}

@@ -65,8 +65,8 @@ export default function TeamDetailPage() {
       {settings ? (
         <header className="team-hero team-hero--compact">
           <div className="team-hero__head">
-            <span className="qg-eyebrow">团队设置</span>
-            <h1>{team.data.name}</h1>
+            <h1>团队设置</h1>
+            <p className="team-hero__sub">{team.data.name}</p>
           </div>
           <div className="team-hero__actions">
             <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(PATHS.teamDetail(teamId))}>
