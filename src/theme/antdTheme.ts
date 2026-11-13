@@ -1,12 +1,5 @@
 import type { ThemeConfig } from 'antd'
-import { T } from './tokens'
-
-/**
- * 品牌字体栈。Geist 不含汉字，必须把中文无衬线字体写在 generic sans-serif 之前，
- * 否则 Windows 会把卡片/按钮/标签里的中文回退成宋体或 Times。
- */
-export const QG_FONT_FAMILY =
-  "Geist, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif"
+import { FONT_SANS, T } from './tokens'
 
 /**
  * antd 主题：数值与 tokens.ts 同源。控件用深墨主色，圆角 10px，
@@ -32,7 +25,7 @@ export const antdTheme: ThemeConfig = {
     borderRadius: 10,
     borderRadiusLG: 14,
     borderRadiusSM: 8,
-    fontFamily: QG_FONT_FAMILY,
+    fontFamily: FONT_SANS,
     fontSize: 14,
     lineHeight: 1.6,
     controlHeight: 36,

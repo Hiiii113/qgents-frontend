@@ -207,13 +207,6 @@ input[type='password']::-moz-reveal {
   border: 0;
 }
 
-/* --qg-font 由 tokens 之外的字体栈提供，保持与 antd 主题同一串。 */
-:root {
-  --qg-font:
-    'Plus Jakarta Sans', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    'Noto Sans SC', sans-serif;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

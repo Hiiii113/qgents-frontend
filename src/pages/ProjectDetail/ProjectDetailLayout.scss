@@ -27,7 +27,8 @@
 }
 
 .project-header__identity {
-  display: flex;
+  /* 桌面端项目名在牌头带上，这里不再重复；窄屏牌头带收起项目名才回落到这一行 */
+  display: none;
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
@@ -118,22 +119,23 @@
   align-items: center;
   gap: var(--space-2);
   height: 32px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-m);
-  color: var(--ink-700);
-  font-size: var(--text-sm);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-s);
+  color: var(--ink-500);
+  font-size: var(--text-ui);
   white-space: nowrap;
-  transition: border-color var(--dur-fast) var(--ease);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
 }
 
 .project-header__settings:hover {
-  border-color: var(--rule-strong);
+  background: var(--paper-sunken);
   color: var(--ink-900);
 }
 
 .project-header__settings.active {
-  border-color: var(--accent);
+  background: var(--paper-sunken);
   color: var(--ink-900);
 }
 
@@ -159,9 +161,22 @@
   background: var(--paper);
 }
 
+.project-groups__search.ant-input-affix-wrapper,
 .project-groups__search .ant-input {
-  background: transparent;
-  font-size: var(--text-sm);
+  background: var(--paper-sunken);
+  border-color: transparent;
+  border-radius: var(--radius-m);
+  font-size: var(--text-ui);
+}
+
+.project-groups__search.ant-input-affix-wrapper {
+  height: 36px;
+  padding: 0 var(--space-3);
+}
+
+.project-groups__search.ant-input-affix-wrapper:hover,
+.project-groups__search.ant-input-affix-wrapper-focused {
+  background: var(--paper-raised);
 }
 
 .project-groups__head {
@@ -365,6 +380,7 @@
   }
 
   .project-header__identity {
+    display: flex;
     max-width: none;
   }
 

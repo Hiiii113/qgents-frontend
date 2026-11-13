@@ -7,6 +7,13 @@
  * 变量按语义命名（面 / 墨 / 线 / 状态），不按明暗命名：后续加深色主题时只换值，
  * 不换结构，页面不用改一行。
  */
+/**
+ * 品牌字体栈。Geist 不含汉字，必须把中文无衬线字体写在 generic sans-serif 之前，
+ * 否则 Windows 会把中文回退成宋体。antd 主题与 CSS 变量共用同一串。
+ */
+export const FONT_SANS =
+  "Geist, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif"
+
 export const T = {
   // 墨：正文与结构
   ink900: '#16181A',
@@ -86,6 +93,8 @@ export const cssVars: Record<string, string> = {
   '--text-h2': '26px',
   '--text-h1': '32px',
   '--text-display': 'clamp(30px, 3.2vw, 42px)',
+
+  '--qg-font': FONT_SANS,
 
   // 等宽字体：时间、序号、代码 —— 出发板的数字列靠它对齐
   '--font-mono': "'Geist Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace",

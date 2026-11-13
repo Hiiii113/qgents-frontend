@@ -1,15 +1,19 @@
-/* Agent 运行临时气泡：1px 发丝线 + 圆角卡片，靠字号、留白与状态色分层，不用底色块与阴影。 */
+/* Agent 运行卡：一块凹陷的面板，不画边框；在跑的时候左缘一根琥珀竖条，和出发板的变更行同一套语言。 */
 .qg-agent-run {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-width: 62ch;
+  max-width: 78ch;
   margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--rule);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-card);
-  background: var(--paper-raised);
+  background: var(--paper-sunken);
   color: var(--ink-900);
+  box-shadow: inset 3px 0 0 var(--rule-strong);
+}
+
+.qg-agent-run:has(.qg-agent-run__status--running) {
+  box-shadow: inset 3px 0 0 var(--warning);
 }
 
 .qg-agent-run__head {
@@ -31,8 +35,14 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--ink-500);
+}
+
+.qg-agent-run__status--running {
+  color: var(--warning);
+  font-weight: 500;
 }
 
 .qg-agent-run__status--succeeded {

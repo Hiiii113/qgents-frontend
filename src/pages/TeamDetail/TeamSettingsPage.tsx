@@ -545,7 +545,7 @@ function TeamsTab({ currentTeamId }: { currentTeamId: string }) {
   return (
     <div className="team-settings__stack">
       <p className="team-settings__hint">
-        切换后返回该团队的项目首页。当前团队：{teams.data?.find((t) => t.id === currentTeamId)?.name ?? '—'}
+        切换团队后会回到该团队的项目首页。
       </p>
       <div className="team-settings__teams">
         {teams.isPending ? (
