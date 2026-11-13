@@ -16,6 +16,7 @@ import { chatApi } from '@/api/chat'
 import { chatKeys } from '@/components/chat/useChatMessages'
 import { GroupMembersModal } from '@/components/chat/GroupMembersModal'
 import { PATHS } from '@/routes/paths'
+import { chatPreview } from '@/types/chat'
 import { formatApiError } from '@/utils/formatApiError'
 import { useRememberTeam } from '@/hooks/useRememberTeam'
 import { PageLoader } from '@/components/PageLoader'
@@ -111,7 +112,9 @@ export default function ProjectDetailLayout() {
           <span className="project-group__meta">
             {group.defaultGroup
               ? '默认群 · 全体项目成员'
-              : group.latestMessage?.text || '开始新的讨论'}
+              : group.latestMessage?.text
+                ? chatPreview(group.latestMessage.text)
+                : '开始新的讨论'}
           </span>
         </span>
         {group.unreadCount ? (

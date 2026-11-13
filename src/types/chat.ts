@@ -61,6 +61,17 @@ export function messageField(message: ChatMessage, field: string): string {
   const value: unknown = Reflect.get(message.content, field)
   return typeof value === 'string' ? value : ''
 }
+/** 群列表预览只出纯文本：Agent 回复是 Markdown，原文的 ** 和表格线留在列表里会像坏数据。 */
+export function chatPreview(text: string, limit = 80): string {
+  return text
+    .replace(/```[\s\S]*?```/g, '代码块')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '图片')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[*_`#>~]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, limit)
+}
 export function chatMessageText(message: ChatMessage): string {
   if (message.type === 'CODE') return messageField(message, 'code')
   if (message.type === 'IMAGE') return '图片'
