@@ -64,12 +64,7 @@ function MessageBody({
   if (item.type === 'IMAGE')
     return (
       <button className="msg__image" aria-label="预览图片" onClick={() => onPreview(item)}>
-        <AuthedImage
-          preview={false}
-          loading="lazy"
-          src={imageUrl}
-          alt={messageField(item, 'name') || '聊天图片'}
-        />
+        <AuthedImage src={imageUrl} alt={messageField(item, 'name') || '聊天图片'} />
       </button>
     )
   if (item.type === 'FILE')

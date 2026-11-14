@@ -1,5 +1,4 @@
 import { App as AntdApp, ConfigProvider } from 'antd'
-import { LoadingOutlined } from '@ant-design/icons'
 import type { ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
@@ -26,7 +25,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ConfigProvider
       theme={antdTheme}
-      spin={{ indicator: <LoadingOutlined spin /> }}
       modal={{ centered: true }}
     >
       <AntdApp>

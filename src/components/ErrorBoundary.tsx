@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react'
-import { Alert, Button, Space } from 'antd'
+import { Button } from '@/components/ui'
 
 interface Props {
   /** 变化时自动复位错误态（如切换路由/群聊/项目时），避免边界一直卡在错误态 */
@@ -50,31 +50,19 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!error) return this.props.children
     if (this.props.fallback) return this.props.fallback(error, this.handleReset)
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: 200,
-          padding: 24,
-        }}
-      >
-        <Alert
-          type="error"
-          showIcon
-          message="页面渲染出错"
-          description={error.message || '发生未知错误，请重试或刷新页面'}
-          action={
-            <Space direction="vertical" size={8}>
-              <Button type="primary" size="small" onClick={this.handleReset}>
-                重试
-              </Button>
-              <Button size="small" onClick={() => window.location.reload()}>
-                刷新页面
-              </Button>
-            </Space>
-          }
-        />
+      <div className="canvas-status">
+        <div className="block">
+          <p className="h3">页面渲染出错</p>
+          <p className="sub">{error.message || '发生未知错误，请重试或刷新页面。'}</p>
+          <div className="row row--tight">
+            <Button variant="quiet" onClick={this.handleReset}>
+              重试
+            </Button>
+            <Button variant="primary" onClick={() => window.location.reload()}>
+              刷新页面
+            </Button>
+          </div>
+        </div>
       </div>
     )
   }
