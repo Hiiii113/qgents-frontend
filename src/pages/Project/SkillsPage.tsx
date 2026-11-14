@@ -139,10 +139,6 @@ export default function SkillsPage() {
     setConfirm(null)
     setReason('')
   }
-  const resetFilters = () => {
-    setFilter('ALL')
-    setKeyword('')
-  }
   const owns = (skill: Skill) => skill.creator.id === user?.id || admin
   const canEdit = selected ? owns(selected) && selected.status !== 'ARCHIVED' : false
   const canSubmit = selected
@@ -199,16 +195,7 @@ export default function SkillsPage() {
                 <EmptyState
                   icon="search"
                   title="没有匹配的 Skill"
-                  description="清空筛选可以看全部 Skill。"
-                  action={
-                    <Button
-                      variant="link"
-                      onClick={resetFilters}
-                      icon={<Icon name="close" size={15} />}
-                    >
-                      清空筛选
-                    </Button>
-                  }
+                  description="换个关键词，或切换上方的状态筛选。"
                   stacked
                 />
               ) : (

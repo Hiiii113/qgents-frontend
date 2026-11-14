@@ -360,9 +360,19 @@
   font-size: var(--t-xs);
   color: var(--ink-500);
 }
+.composer__reply > div {
+  min-width: 0;
+}
 .composer__reply strong {
   color: var(--ink-700);
   margin-right: var(--s-2);
+}
+.composer__reply span {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .composer__files {
   display: flex;

@@ -320,6 +320,7 @@ kbd {
 }
 .grouprow {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2px;
   width: 100%;
   text-align: left;
@@ -341,13 +342,18 @@ kbd {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  overflow: hidden;
   font-size: var(--t-ui);
   font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .grouprow__meta {
   display: flex;
   align-items: center;
   gap: var(--s-2);
+  min-width: 0;
   font-size: var(--t-xs);
   color: var(--ink-400);
 }
@@ -359,8 +365,10 @@ kbd {
   white-space: nowrap;
 }
 .grouprow time {
+  flex: none;
   font-family: var(--mono);
   font-size: var(--t-xs);
+  white-space: nowrap;
 }
 .grouprow time[data-fresh] {
   color: var(--wait);
