@@ -8,6 +8,7 @@ import { useRememberTeam } from '@/hooks/useRememberTeam'
 import { useTeamEvents } from '@/realtime/useTeamEvents'
 import { formatApiError } from '@/utils/formatApiError'
 import { CreateProjectModal } from '@/components/CreateProjectModal'
+import './team-home.css'
 import {
   Button,
   DataTable,
@@ -129,9 +130,24 @@ export default function TeamHomePage() {
               />
             ) : visible.length === 0 ? (
               <EmptyState
-                icon="search"
+                icon={keyword ? 'search' : 'repo'}
                 title={keyword ? '没有匹配的项目' : '还没有项目'}
                 description={keyword ? '清空筛选可以看全部项目。' : '建一个项目，就有了默认群与 Agent。'}
+                action={
+                  keyword ? (
+                    <Button variant="link" onClick={() => setSearch('')}>
+                      清空筛选
+                    </Button>
+                  ) : canManage ? (
+                    <Button
+                      variant="primary"
+                      icon={<Icon name="plus" size={16} />}
+                      onClick={() => setCreateOpen(true)}
+                    >
+                      新建项目
+                    </Button>
+                  ) : undefined
+                }
                 stacked
               />
             ) : (
@@ -143,13 +159,20 @@ export default function TeamHomePage() {
                       className="table__cell table__name"
                       onClick={() => navigate(PATHS.projectChat(project.id))}
                     >
-                      <span className="name">{project.name}</span>
-                      <span className="meta">
-                        {project.status === 'ARCHIVED' ? (
-                          <Tag tone="readonly">已归档</Tag>
-                        ) : (
-                          (project.description ?? '—')
-                        )}
+                      <span className="project-cell">
+                        <span className="project-cell__mark" aria-hidden>
+                          {project.name.slice(0, 1)}
+                        </span>
+                        <span className="project-cell__body">
+                          <span className="name">{project.name}</span>
+                          <span className="meta">
+                            {project.status === 'ARCHIVED' ? (
+                              <Tag tone="readonly">已归档</Tag>
+                            ) : (
+                              (project.description ?? '—')
+                            )}
+                          </span>
+                        </span>
                       </span>
                     </button>
                     <TableCell className="mono">

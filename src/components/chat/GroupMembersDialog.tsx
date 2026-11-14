@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext'
 import { formatApiError } from '@/utils/formatApiError'
 import { chatKeys } from '@/query/chatKeys'
 import type { ChatGroup } from '@/types/chat'
-import { Avatar, Button, Dialog, Skeleton, TextField } from '@/components/ui'
+import { Avatar, Button, Dialog, Icon, Skeleton, TextField } from '@/components/ui'
 
 interface Values {
   title?: string
@@ -192,7 +192,12 @@ export function GroupMembersDialog({
           <Button variant="quiet" onClick={onClose}>
             取消
           </Button>
-          <Button variant="primary" type="submit" disabled={loading || failed}>
+          <Button
+            variant="primary"
+            type="submit"
+            icon={<Icon name="plus" size={16} />}
+            disabled={loading || failed}
+          >
             {mutation.isPending ? '提交中…' : group ? '邀请' : '创建群聊'}
           </Button>
         </div>

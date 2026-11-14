@@ -11,6 +11,7 @@ import {
   Avatar,
   Button,
   EmptyState,
+  Icon,
   Page,
   PageHead,
   Section,
@@ -141,7 +142,12 @@ function Account() {
           <TextField value={user?.email ?? ''} readOnly />
         </Form.Item>
         <div className="form__foot form__foot--start">
-          <Button variant="primary" type="submit" disabled={save.isPending}>
+          <Button
+            variant="primary"
+            type="submit"
+            icon={<Icon name="check" size={15} />}
+            disabled={save.isPending}
+          >
             {save.isPending ? '保存中…' : '保存'}
           </Button>
         </div>

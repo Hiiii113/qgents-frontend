@@ -14,6 +14,7 @@ import {
   DataTable,
   Dialog,
   EmptyState,
+  Icon,
   Page,
   PageHead,
   Section,
@@ -75,7 +76,11 @@ export default function TeamSettingsPage() {
           description="团队管理员邀请成员、维护团队资料；项目成员在各自项目里单独管理。"
           actions={
             canManage ? (
-              <Button variant="primary" onClick={() => setInviteOpen(true)}>
+              <Button
+                variant="primary"
+                icon={<Icon name="plus" size={16} />}
+                onClick={() => setInviteOpen(true)}
+              >
                 邀请成员
               </Button>
             ) : undefined
@@ -192,8 +197,13 @@ function Members({ teamId, isOwner }: { teamId: string; isOwner: boolean }) {
           {members.data.map((member) => (
             <TableRow key={member.userId}>
               <TableCell>
-                <span className="name">{nameOf(member)}</span>
-                {member.userId === user?.id ? <span className="meta">你</span> : null}
+                <span className="member-cell">
+                  <Avatar name={nameOf(member)} src={member.avatarUrl} size="sm" />
+                  <span className="member-cell__body">
+                    <span className="name">{nameOf(member)}</span>
+                    {member.userId === user?.id ? <span className="meta">你</span> : null}
+                  </span>
+                </span>
               </TableCell>
               <TableCell className="mono">{member.email || '—'}</TableCell>
               <TableCell>
@@ -499,7 +509,12 @@ function Profile({ team, canManage }: { team: Team; canManage: boolean }) {
         </Form.Item>
         <p className="meta">成立于 {formatDate(team.createdAt)}</p>
         <div className="form__foot form__foot--start">
-          <Button variant="primary" type="submit" disabled={update.isPending}>
+          <Button
+            variant="primary"
+            type="submit"
+            icon={<Icon name="check" size={15} />}
+            disabled={update.isPending}
+          >
             {update.isPending ? '保存中…' : '保存'}
           </Button>
         </div>

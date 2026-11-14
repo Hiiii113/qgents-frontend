@@ -209,7 +209,11 @@ export default function SkillsPage() {
                   title="还没有 Skill"
                   description="导入一个 SKILL.md；项目共享的 Skill 在管理员审核后才会被 Agent 调用。"
                   action={
-                    <Button variant="primary" onClick={() => setEditor({ skill: null })}>
+                    <Button
+                      variant="primary"
+                      icon={<Icon name="plus" size={16} />}
+                      onClick={() => setEditor({ skill: null })}
+                    >
                       导入 Skill
                     </Button>
                   }

@@ -232,7 +232,6 @@ textarea:focus,
 .select:focus {
   border-color: var(--ink-900);
   outline: none;
-  box-shadow: 0 0 0 3px var(--mark-soft);
 }
 input[readonly] {
   background: var(--surface-soft);
@@ -397,6 +396,17 @@ input[readonly] {
 .table--team .table__row {
   grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.8fr) 160px 110px;
 }
+.member-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.member-cell__body {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
 .select {
   min-height: 32px;
   padding: 4px 8px;
@@ -426,7 +436,6 @@ input[readonly] {
 }
 .inline-search:focus-within {
   border-color: var(--ink-900);
-  box-shadow: 0 0 0 3px var(--mark-soft);
 }
 
 /* ---------- 空态 / 阻断 / 骨架 / 横幅 ---------- */
@@ -444,6 +453,34 @@ input[readonly] {
   justify-items: start;
   gap: var(--s-1);
   padding: var(--s-6) var(--s-2);
+}
+.empty__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: var(--s-2);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink-500);
+}
+.empty:not(.empty--stacked) .empty__icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-400);
+}
+.empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+}
+.empty:not(.empty--stacked) .empty__actions {
+  margin-top: 0;
 }
 .block {
   display: grid;
@@ -472,12 +509,12 @@ input[readonly] {
   color: var(--ink-500);
 }
 .row-empty__title {
-  font-size: var(--t-ui);
+  font-size: var(--t-body);
   font-weight: 500;
 }
 .row-empty__desc {
   margin-top: 4px;
-  font-size: var(--t-sm);
+  font-size: var(--t-ui);
   color: var(--ink-500);
   max-width: 64ch;
 }
@@ -1033,6 +1070,15 @@ input[readonly] {
   inset: 0;
   z-index: 30;
   background: rgba(16, 20, 24, 0.28);
+}
+/* 桌面侧栏占列，不走遮罩；窄屏覆盖层才需要。 */
+.scrim--panel {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .scrim--panel {
+    display: block;
+  }
 }
 
 /* ---------- 对话框 ---------- */

@@ -1,0 +1,24 @@
+/* 团队首页：项目名前的字母牌，让行比纯文字更容易扫读。 */
+.project-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.project-cell__mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink-700);
+  font-size: var(--t-ui);
+  font-weight: 600;
+}
+.project-cell__body {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}

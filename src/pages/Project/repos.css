@@ -3,6 +3,29 @@
   overflow-wrap: anywhere;
 }
 
+.repo-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.repo-cell__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink-500);
+}
+.repo-cell__body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
 .repo-url {
   color: var(--mark);
 }

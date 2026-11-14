@@ -7,7 +7,7 @@ import { teamApi } from '@/api/team'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
 import { useAuth } from '@/context/AuthContext'
-import { Button, Dialog, TextAreaField, TextField } from '@/components/ui'
+import { Button, Dialog, Icon, TextAreaField, TextField } from '@/components/ui'
 
 interface Values {
   name: string
@@ -100,7 +100,12 @@ export function CreateProjectModal({
           <Button variant="quiet" onClick={onClose}>
             取消
           </Button>
-          <Button variant="primary" type="submit" disabled={create.isPending}>
+          <Button
+            variant="primary"
+            type="submit"
+            icon={<Icon name="plus" size={16} />}
+            disabled={create.isPending}
+          >
             {create.isPending ? '创建中…' : '创建项目'}
           </Button>
         </div>

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 
 type Variant = 'primary' | 'quiet' | 'danger' | 'link'
 
@@ -10,16 +10,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /** 主按钮墨实心；次按钮白底细线；文字按钮只有朱砂色，没有框。 */
-export function Button({
-  variant,
-  size,
-  block,
-  icon,
-  className = '',
-  children,
-  type = 'button',
-  ...rest
-}: ButtonProps) {
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { variant, size, block, icon, className = '', children, type = 'button', ...rest },
+  ref,
+) {
   const classes = [
     'btn',
     variant ? `btn--${variant}` : '',
@@ -30,12 +24,12 @@ export function Button({
     .filter(Boolean)
     .join(' ')
   return (
-    <button type={type} className={classes} {...rest}>
+    <button ref={ref} type={type} className={classes} {...rest}>
       {icon}
       {children}
     </button>
   )
-}
+})
 
 interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   square?: boolean

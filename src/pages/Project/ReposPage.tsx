@@ -123,7 +123,7 @@ export default function ReposPage() {
           title="仓库"
           description="团队 GitHub App 已授权的仓库。Qgent 始终可以使用已导入到本项目的仓库。"
           actions={
-            canManage && connections.isSuccess && !disconnected ? (
+            canManage && connections.isSuccess && !disconnected && imported.data?.length ? (
               <Button
                 variant="primary"
                 icon={<Icon name="plus" size={16} aria-hidden />}
@@ -226,7 +226,11 @@ export default function ReposPage() {
                   description="Qgent 只能读写已导入本项目的仓库；先导入一个，才能在群里派活。"
                   action={
                     canManage ? (
-                      <Button variant="link" onClick={() => setImportOpen(true)}>
+                      <Button
+                        variant="primary"
+                        icon={<Icon name="plus" size={16} aria-hidden />}
+                        onClick={() => setImportOpen(true)}
+                      >
                         导入仓库
                       </Button>
                     ) : undefined
@@ -239,15 +243,22 @@ export default function ReposPage() {
                 {rows.map((repo) => (
                   <TableRow key={repo.id}>
                     <TableCell className="repo-name">
-                      <span className="name">{repo.fullName}</span>
-                      <a
-                        className="meta repo-url"
-                        href={repo.htmlUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {repo.htmlUrl}
-                      </a>
+                      <span className="repo-cell">
+                        <span className="repo-cell__icon" aria-hidden>
+                          <Icon name="repo" size={16} />
+                        </span>
+                        <span className="repo-cell__body">
+                          <span className="name">{repo.fullName}</span>
+                          <a
+                            className="meta repo-url"
+                            href={repo.htmlUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {repo.htmlUrl}
+                          </a>
+                        </span>
+                      </span>
                     </TableCell>
                     <TableCell className="mono">{repo.defaultBranch || '—'}</TableCell>
                     <TableCell className="meta">
@@ -264,9 +275,11 @@ export default function ReposPage() {
                 ))}
               </DataTable>
             )}
-            <p className="note">
-              移除只取消本项目引用，不会删除 GitHub 上的仓库，也不影响团队其他项目。
-            </p>
+            {imported.data?.length ? (
+              <p className="note">
+                移除只取消本项目引用，不会删除 GitHub 上的仓库，也不影响团队其他项目。
+              </p>
+            ) : null}
           </Section>
         )}
       </Page>

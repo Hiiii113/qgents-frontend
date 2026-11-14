@@ -16,7 +16,7 @@ src/
 ├── api/                    统一请求基础设施与业务接口
 ├── components/
 │   ├── ui/                 设计系统组件与图标（Button、Tag、Avatar、Dialog、Popover、Table…）
-│   ├── chat/               聊天画布、消息行、输入器、附件预览、成员弹窗、运行卡、执行轨迹
+│   ├── chat/               聊天画布、消息行、输入器、附件预览、成员侧栏、邀请弹窗、运行卡、执行轨迹
 │   ├── CreateProjectModal  新建项目
 │   ├── PageLoader / StartupScreen / ErrorBoundary / AuthedImage
 ├── features/agent-runs/    Agent 运行状态、快照与群级 SSE 订阅

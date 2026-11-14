@@ -395,7 +395,7 @@ kbd {
 }
 
 /* ---------- 执行轨迹 ---------- */
-.trace {
+.sidepanel {
   display: flex;
   flex-direction: column;
   width: 348px;
@@ -403,20 +403,24 @@ kbd {
   background: var(--surface-soft);
   border-left: 1px solid var(--line);
 }
-.trace__head {
+.sidepanel__head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--s-2);
   padding: var(--s-4) var(--s-4) var(--s-2);
 }
-.trace__kicker {
+.sidepanel__kicker {
   font-size: var(--t-xs);
   color: var(--ink-400);
 }
-.trace__title {
+.sidepanel__title {
   font-size: var(--t-ui);
   font-weight: 600;
+}
+.sidepanel__foot {
+  padding: var(--s-3) var(--s-4) var(--s-4);
+  border-top: 1px solid var(--line);
 }
 .trace__trigger {
   padding: 0 var(--s-4) var(--s-3);
@@ -510,7 +514,7 @@ kbd {
 }
 
 @media (max-width: 1280px) {
-  .trace {
+  .sidepanel {
     width: 320px;
   }
 }
@@ -530,7 +534,7 @@ kbd {
   .context.is-open {
     transform: none;
   }
-  .trace {
+  .sidepanel {
     position: fixed;
     z-index: 35;
     top: 0;
@@ -542,7 +546,7 @@ kbd {
     transform: translateX(110%);
     transition: transform var(--d-base) var(--ease);
   }
-  .trace.is-open {
+  .sidepanel.is-open {
     transform: none;
   }
   .searchbtn {

@@ -261,7 +261,12 @@ export default function AgentsPage() {
             <Button variant="quiet" onClick={closeDialog}>
               取消
             </Button>
-            <Button variant="primary" type="submit" disabled={apply.isPending}>
+            <Button
+              variant="primary"
+              type="submit"
+              icon={<Icon name="check" size={15} />}
+              disabled={apply.isPending}
+            >
               {apply.isPending ? '提交中…' : '提交申请'}
             </Button>
           </div>

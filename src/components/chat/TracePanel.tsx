@@ -50,11 +50,11 @@ export function TracePanel({
   const running = run ? !isTerminalStatus(run.status) : false
   const liveText = run?.segments.map((segment) => segment.text).join('')
   return (
-    <aside className="trace is-open" aria-label="执行轨迹">
-      <header className="trace__head">
+    <aside className="sidepanel trace is-open" aria-label="执行轨迹">
+      <header className="sidepanel__head">
         <div>
-          <p className="trace__kicker">执行轨迹</p>
-          <p className="trace__title od-truncate">{agentName ?? 'Agent 运行'}</p>
+          <p className="sidepanel__kicker">执行轨迹</p>
+          <p className="sidepanel__title od-truncate">{agentName ?? 'Agent 运行'}</p>
         </div>
         <IconButton label="收起执行轨迹" square onClick={onClose}>
           <Icon name="close" size={18} />

@@ -61,14 +61,18 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, description, action, stacked }: EmptyStateProps) {
   return (
     <div className={stacked ? 'empty empty--stacked' : 'empty'}>
-      {icon ? <Icon name={icon} /> : null}
+      {icon ? (
+        <span className="empty__icon" aria-hidden>
+          <Icon name={icon} size={stacked ? 18 : 15} />
+        </span>
+      ) : null}
       <div>
         {title ? <p className={stacked ? 'row-empty__title' : undefined}>{title}</p> : null}
         {description ? (
           <p className={stacked ? 'row-empty__desc' : 'meta'}>{description}</p>
         ) : null}
       </div>
-      {action}
+      {action ? <div className="empty__actions">{action}</div> : null}
     </div>
   )
 }

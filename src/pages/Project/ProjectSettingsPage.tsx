@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext'
 import { formatApiError } from '@/utils/formatApiError'
 import type { Project, ProjectMember, ProjectRole } from '@/types'
 import {
+  Avatar,
   Button,
   DataTable,
   Dialog,
@@ -150,7 +151,12 @@ function BasicInfo({ project }: { project: Project }) {
       </Form.Item>
       {editable ? (
         <div className="form__foot form__foot--start">
-          <Button variant="primary" type="submit" disabled={update.isPending}>
+          <Button
+            variant="primary"
+            type="submit"
+            icon={<Icon name="check" size={15} />}
+            disabled={update.isPending}
+          >
             {update.isPending ? '保存中…' : '保存'}
           </Button>
         </div>
@@ -263,6 +269,17 @@ function Members({ project }: { project: Project }) {
             icon="people"
             title="还没有项目成员"
             description="从团队成员里添加需要参与这个项目的人。"
+            action={
+              isAdmin ? (
+                <Button
+                  variant="primary"
+                  icon={<Icon name="plus" size={16} />}
+                  onClick={() => setAddOpen(true)}
+                >
+                  添加成员
+                </Button>
+              ) : undefined
+            }
             stacked
           />
         ) : (
@@ -270,12 +287,17 @@ function Members({ project }: { project: Project }) {
             {members.data.map((member) => (
               <TableRow key={member.userId}>
                 <TableCell>
-                  <span className="name">{nameOf(member)}</span>
-                  {member.userId === user?.id ? (
-                    <span className="meta">你</span>
-                  ) : member.userId === teamOwnerId ? (
-                    <span className="meta">团队所有者</span>
-                  ) : null}
+                  <span className="member-cell">
+                    <Avatar name={nameOf(member)} src={member.avatarUrl} size="sm" />
+                    <span className="member-cell__body">
+                      <span className="name">{nameOf(member)}</span>
+                      {member.userId === user?.id ? (
+                        <span className="meta">你</span>
+                      ) : member.userId === teamOwnerId ? (
+                        <span className="meta">团队所有者</span>
+                      ) : null}
+                    </span>
+                  </span>
                 </TableCell>
                 <TableCell className="mono">{emailOf(member)}</TableCell>
                 <TableCell>

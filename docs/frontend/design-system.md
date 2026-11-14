@@ -67,10 +67,10 @@
 | `<Section title aside>` | 页面区块 | 标题 + 右侧动作 |
 | `<DataTable layout columns>` + `<TableRow>` + `<TableCell end>` | 列表 | layout: projects/agents/repos/members/team/plain |
 | `<Tabs items value onChange label>` | 页签 | 选中项朱砂下划线 |
-| `<Dialog open onClose title description danger>` | 对话框 | 原生 dialog，内含 `<form>` |
-| `<Popover open onClose align>` | 锚定浮层 | 父级容器加 `.anchored`；点击外部/Esc 关闭 |
-| `<EmptyState icon title description action stacked>` | 空态 | 贴着它替代的列表位置 |
-| `<Skeleton rows>` | 加载 | 软灰条呼吸 |
+| `<Dialog open onClose title description danger>` | 对话框 | 原生 dialog；常驻挂载，关闭后焦点回到触发按钮 |
+| `<Popover open onClose label align>` | 锚定浮层 | 父级容器加 `.anchored`；必须带 label；点击外部/Esc 关闭 |
+| `<EmptyState icon title description action stacked>` | 空态 | 贴着它替代的列表位置；图标落在浅底方块里，动作单独一行 |
+| `<Skeleton rows>` | 加载 | 300ms 后才出现，避免快速请求闪骨架 |
 | `<TextField>` `<TextAreaField>` `<SelectField>` | 表单控件 | 配 antd `Form.Item` 使用 |
 | `<PageLoader fullscreen>` | 路由加载 | 三条呼吸条 |
 

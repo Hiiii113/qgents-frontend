@@ -16,7 +16,8 @@ import { ChatComposer, type ChatComposerHandle } from './ChatComposer'
 import { ChatMessageList } from './ChatMessageList'
 import { GroupMembersDialog } from './GroupMembersDialog'
 import { TracePanel } from './TracePanel'
-import { Avatar, Button, Dialog, Icon, Tag } from '@/components/ui'
+import { MembersPanel } from './MembersPanel'
+import { Button, Icon } from '@/components/ui'
 import { useAppUiStore } from '@/store/appUiStore'
 import './chat.css'
 
@@ -49,9 +50,33 @@ export function ChatPanel({
   const [readingLatest, setReadingLatest] = useState(true)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const composerRef = useRef<ChatComposerHandle>(null)
+  const membersButtonRef = useRef<HTMLButtonElement>(null)
   const traceOpen = useAppUiStore((state) => state.chatTraceOpen)
   const setTraceOpen = useAppUiStore((state) => state.setChatTraceOpen)
   const groupId = group.id
+
+  const closeMembers = useCallback(() => {
+    setMembersOpen(false)
+    requestAnimationFrame(() => membersButtonRef.current?.focus())
+  }, [])
+
+  const toggleMembers = useCallback(() => {
+    if (membersOpen) {
+      closeMembers()
+      return
+    }
+    setTraceOpen(false)
+    setMembersOpen(true)
+  }, [closeMembers, membersOpen, setTraceOpen])
+
+  const toggleTrace = useCallback(() => {
+    if (traceOpen) {
+      setTraceOpen(false)
+      return
+    }
+    setMembersOpen(false)
+    setTraceOpen(true)
+  }, [setTraceOpen, traceOpen])
 
   // 窄屏轨迹是覆盖层：首次进入先不叠在画布上，点运行卡或页头按钮再打开。
   useEffect(() => {
@@ -215,9 +240,11 @@ export function ChatPanel({
             </div>
             <div className="chathead__actions">
               <Button
+                ref={membersButtonRef}
                 variant="quiet"
                 icon={<Icon name="people" size={16} aria-hidden />}
-                onClick={() => setMembersOpen(true)}
+                aria-expanded={membersOpen}
+                onClick={toggleMembers}
               >
                 成员
               </Button>
@@ -225,7 +252,7 @@ export function ChatPanel({
                 variant="quiet"
                 aria-expanded={traceOpen}
                 icon={<Icon name="activity" size={16} aria-hidden />}
-                onClick={() => setTraceOpen(!traceOpen)}
+                onClick={toggleTrace}
               >
                 执行轨迹
               </Button>
@@ -268,6 +295,7 @@ export function ChatPanel({
             onLocate={(id) => void locate(id)}
             onOpenRun={(runId) => {
               setSelectedRunId(runId)
+              setMembersOpen(false)
               setTraceOpen(true)
             }}
             onStop={handleStop}
@@ -289,6 +317,18 @@ export function ChatPanel({
         </section>
       </main>
 
+      {(traceOpen || membersOpen) && (
+        <button
+          type="button"
+          className="scrim scrim--panel"
+          aria-label="关闭侧栏"
+          onClick={() => {
+            if (membersOpen) closeMembers()
+            setTraceOpen(false)
+          }}
+        />
+      )}
+
       {traceOpen ? (
         <TracePanel
           run={activeRun}
@@ -301,47 +341,18 @@ export function ChatPanel({
         />
       ) : null}
 
-      <Dialog
-        open={membersOpen}
-        onClose={() => setMembersOpen(false)}
-        title={`${group.title} 成员`}
-        description={`${members.data?.length ?? 0} 名成员，含 ${agentNames.size} 个 Agent。邀请与移除都在这里完成。`}
-      >
-        <ul className="rows">
-          {(members.data ?? []).map((member) => (
-            <li key={`${member.memberType}:${member.id}`} className="rows__item">
-              <Avatar
-                name={member.displayName}
-                src={member.avatarUrl}
-                type={member.memberType === 'AGENT' ? 'agent' : 'user'}
-                size="sm"
-              />
-              <span className="od-fill">
-                {member.displayName}
-                <span className="meta" style={{ display: 'block' }}>
-                  {member.memberType === 'AGENT' ? 'Agent' : (member.email || '成员')}
-                </span>
-              </span>
-              {member.memberType === 'AGENT' ? <Tag tone="agent">Agent</Tag> : null}
-            </li>
-          ))}
-        </ul>
-        <div className="dlg__foot">
-          <Button
-            variant="quiet"
-            disabled={archived}
-            onClick={() => {
-              setMembersOpen(false)
-              setInviteOpen(true)
-            }}
-          >
-            邀请成员 / Agent
-          </Button>
-          <Button variant="primary" onClick={() => setMembersOpen(false)}>
-            关闭
-          </Button>
-        </div>
-      </Dialog>
+      {membersOpen ? (
+        <MembersPanel
+          groupTitle={group.title}
+          members={members.data}
+          pending={members.isPending}
+          error={members.isError ? members.error : null}
+          onRetry={() => void members.refetch()}
+          onClose={closeMembers}
+          onInvite={() => setInviteOpen(true)}
+          inviteDisabled={archived}
+        />
+      ) : null}
 
       {inviteOpen ? (
         <GroupMembersDialog

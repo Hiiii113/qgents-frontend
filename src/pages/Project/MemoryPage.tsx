@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm'
 import { memoryApi } from '@/api'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
-import { Button, EmptyState, Page, PageHead, Skeleton, Tag } from '@/components/ui'
+import { Button, EmptyState, Icon, Page, PageHead, Skeleton, Tag } from '@/components/ui'
 import './memory.css'
 
 /** 标题锚点用标题文本生成，目录与正文共用同一个 id。 */
@@ -99,7 +99,11 @@ export default function MemoryPage() {
             title="还没有项目记忆"
             description="在聊天里告诉 Qgent 需要长期保留的约定；项目管理员确认后由它写入 memory.md。"
             action={
-              <Button variant="link" onClick={() => navigate(PATHS.projectChat(projectId))}>
+              <Button
+                variant="link"
+                icon={<Icon name="chat" size={14} />}
+                onClick={() => navigate(PATHS.projectChat(projectId))}
+              >
                 去群聊
               </Button>
             }

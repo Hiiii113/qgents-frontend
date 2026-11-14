@@ -6,7 +6,7 @@ import { teamApi } from '@/api/team'
 import { useAuth } from '@/context/AuthContext'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
-import { Button, TextAreaField, TextField } from '@/components/ui'
+import { Button, Icon, TextAreaField, TextField } from '@/components/ui'
 import { Gate, GateAside, GateForm } from '../Auth/Gate'
 
 interface Values {
@@ -80,7 +80,12 @@ export default function CreateTeamPage() {
             <Button variant="quiet" onClick={() => navigate(PATHS.WELCOME)}>
               取消
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button
+              variant="primary"
+              type="submit"
+              icon={<Icon name="plus" size={16} />}
+              disabled={submitting}
+            >
               {submitting ? '创建中…' : '创建并进入'}
             </Button>
           </div>
