@@ -3,6 +3,7 @@ import { Button, Icon, TextField } from '@/components/ui'
 
 /** 验证码输入 + 发送按钮，作为 Form.Item 的受控子组件。 */
 export function CodeField({
+  id,
   value,
   onChange,
   onSend,
@@ -10,6 +11,7 @@ export function CodeField({
   countdown,
   disabled,
 }: {
+  id?: string
   value?: string
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   onSend: () => void
@@ -20,6 +22,7 @@ export function CodeField({
   return (
     <div className="row row--tight">
       <TextField
+        id={id}
         value={value ?? ''}
         onChange={onChange}
         inputMode="numeric"
@@ -42,12 +45,14 @@ export function CodeField({
 
 /** 密码输入 + 显示/隐藏，作为 Form.Item 的受控子组件。 */
 export function PasswordField({
+  id,
   value,
   onChange,
   autoComplete,
   placeholder,
   disabled,
 }: {
+  id?: string
   value?: string
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   autoComplete?: string
@@ -58,6 +63,7 @@ export function PasswordField({
   return (
     <div className="gate__password">
       <TextField
+        id={id}
         type={visible ? 'text' : 'password'}
         value={value ?? ''}
         onChange={onChange}

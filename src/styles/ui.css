@@ -198,6 +198,7 @@
   color: var(--ink-700);
 }
 input[type='text'],
+input:not([type]),
 input[type='search'],
 input[type='email'],
 input[type='password'],
@@ -657,6 +658,7 @@ input[readonly] {
   max-width: 72ch;
   padding-right: var(--s-4);
   max-height: calc(100dvh - 300px);
+  overflow-y: auto;
 }
 .doc h2 {
   font-size: var(--t-h3);
@@ -1143,6 +1145,11 @@ input[readonly] {
   }
 }
 @media (max-width: 760px) {
+  .table--projects .table__row,
+  .table--agents .table__row,
+  .table--repos .table__row,
+  .table--members .table__row,
+  .table--team .table__row,
   .table__row {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--s-1);
@@ -1180,4 +1187,19 @@ input[readonly] {
   .status__box {
     padding: var(--s-6);
   }
+}
+
+/* 垂直表单里控件占满字段宽度，和说明文字同宽。 */
+.form .ant-form-item-control {
+  flex: 1;
+  min-width: 0;
+}
+.form .ant-form-item-control-input,
+.form .ant-form-item-control-input-content {
+  width: 100%;
+}
+
+/* 隐藏的原生文件选择器不参与排版（部分 UA 样式会覆盖 hidden）。 */
+input[type='file'][hidden] {
+  display: none !important;
 }

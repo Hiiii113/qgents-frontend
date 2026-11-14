@@ -204,6 +204,9 @@ input:-webkit-autofill:focus {
   font-size: var(--t-ui);
   font-weight: 500;
 }
+a.name {
+  color: var(--ink-900);
+}
 .note {
   margin-top: var(--s-3);
   font-size: var(--t-sm);
@@ -265,4 +268,12 @@ input:-webkit-autofill:focus {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* 图标 symbol 定义：绝对定位，不参与布局。 */
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }

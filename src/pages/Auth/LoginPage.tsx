@@ -66,7 +66,7 @@ export function LoginPage() {
               { type: 'email', message: '请输入正确的邮箱地址' },
             ]}
           >
-            <TextField autoComplete="username" placeholder="name@company.com" autoFocus />
+            <TextField autoComplete="username" placeholder="name@company.com" />
           </Form.Item>
           <Form.Item
             name="password"

@@ -147,3 +147,34 @@
     justify-content: flex-start;
   }
 }
+
+.gate__password {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.gate__password input {
+  padding-right: 38px;
+}
+.gate__eye {
+  position: absolute;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--ink-400);
+  cursor: pointer;
+}
+.gate__eye:hover {
+  background: var(--surface-sunken);
+  color: var(--ink-900);
+}
+.gate__code-btn {
+  flex: none;
+  height: 36px;
+}

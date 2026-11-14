@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { PATHS } from '@/routes/paths'
 import { Mark } from '@/components/ui'
-import './gate.css'
+import '../Auth/gate.css'
 
 /** 无团队时的入口：创建或加入，两个选择并列。 */
 export default function WelcomePage() {

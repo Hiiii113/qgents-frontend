@@ -224,6 +224,14 @@ export default function ChatWorkspace() {
   return (
     <>
       <ChatPanel key={selected.id} projectId={projectId} group={selected} contextPanel={context} />
+      {contextOpen ? (
+        <button
+          type="button"
+          className="scrim"
+          aria-label="关闭群聊列表"
+          onClick={() => setContextOpen(false)}
+        />
+      ) : null}
       <GroupMembersDialog
         projectId={projectId}
         teamId={project.data?.teamId ?? ''}

@@ -71,7 +71,7 @@ export default function TeamSettingsPage() {
       <Page>
         <PageHead
           kicker="团队"
-          title={team.data?.name ?? (team.isError ? '团队不可用' : '团队设置')}
+          title={team.data ? `${team.data.name} · 成员` : team.isError ? '团队不可用' : '团队设置'}
           description="团队管理员邀请成员、维护团队资料；项目成员在各自项目里单独管理。"
           actions={
             canManage ? (

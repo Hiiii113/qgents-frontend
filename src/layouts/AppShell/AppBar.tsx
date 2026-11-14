@@ -110,14 +110,14 @@ export function AppBar({
         </div>
 
         {chatEnabled ? (
-          <IconButton
-            label={chatOpen ? '收起群聊列表' : '展开群聊列表'}
-            className="ctx-toggle"
+          <button
+            type="button"
+            className="iconbtn ctx-toggle"
             aria-expanded={chatOpen}
             onClick={() => setChatOpen(!chatOpen)}
           >
-            <Icon name="inbox" size={16} />
-          </IconButton>
+            {chatOpen ? '收起群聊' : '群聊'}
+          </button>
         ) : null}
       </div>
     </header>

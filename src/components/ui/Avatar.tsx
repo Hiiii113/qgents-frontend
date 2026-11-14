@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Mark } from './Icon'
 
 interface AvatarProps {
@@ -9,8 +10,9 @@ interface AvatarProps {
   className?: string
 }
 
-/** 32px 方形头像；Agent 始终用品牌标记，不用首字母。 */
+/** 32px 方形头像；Agent 始终用品牌标记，图片加载失败回落到首字。 */
 export function Avatar({ name, src, type = 'user', size = 'md', className = '' }: AvatarProps) {
+  const [broken, setBroken] = useState(false)
   const classes = [
     'avatar',
     size === 'sm' ? 'avatar--sm' : '',
@@ -29,7 +31,11 @@ export function Avatar({ name, src, type = 'user', size = 'md', className = '' }
   }
   return (
     <span className={classes} title={name}>
-      {src ? <img src={src} alt={name} /> : name.trim().slice(0, 1) || '?'}
+      {src && !broken ? (
+        <img src={src} alt={name} onError={() => setBroken(true)} />
+      ) : (
+        name.trim().slice(0, 1) || '?'
+      )}
     </span>
   )
 }

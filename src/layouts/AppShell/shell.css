@@ -101,9 +101,19 @@
 }
 
 .workspace {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  min-height: 0;
+}
+.workspace > .appbar,
+.workspace > .banner-bar {
+  flex: none;
+}
+.workspace > .body,
+.workspace > .canvas,
+.workspace > .canvas-status {
+  flex: 1;
   min-height: 0;
 }
 .appbar {
@@ -126,6 +136,21 @@
   position: relative;
   display: inline-flex;
   align-items: center;
+}
+/* 头像菜单从竖轨底部弹出；fixed 让浮层不被竖轨的滚动容器裁掉。 */
+.popover.popover--me {
+  position: fixed;
+  left: 72px;
+  bottom: 12px;
+  top: auto;
+  right: auto;
+}
+@media (max-width: 900px) {
+  .popover.popover--me {
+    left: var(--s-2);
+    bottom: auto;
+    top: 56px;
+  }
 }
 .crumb {
   display: inline-flex;
@@ -208,6 +233,9 @@ kbd {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   min-height: 0;
+}
+.ctx-toggle {
+  display: none;
 }
 .canvas {
   min-width: 0;
@@ -491,7 +519,7 @@ kbd {
     width: 300px;
     box-shadow: var(--shadow);
     border-right: 1px solid var(--line-strong);
-    transform: translateX(-110%);
+    transform: translateX(-125%);
     transition: transform var(--d-base) var(--ease);
   }
   .context.is-open {
@@ -518,6 +546,9 @@ kbd {
   .searchbtn span {
     display: none;
   }
+  .ctx-toggle {
+    display: inline-flex;
+  }
 }
 @media (max-width: 900px) {
   .shell {
@@ -535,7 +566,7 @@ kbd {
     overflow-y: visible;
   }
   .rail__top {
-    padding: 0 var(--s-1) 0 0;
+    display: none;
   }
   .rail__group,
   .rail__foot {
