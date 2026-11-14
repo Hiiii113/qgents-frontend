@@ -1,13 +1,12 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { App, Form } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { teamApi } from '@/api/team'
 import { PATHS } from '@/routes/paths'
 import { useAuth } from '@/context/AuthContext'
-import { useAppUiStore } from '@/store/appUiStore'
 import { formatApiError } from '@/utils/formatApiError'
-import type { Team, TeamInvitation, TeamMember, TeamRole } from '@/types'
+import type { TeamInvitation, TeamMember, TeamRole } from '@/types'
 import {
   Avatar,
   Button,
@@ -23,7 +22,6 @@ import {
   TableCell,
   TableRow,
   Tag,
-  TextAreaField,
   TextField,
 } from '@/components/ui'
 import './team-settings.css'
@@ -55,7 +53,7 @@ function formatDate(iso?: string): string {
     : date.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })
 }
 
-/** 团队设置：成员与邀请、团队资料、解散。成员由所有者调整角色，管理员可邀请与移除普通成员。 */
+/** 团队成员：成员列表与邀请。成员由所有者调整角色，管理员可邀请与移除普通成员。 */
 export default function TeamSettingsPage() {
   const { teamId = '' } = useParams<{ teamId: string }>()
   const team = useQuery({
@@ -73,7 +71,7 @@ export default function TeamSettingsPage() {
         <PageHead
           kicker="团队"
           title={team.data ? `${team.data.name} · 成员` : team.isError ? '团队不可用' : '团队设置'}
-          description="团队管理员邀请成员、维护团队资料；项目成员在各自项目里单独管理。"
+          description="团队管理员邀请成员、调整团队角色；项目成员在各自项目里单独管理。"
           actions={
             canManage ? (
               <Button
@@ -109,8 +107,6 @@ export default function TeamSettingsPage() {
               <p className="note">团队管理员可以邀请和移除普通成员，不能调整管理员或所有者。</p>
             )}
             <Invitations teamId={teamId} />
-            <Profile team={team.data} canManage={canManage} />
-            {isOwner ? <Disband teamId={teamId} name={team.data.name} /> : null}
           </>
         )}
       </Page>
@@ -126,7 +122,7 @@ function Forbidden() {
     <div className="block">
       <p className="h3">需要团队管理员权限</p>
       <p className="sub">
-        你在这个团队里的角色是「成员」。成员管理、邀请与团队资料只对团队管理员开放。
+        你在这个团队里的角色是「成员」。成员管理、邀请与角色调整只对团队管理员开放。
       </p>
       <Button variant="quiet" onClick={() => navigate(PATHS.APP)}>
         回到团队首页
@@ -417,187 +413,5 @@ function InviteDialog({
         </div>
       </Form>
     </Dialog>
-  )
-}
-
-function Profile({ team, canManage }: { team: Team; canManage: boolean }) {
-  const { message } = App.useApp()
-  const client = useQueryClient()
-  const fileRef = useRef<HTMLInputElement>(null)
-  const [uploading, setUploading] = useState(false)
-  const [form] = Form.useForm<{ name: string; description?: string }>()
-  const update = useMutation({
-    mutationFn: (values: { name: string; description?: string }) =>
-      teamApi.update(team.id, {
-        name: values.name.trim(),
-        description: values.description?.trim() || undefined,
-      }),
-    onSuccess: () => {
-      // PATCH 响应不保证带角色，重新拉取详情再渲染，避免把权限字段冲掉。
-      void client.invalidateQueries({ queryKey: ['teams', team.id] })
-      void client.invalidateQueries({ queryKey: ['teams', 'mine'] })
-      void message.success('团队资料已更新')
-    },
-  })
-
-  async function handleAvatar(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file || uploading) return
-    if (!file.type.startsWith('image/')) {
-      message.warning('仅支持图片文件')
-      return
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      message.warning('图片不超过 5MB')
-      return
-    }
-    setUploading(true)
-    try {
-      await teamApi.uploadAvatar(team.id, file)
-      await client.invalidateQueries({ queryKey: ['teams', team.id] })
-      await client.invalidateQueries({ queryKey: ['teams', 'mine'] })
-      void message.success('团队头像已更新')
-    } catch (error) {
-      void message.error(formatApiError(error))
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  return (
-    <Section title="团队资料">
-      <Form
-        form={form}
-        layout="vertical"
-        className="form form--narrow"
-        initialValues={{ name: team.name, description: team.description ?? '' }}
-        onFinish={(values) => update.mutate(values)}
-        disabled={!canManage || update.isPending}
-        requiredMark={false}
-      >
-        {update.isError ? <p className="err">{formatApiError(update.error)}</p> : null}
-        <Form.Item label="团队头像">
-          <div className="row">
-            <Avatar name={team.name} src={team.avatarUrl} size="lg" />
-            {canManage ? (
-              <Button variant="quiet" disabled={uploading} onClick={() => fileRef.current?.click()}>
-                {uploading ? '上传中…' : '更换头像'}
-              </Button>
-            ) : null}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(event) => void handleAvatar(event)}
-            />
-          </div>
-        </Form.Item>
-        <Form.Item
-          name="name"
-          label="团队名称"
-          rules={[
-            { required: true, whitespace: true, message: '请输入团队名称' },
-            { max: 255, message: '团队名称最多 255 个字符' },
-          ]}
-        >
-          <TextField maxLength={255} />
-        </Form.Item>
-        <Form.Item name="description" label="团队简介">
-          <TextAreaField rows={3} maxLength={16000} placeholder="描述团队用途、协作方向" />
-        </Form.Item>
-        <p className="meta">成立于 {formatDate(team.createdAt)}</p>
-        <div className="form__foot form__foot--start">
-          <Button
-            variant="primary"
-            type="submit"
-            icon={<Icon name="check" size={15} />}
-            disabled={update.isPending}
-          >
-            {update.isPending ? '保存中…' : '保存'}
-          </Button>
-        </div>
-      </Form>
-    </Section>
-  )
-}
-
-function Disband({ teamId, name }: { teamId: string; name: string }) {
-  const { message } = App.useApp()
-  const client = useQueryClient()
-  const navigate = useNavigate()
-  const [open, setOpen] = useState(false)
-  const [form] = Form.useForm<{ name: string }>()
-  const disband = useMutation({
-    mutationFn: () => teamApi.disband(teamId),
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: ['teams', 'mine'] })
-      client.removeQueries({ queryKey: ['me'] })
-      useAppUiStore.getState().clearContext()
-      void message.success('团队已解散')
-      navigate(PATHS.APP, { replace: true })
-    },
-  })
-
-  return (
-    <div className="danger">
-      <h2 className="h3">解散团队</h2>
-      <p className="sub">解散后团队下的所有项目、群聊和成员不可恢复。</p>
-      <Button variant="danger" onClick={() => setOpen(true)}>
-        解散团队
-      </Button>
-
-      <Dialog
-        open={open}
-        onClose={() => {
-          setOpen(false)
-          form.resetFields()
-        }}
-        title="解散团队"
-        danger
-        description={`输入团队名称「${name}」确认。此操作不可撤销。`}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          className="form"
-          onFinish={() => disband.mutate()}
-          disabled={disband.isPending}
-          requiredMark={false}
-        >
-          {disband.isError ? <p className="err">{formatApiError(disband.error)}</p> : null}
-          <Form.Item
-            name="name"
-            label="团队名称"
-            rules={[
-              { required: true, whitespace: true, message: '请输入团队名称' },
-              {
-                validator: (_, value: string) =>
-                  value?.trim() === name
-                    ? Promise.resolve()
-                    : Promise.reject(new Error('名称与当前团队不一致')),
-              },
-            ]}
-          >
-            <TextField autoFocus autoComplete="off" />
-          </Form.Item>
-          <div className="dlg__foot">
-            <Button
-              variant="quiet"
-              onClick={() => {
-                setOpen(false)
-                form.resetFields()
-              }}
-            >
-              取消
-            </Button>
-            <Button variant="danger" type="submit" disabled={disband.isPending}>
-              {disband.isPending ? '解散中…' : '解散团队'}
-            </Button>
-          </div>
-        </Form>
-      </Dialog>
-    </div>
   )
 }

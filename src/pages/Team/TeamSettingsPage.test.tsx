@@ -21,7 +21,7 @@ function seed(client: QueryClient, role: TeamRole) {
   client.setQueryData(['teams', 't1', 'invitations'], [])
 }
 
-it('lets the owner adjust roles, invite and confirm disband by name', async () => {
+it('lets the owner adjust roles and invite members', async () => {
   renderWorkspace(
     <TeamSettingsPage />,
     '/app/teams/t1/settings',
@@ -39,9 +39,6 @@ it('lets the owner adjust roles, invite and confirm disband by name', async () =
   fireEvent.click(screen.getByRole('button', { name: '邀请成员' }))
   expect(await screen.findByRole('dialog')).toHaveTextContent('邀请 7 天内有效')
   fireEvent.click(screen.getByRole('button', { name: '取消' }))
-
-  fireEvent.click(screen.getByRole('button', { name: '解散团队' }))
-  expect(await screen.findByRole('dialog')).toHaveTextContent('输入团队名称「砺行科技」确认')
 })
 
 it('shows a 403 explanation to ordinary team members', async () => {
@@ -54,5 +51,6 @@ it('shows a 403 explanation to ordinary team members', async () => {
 
   expect(await screen.findByText('需要团队管理员权限')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '邀请成员' })).not.toBeInTheDocument()
+  expect(screen.queryByText('团队资料')).not.toBeInTheDocument()
   expect(screen.queryByRole('button', { name: '解散团队' })).not.toBeInTheDocument()
 })
