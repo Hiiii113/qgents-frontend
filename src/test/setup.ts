@@ -18,6 +18,16 @@ if (typeof window.matchMedia !== 'function') {
   })
 }
 
+// jsdom 没有实现 <dialog> 的模态方法；设计系统 Dialog 在浏览器里走原生 showModal/close。
+if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+    this.setAttribute('open', '')
+  }
+  HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+    this.removeAttribute('open')
+  }
+}
+
 if (typeof globalThis.ResizeObserver === 'undefined') {
   class TestResizeObserver implements ResizeObserver {
     disconnect(): void {}
