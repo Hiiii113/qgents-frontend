@@ -19,6 +19,7 @@ npm run build
 - 协作规范：[AGENTS.md](AGENTS.md)
 - 当前接口：[docs/api/qgents-api-current.md](docs/api/qgents-api-current.md)
 - 技术约束：[docs/frontend/tech-stack.md](docs/frontend/tech-stack.md)
+- 设计系统：[docs/frontend/design-system.md](docs/frontend/design-system.md)（视觉原型：[design/prototype](design/prototype)）
 - 页面目录及聊天性能：[docs/frontend/structure.md](docs/frontend/structure.md)
 - 部署：[docs/frontend/deployment.md](docs/frontend/deployment.md)
 

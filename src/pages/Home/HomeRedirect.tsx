@@ -1,14 +1,14 @@
 import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Alert, Button } from 'antd'
 import { authApi } from '@/api/auth'
 import { useAuth } from '@/context/AuthContext'
 import { useAppUiStore, useCurrentTeamId } from '@/store/appUiStore'
 import { PageLoader } from '@/components/PageLoader'
 import { PATHS } from '@/routes/paths'
+import { Button, EmptyState } from '@/components/ui'
 
-/** 首页直接进入当前团队的项目，无团队时提供创建或加入入口。 */
+/** 首页直接进入最近团队，无团队时进入欢迎页。 */
 export function HomeRedirect() {
   const teamId = useCurrentTeamId()
   const { hasTeam, setHasTeam } = useAuth()
@@ -29,11 +29,24 @@ export function HomeRedirect() {
   if (!hasTeam) return <Navigate to={PATHS.WELCOME} replace />
   if (me.isError)
     return (
-      <Alert
-        type="error"
-        title="首页加载失败"
-        action={<Button onClick={() => void me.refetch()}>重试</Button>}
-      />
+      <main className="canvas">
+        <div className="sk">
+          <EmptyState
+            title="首页加载失败"
+            description={me.error instanceof Error ? me.error.message : undefined}
+            action={
+              <Button variant="link" onClick={() => void me.refetch()}>
+                重试
+              </Button>
+            }
+            stacked
+          />
+        </div>
+      </main>
     )
-  return <PageLoader />
+  return (
+    <main className="canvas">
+      <PageLoader />
+    </main>
+  )
 }
