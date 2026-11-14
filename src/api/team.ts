@@ -21,33 +21,9 @@ export const teamApi = {
     return request<Team>('/teams', { method: 'POST', body: payload })
   },
 
-  /** POST /teams/{teamId}/avatar/credential — 签发团队头像直传凭证（OSS 未启用时 501） */
-  avatarCredential(teamId: string, input: { mediaType: string; sizeBytes: number }) {
-    return request<{
-      objectKey: string
-      uploadUrl: string
-      method: string
-      headers: Record<string, string>
-      expiresAt: string
-    }>(`/teams/${teamId}/avatar/credential`, { method: 'POST', body: input })
-  },
-
-  /** POST /teams/{teamId}/avatar/confirm — 确认团队头像上传并返回公共读 URL */
-  avatarConfirm(teamId: string, objectKey: string) {
-    return request<{ avatarUrl: string }>(`/teams/${teamId}/avatar/confirm`, {
-      method: 'POST',
-      body: { objectKey },
-    })
-  },
-
   /** GET /teams/{teamId} — 获取团队资料 */
   getById(teamId: string) {
     return request<Team>(`/teams/${teamId}`)
-  },
-
-  /** PATCH /teams/{teamId} — 修改团队资料（仅 Team Owner） */
-  update(teamId: string, payload: Partial<CreateTeamPayload>) {
-    return request<Team>(`/teams/${teamId}`, { method: 'PATCH', body: payload })
   },
 
   /** GET /teams/{teamId}/members — 团队成员列表 */
@@ -100,31 +76,5 @@ export const teamApi = {
     return request<void>(`/teams/${teamId}/members/${userId}`, {
       method: 'DELETE',
     })
-  },
-
-  /** DELETE /teams/{teamId} —— 解散团队（仅 TEAM_OWNER） */
-  disband(teamId: string) {
-    return request<void>(`/teams/${teamId}`, { method: 'DELETE' })
-  },
-
-  /**
-   * 上传团队头像：签发凭证 → 直传 OSS → 确认，服务端确认时直接写入团队头像。
-   * 返回的 URL 即最新头像地址；失败时抛错，由调用方 toast 展示；OSS 未启用时抛 501 错误。
-   */
-  async uploadAvatar(teamId: string, file: File): Promise<string> {
-    const credential = await teamApi.avatarCredential(teamId, {
-      mediaType: file.type,
-      sizeBytes: file.size,
-    })
-    // 用 ArrayBuffer 作 body：fetch 不会自动带 Content-Type 头，避免预签名 PUT 签名不匹配
-    const putRes = await fetch(credential.uploadUrl, {
-      method: 'PUT',
-      body: await file.arrayBuffer(),
-    })
-    if (!putRes.ok) {
-      throw new Error(`团队头像上传失败（${putRes.status}）`)
-    }
-    const result = await teamApi.avatarConfirm(teamId, credential.objectKey)
-    return result.avatarUrl
   },
 }
