@@ -231,63 +231,6 @@ export const identityHandlers = [
     return HttpResponse.json({ data: { avatarUrl } })
   }),
 
-  // ── 团队头像：credential → PUT → confirm，与用户头像同构 ──
-  http.post('/api/teams/:teamId/avatar/credential', async ({ request }) => {
-    const team = MOCK_TEAMS.find((t) => t.id === request.url.split('/teams/')[1]?.split('/')[0])
-    if (!team)
-      return HttpResponse.json(
-        { error: { code: 'NOT_FOUND', message: '团队不存在' } },
-        { status: 404 },
-      )
-    const body = (await request.json()) as { mediaType?: string; sizeBytes?: number }
-    const mediaType = body.mediaType ?? ''
-    if (!mediaType.startsWith('image/')) {
-      return HttpResponse.json(
-        { error: { code: 'INVALID_MEDIA_TYPE', message: '仅支持图片格式' } },
-        { status: 400 },
-      )
-    }
-    const ext = mediaType.split('/')[1] ?? 'png'
-    const objectKey = `teams/${team.id}/mock-${Date.now()}.${ext}`
-    return HttpResponse.json({
-      data: {
-        objectKey,
-        uploadUrl: `/api/mock-team-avatar-upload/${objectKey}`,
-        method: 'PUT',
-        expiresAt: new Date(Date.now() + 900_000).toISOString(),
-        headers: {},
-      },
-    })
-  }),
-
-  // 直传落盘（模拟 OSS 接收团队头像字节）
-  http.put('/api/mock-team-avatar-upload/:objectKey', () =>
-    HttpResponse.json(null, { status: 200 }),
-  ),
-
-  // 确认团队头像上传，写入 teams.avatar_url 并返回公共读 URL
-  http.post('/api/teams/:teamId/avatar/confirm', async ({ request }) => {
-    const teamId = request.url.split('/teams/')[1]?.split('/')[0]
-    const team = MOCK_TEAMS.find((t) => t.id === teamId)
-    if (!team)
-      return HttpResponse.json(
-        { error: { code: 'NOT_FOUND', message: '团队不存在' } },
-        { status: 404 },
-      )
-    const body = (await request.json()) as { objectKey?: string }
-    const objectKey = body.objectKey ?? ''
-    // ：对象键前缀必须匹配 teams/{teamId}/，否则 403
-    if (!objectKey.startsWith(`teams/${teamId}/`)) {
-      return HttpResponse.json(
-        { error: { code: 'AVATAR_OBJECT_KEY_FORBIDDEN', message: '头像对象前缀不匹配' } },
-        { status: 403 },
-      )
-    }
-    const avatarUrl = `https://mock-cdn.example.com/${objectKey}`
-    team.avatarUrl = avatarUrl
-    return HttpResponse.json({ data: { avatarUrl } })
-  }),
-
   http.post('/api/auth/logout', () => HttpResponse.json({ data: null })),
 
   // ── Teams ──
