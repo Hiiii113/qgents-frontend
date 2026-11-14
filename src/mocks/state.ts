@@ -18,7 +18,6 @@ export const MOCK_TEAMS: Team[] = [
     createdAt: '2026-06-01T08:00:00Z',
     role: 'TEAM_OWNER' as const,
     memberCount: 5,
-    avatarUrl: 'https://api.dicebear.com/9.x/initials/svg?seed=星河工作室',
   },
   {
     id: '2',

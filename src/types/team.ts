@@ -11,7 +11,6 @@ export interface Team {
   // 当前用户在团队中的角色
   role?: TeamRole
   description?: string
-  avatarUrl?: string
   createdAt?: string
   // 团队成员数
   memberCount?: number
@@ -27,12 +26,10 @@ export interface TeamMember {
   avatarUrl?: string
 }
 
-// PATCH /teams/{teamId} 请求体；创建团队不接受 avatarUrl
+// POST /teams 请求体
 export interface CreateTeamPayload {
   name: string
   description?: string
-  // 头像由头像上传 confirm 写入；这里仅用空串清空，非空地址会被服务端拒绝
-  avatarUrl?: string
 }
 
 // POST /teams/{teamId}/invitations 请求体

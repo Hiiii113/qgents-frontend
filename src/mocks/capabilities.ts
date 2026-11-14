@@ -181,12 +181,6 @@ export const capabilityHandlers = [
   ),
   http.post('/api/notifications/read-all', () => HttpResponse.json({ data: null })),
   http.post('/api/notifications/:id/read', () => HttpResponse.json({ data: null })),
-  http.post('/api/projects/:projectId/avatar/credential', () =>
-    HttpResponse.json(
-      { error: { code: 'AVATAR_STORAGE_NOT_CONFIGURED', message: '演示环境未配置头像存储' } },
-      { status: 501 },
-    ),
-  ),
   http.post('/api/projects/:projectId/attachments', () =>
     HttpResponse.json(
       { error: { code: 'ATTACHMENT_STORAGE_NOT_CONFIGURED', message: '演示环境未配置附件存储' } },

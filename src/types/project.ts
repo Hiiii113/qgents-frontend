@@ -10,8 +10,6 @@ export interface Project {
   teamId: string
   name: string
   description?: string
-  // 项目头像 URL（OSS 公共读长期地址，可为空）
-  avatarUrl?: string
   createdAt?: string
   // 当前用户在项目中的角色（后端字段名为 role，非 myRole）
   role?: ProjectRole
@@ -43,8 +41,6 @@ export interface CreateProjectPayload {
   description?: string
   // 初始项目成员 userId 列表
   memberIds?: string[]
-  // 头像由头像上传 confirm 写入；PATCH 仅接受空串清空，非空地址会被服务端拒绝
-  avatarUrl?: string
 }
 
 export type UpdateProjectPayload = Partial<CreateProjectPayload>

@@ -261,27 +261,6 @@ export const identityHandlers = [
     return HttpResponse.json({ data: team })
   }),
 
-  http.patch('/api/teams/:teamId', async ({ params, request }) => {
-    const body = (await request.json()) as {
-      name?: string
-      description?: string
-      avatarUrl?: string
-    }
-    const team = MOCK_TEAMS.find((t) => t.id === params.teamId)
-    if (!team)
-      return HttpResponse.json(
-        { error: { code: 'NOT_FOUND', message: '团队不存在' } },
-        { status: 404 },
-      )
-    // ：avatarUrl 空串清空，null 保留原值
-    if (body.avatarUrl === '') {
-      delete body.avatarUrl
-      team.avatarUrl = undefined
-    }
-    Object.assign(team, body)
-    return HttpResponse.json({ data: team })
-  }),
-
   http.get('/api/teams/:teamId/members', ({ params }) => {
     const members =
       Number(params.teamId) >= 10
