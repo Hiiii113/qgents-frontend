@@ -1,0 +1,94 @@
+/* 项目记忆：memory.md 的文档排版；TOC 与分栏来自设计系统。 */
+.memory-doc {
+  max-height: none;
+  overflow-wrap: anywhere;
+}
+
+.memory-doc ol {
+  padding-left: 24px;
+  margin: var(--s-2) 0;
+  font-size: var(--t-body);
+  line-height: 1.7;
+  color: var(--ink-700);
+}
+
+.memory-doc h1,
+.memory-doc h3,
+.memory-doc h4 {
+  margin: var(--s-6) 0 var(--s-2);
+  color: var(--ink-900);
+  font-weight: 600;
+  scroll-margin-top: var(--s-6);
+}
+
+.memory-doc h1 {
+  font-size: var(--t-h2);
+}
+
+.memory-doc h3,
+.memory-doc h4 {
+  font-size: var(--t-ui);
+}
+
+.memory-doc blockquote {
+  margin: var(--s-3) 0;
+  padding-left: var(--s-4);
+  border-left: 2px solid var(--line-strong);
+  color: var(--ink-500);
+}
+
+.memory-doc pre {
+  margin: var(--s-3) 0;
+  padding: var(--s-3);
+  overflow-x: auto;
+  background: var(--surface-sunken);
+  border-radius: var(--r-sm);
+  font-size: var(--t-sm);
+  line-height: 1.7;
+}
+
+.memory-doc pre code {
+  padding: 0;
+  background: none;
+}
+
+.memory-doc table {
+  width: 100%;
+  margin: var(--s-3) 0;
+  border-collapse: collapse;
+  font-size: var(--t-sm);
+}
+
+.memory-doc th,
+.memory-doc td {
+  padding: var(--s-2) var(--s-3);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.memory-doc th {
+  color: var(--ink-400);
+  font-weight: 500;
+  border-bottom-color: var(--line-strong);
+}
+
+.memory-doc hr {
+  margin: var(--s-5) 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.memory-doc img {
+  max-width: 100%;
+}
+
+/* 字符数与最后修改：文档末尾的元信息，与正文用行界分开。 */
+.memory-doc__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-top: var(--s-6);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}

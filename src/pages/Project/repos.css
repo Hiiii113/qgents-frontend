@@ -1,0 +1,36 @@
+/* 仓库页：仓库地址可换行并可直接打开，导入弹窗的候选项局部滚动。 */
+.repo-name .meta {
+  overflow-wrap: anywhere;
+}
+
+.repo-url {
+  color: var(--mark);
+}
+
+.repo-search {
+  width: 100%;
+}
+
+.repo-search input {
+  width: 100%;
+}
+
+.repo-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  max-height: 280px;
+  overflow-y: auto;
+  padding: var(--s-1);
+}
+
+.repo-list .check {
+  display: flex;
+  align-items: flex-start;
+  overflow-wrap: anywhere;
+}
+
+.repo-list .check input {
+  margin-top: 2px;
+  flex: none;
+}
