@@ -1,14 +1,21 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Alert, Button, Form, Input, Modal, Select } from 'antd'
+import { App, Checkbox, Form } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
 import { teamApi } from '@/api/team'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
-import type { CreateProjectPayload } from '@/types/project'
 import { useAuth } from '@/context/AuthContext'
+import { Button, Dialog, TextAreaField, TextField } from '@/components/ui'
 
+interface Values {
+  name: string
+  description?: string
+  memberIds?: string[]
+}
+
+/** 新建项目：自动生成默认 Agent 与默认群，可顺手加入团队成员。 */
 export function CreateProjectModal({
   teamId,
   open,
@@ -19,9 +26,10 @@ export function CreateProjectModal({
   onClose: () => void
 }) {
   const navigate = useNavigate()
+  const { message } = App.useApp()
   const { user } = useAuth()
   const client = useQueryClient()
-  const [form] = Form.useForm<Omit<CreateProjectPayload, 'teamId'>>()
+  const [form] = Form.useForm<Values>()
   const [error, setError] = useState<string | null>(null)
   const members = useQuery({
     queryKey: ['teams', teamId, 'members'],
@@ -29,7 +37,7 @@ export function CreateProjectModal({
     enabled: open && Boolean(teamId),
   })
   const create = useMutation({
-    mutationFn: (values: Omit<CreateProjectPayload, 'teamId'>) =>
+    mutationFn: (values: Values) =>
       projectApi.create({
         teamId,
         name: values.name.trim(),
@@ -41,59 +49,62 @@ export function CreateProjectModal({
       form.resetFields()
       setError(null)
       onClose()
+      void message.success('项目已创建')
       navigate(PATHS.projectChat(project.id))
     },
     onError: (failure) => setError(formatApiError(failure)),
   })
+
   return (
-    <Modal
-      title="创建项目"
+    <Dialog
       open={open}
-      onCancel={onClose}
-      onOk={() => form.submit()}
-      confirmLoading={create.isPending}
-      okText="创建"
-      cancelText="取消"
+      onClose={onClose}
+      title="新建项目"
+      description="创建后会自动生成该项目的默认 Agent 与一个默认群。"
     >
-      {error && <Alert type="error" showIcon title={error} />}
       <Form
         form={form}
         layout="vertical"
+        className="form"
         onFinish={(values) => create.mutate(values)}
         disabled={create.isPending}
+        requiredMark={false}
       >
+        {error ? <p className="err">{error}</p> : null}
         <Form.Item
           name="name"
           label="项目名称"
-          rules={[{ required: true, whitespace: true, message: '请输入项目名称' }, { max: 255 }]}
+          rules={[
+            { required: true, whitespace: true, message: '请输入项目名称' },
+            { max: 255, message: '项目名称最多 255 个字符' },
+          ]}
         >
-          <Input maxLength={255} placeholder="例如：新版控制台" />
+          <TextField maxLength={255} placeholder="例如：qgents-web" autoFocus />
         </Form.Item>
-        <Form.Item name="description" label="项目描述">
-          <Input.TextArea maxLength={16000} rows={3} placeholder="项目要解决的问题或范围（可选）" />
+        <Form.Item name="description" label="项目说明">
+          <TextAreaField rows={3} maxLength={16000} placeholder="项目要解决的问题或范围（可选）" />
         </Form.Item>
-        <Form.Item name="memberIds" label="邀请团队成员">
-          <Select
-            mode="multiple"
-            loading={members.isPending}
-            optionFilterProp="label"
-            placeholder="选择团队成员（可选）"
-            options={members.data
-              ?.filter((member) => member.userId !== user?.id && member.role !== 'TEAM_OWNER')
-              .map((member) => ({
-                value: member.userId,
-                label: member.displayName || member.email || member.userId,
-              }))}
-          />
-        </Form.Item>
-        {members.isError && (
-          <Alert
-            type="warning"
-            title="团队成员加载失败，可创建后再添加成员"
-            action={<Button onClick={() => void members.refetch()}>重试</Button>}
-          />
-        )}
+        {members.data && members.data.length > 0 ? (
+          <Form.Item name="memberIds" label="加入项目成员">
+            <Checkbox.Group
+              options={members.data
+                .filter((member) => member.userId !== user?.id && member.role !== 'TEAM_OWNER')
+                .map((member) => ({
+                  value: member.userId,
+                  label: member.displayName || member.email || member.userId,
+                }))}
+            />
+          </Form.Item>
+        ) : null}
+        <div className="dlg__foot">
+          <Button variant="quiet" onClick={onClose}>
+            取消
+          </Button>
+          <Button variant="primary" type="submit" disabled={create.isPending}>
+            {create.isPending ? '创建中…' : '创建项目'}
+          </Button>
+        </div>
       </Form>
-    </Modal>
+    </Dialog>
   )
 }

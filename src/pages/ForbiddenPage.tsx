@@ -1,23 +1,26 @@
 import { useNavigate } from 'react-router-dom'
-import { Button } from 'antd'
-import { PATHS } from '@/routes/paths'
-import './StatusPage.css'
+import { Button, Icon } from '@/components/ui'
 
-/**
- * 403 页面 —— 权限不足时展示
- */
+/** 403：角色不足时展示，给两条出口。 */
 export default function ForbiddenPage() {
   const navigate = useNavigate()
-
   return (
-    <main className="status-page">
-      <div className="status-page__inner">
-        <p className="status-page__code qg-num">403</p>
-        <h1 className="status-page__title">暂无访问权限</h1>
-        <p className="status-page__desc">你当前的团队或项目角色无法访问此页面。</p>
-        <Button type="primary" onClick={() => navigate(PATHS.APP, { replace: true })}>
-          返回团队首页
-        </Button>
+    <main className="status">
+      <div className="status__box">
+        <span className="status__icon" aria-hidden>
+          <Icon name="lock" size={22} />
+        </span>
+        <p className="status__code mono">403</p>
+        <h1 className="status__title">需要团队管理员权限</h1>
+        <p className="sub">
+          你在这个团队里的角色是「成员」。成员管理、邀请与 GitHub 授权只对团队管理员开放。
+        </p>
+        <div className="status__actions">
+          <Button variant="primary" onClick={() => navigate('/app', { replace: true })}>
+            回到团队首页
+          </Button>
+        </div>
+        <p className="meta">要换到其他团队，去产品设置的「团队」页签。角色由团队管理员调整。</p>
       </div>
     </main>
   )

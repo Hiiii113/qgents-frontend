@@ -1,4 +1,5 @@
 import { AppRouter } from '@/routes'
+import { IconSprite } from '@/components/ui'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 /**
@@ -8,6 +9,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 function App() {
   return (
     <ErrorBoundary>
+      <IconSprite />
       <AppRouter />
     </ErrorBoundary>
   )

@@ -1,0 +1,268 @@
+/**
+ * 全局基础样式：重置、排版、工具类与品牌标记。
+ * 具体数值来自 src/theme/tokens.ts，这里只引用变量。
+ */
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--t-ui);
+  line-height: 1.55;
+  color: var(--ink-900);
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+button {
+  font: inherit;
+  color: inherit;
+}
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+code,
+kbd,
+.mono {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+}
+code {
+  background: var(--surface-sunken);
+  border-radius: var(--r-xs);
+  padding: 0.1em 0.35em;
+}
+a {
+  color: var(--mark);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+:focus-visible {
+  outline: 2px solid var(--mark);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+::selection {
+  background: var(--mark-soft);
+  color: var(--mark-strong);
+}
+::placeholder {
+  color: var(--ink-400);
+  opacity: 1;
+}
+
+/* 浏览器自动填充保持纸底色，不出现淡蓝底。 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset;
+  -webkit-text-fill-color: var(--ink-900);
+  caret-color: var(--ink-900);
+  transition: background-color 9999s ease-out;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip {
+  position: fixed;
+  top: -100px;
+  left: 12px;
+  z-index: 60;
+  background: var(--action);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: var(--r-sm);
+}
+.skip:focus {
+  top: 12px;
+}
+.od-icon {
+  display: inline-block;
+  inline-size: var(--od-icon-size, 1em);
+  block-size: var(--od-icon-size, 1em);
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -0.15em;
+}
+.od-fill {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.od-truncate {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.od-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+/* 品牌标记：墨环 + 朱砂点，全站唯一写出品牌的图形。 */
+.mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--ink-900);
+}
+.mark__svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+.mark--lg {
+  width: 40px;
+  height: 40px;
+}
+.mark--lg .mark__svg {
+  width: 40px;
+  height: 40px;
+}
+
+/* 排版层级：显示 30，标题 24，区块 20，正文 16，UI 14，元信息 12。 */
+.h1 {
+  font-size: var(--t-h1);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.h1 .mono {
+  font-size: 0.78em;
+  letter-spacing: -0.01em;
+}
+.h2 {
+  font-size: var(--t-body);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.h3 {
+  font-size: var(--t-ui);
+  font-weight: 600;
+}
+.kicker {
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+  letter-spacing: 0.02em;
+}
+.sub {
+  font-size: var(--t-ui);
+  color: var(--ink-500);
+  max-width: 62ch;
+}
+.sub--inverse {
+  max-width: 40ch;
+}
+.meta {
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+}
+.name {
+  font-size: var(--t-ui);
+  font-weight: 500;
+}
+.note {
+  margin-top: var(--s-3);
+  font-size: var(--t-sm);
+  color: var(--ink-500);
+  max-width: 78ch;
+}
+.note--ok {
+  color: var(--ok);
+}
+.note--error {
+  color: var(--danger);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.row--tight {
+  gap: var(--s-2);
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  display: inline-block;
+  flex: none;
+}
+.dot--mark {
+  background: var(--mark);
+}
+.dot--ok {
+  background: var(--ok);
+}
+.dot--fail {
+  background: var(--danger);
+}
+.dot--halt {
+  background: var(--mark);
+}
+.dot--live {
+  background: var(--mark);
+  animation: qg-pulse 1.6s var(--ease) infinite;
+}
+@keyframes qg-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

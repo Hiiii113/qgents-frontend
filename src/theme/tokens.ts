@@ -1,114 +1,149 @@
 /**
- * 设计 token 单一来源。
+ * 设计 token 单一来源 —— 「案头朱批」体系。
  *
- * 数值只在这里定义一次：`applyDesignTokens()` 把它们写成 :root 的 CSS 变量，
- * antd 主题从同一份对象取值，页面 CSS 只引用变量名。页面里不写死颜色、圆角、间距。
- *
- * 变量按语义命名（面 / 墨 / 线 / 状态），不按明暗命名：后续加深色主题时只换值，
- * 不换结构，页面不用改一行。
+ * 分三层：原始值（PRIMITIVES）→ 语义（T）→ CSS 变量（cssVars）。
+ * 组件样式只引用 CSS 变量，页面不写死颜色、圆角、字号、间距。
+ * 朱砂只标人的动作与所在位置，墨绿=完成，琥珀=等待，深红=不可逆。
  */
-/**
- * 品牌字体栈。Geist 不含汉字，必须把中文无衬线字体写在 generic sans-serif 之前，
- * 否则 Windows 会把中文回退成宋体。antd 主题与 CSS 变量共用同一串。
- */
-export const FONT_SANS =
-  "Geist, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif"
 
-export const T = {
-  // 墨：正文与结构
-  ink900: '#16181A',
-  ink700: '#3A4046',
-  ink500: '#5E666D',
-  ink400: '#68717A',
-  ink300: '#A7AEB3',
-  // 面：页面底、容器、凹陷区
-  paper: '#FAFAF9',
-  paperRaised: '#FFFFFF',
-  paperSunken: '#F4F6F6',
-  // 线：只作行界，不做装饰
-  rule: '#EDEFF0',
-  ruleStrong: '#DDE1E3',
-  // 牌头带：深墨横贯顶栏，承担「你在哪个团队、哪个项目」
-  band: '#14202B',
-  bandInk: '#F4F6F7',
-  bandInkMuted: '#B9C2C8',
-  bandInkStrong: '#FFFFFF',
-  // 强调：牌头同族的蓝，只出现在主要动作与选中态
-  accent: '#2A5D8F',
-  accentStrong: '#1E4770',
-  accentSoft: '#EAF1F7',
-  // 状态：琥珀只表示变更/进行中，红只表示失败或叫停，完成用墨
-  success: '#0F7A6B',
-  warning: '#8A5200',
-  danger: '#A32020',
+/** 原始色值。语义层从这里取，不在组件里直接使用。 */
+const PRIMITIVES = {
+  white: '#FFFFFF',
+  gray50: '#FCFCFD',
+  gray100: '#F6F7F8',
+  gray150: '#EEF0F2',
+  gray200: '#E3E6E9',
+  gray300: '#CED4DA',
+  gray400: '#9AA3AC',
+  gray500: '#6E7780',
+  gray600: '#59626B',
+  gray700: '#333A41',
+  gray900: '#14171A',
+  red700: '#B03A2B',
+  red800: '#8C2B1F',
+  red050: '#F9EAE7',
+  green700: '#1F6B4A',
+  green050: '#EAF3EE',
+  amber700: '#8A5A00',
+  amber050: '#F8F0DF',
+  crimson700: '#A2261C',
+  crimson050: '#FBECEA',
+  ink900: '#191D21',
+  ink800: '#2B323A',
+  black: '#000000',
 } as const
 
+/** 语义 token：按用途命名，不按明暗命名。 */
+export const T = {
+  // 面
+  surface: PRIMITIVES.white,
+  surfaceSoft: PRIMITIVES.gray100,
+  surfaceSunken: PRIMITIVES.gray150,
+  surfaceRail: PRIMITIVES.gray50,
+  // 墨
+  ink900: PRIMITIVES.gray900,
+  ink700: PRIMITIVES.gray700,
+  ink500: PRIMITIVES.gray600,
+  ink400: PRIMITIVES.gray500,
+  ink300: PRIMITIVES.gray400,
+  // 线
+  line: PRIMITIVES.gray200,
+  lineStrong: PRIMITIVES.gray300,
+  // 朱砂：只标记人的决定
+  mark: PRIMITIVES.red700,
+  markStrong: PRIMITIVES.red800,
+  markSoft: PRIMITIVES.red050,
+  // 状态
+  ok: PRIMITIVES.green700,
+  okSoft: PRIMITIVES.green050,
+  wait: PRIMITIVES.amber700,
+  waitSoft: PRIMITIVES.amber050,
+  danger: PRIMITIVES.crimson700,
+  dangerSoft: PRIMITIVES.crimson050,
+  // 实心动作
+  action: PRIMITIVES.ink900,
+  actionHover: PRIMITIVES.ink800,
+} as const
+
+/**
+ * 品牌字体栈。Geist 不含汉字，中文回退必须写在 generic sans-serif 之前，
+ * 否则 Windows 会用宋体画汉字。
+ */
+export const FONT_SANS =
+  "'Geist', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif"
+
+export const FONT_MONO =
+  "'Geist Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace"
+
+/** 浮层与对话框唯一允许的阴影；页面本身不用阴影分层。 */
+export const SHADOW = '0 12px 32px rgba(16, 20, 24, .12), 0 2px 6px rgba(16, 20, 24, .06)'
+
 export const cssVars: Record<string, string> = {
+  '--surface': T.surface,
+  '--surface-soft': T.surfaceSoft,
+  '--surface-sunken': T.surfaceSunken,
+  '--surface-rail': T.surfaceRail,
+
   '--ink-900': T.ink900,
   '--ink-700': T.ink700,
   '--ink-500': T.ink500,
   '--ink-400': T.ink400,
   '--ink-300': T.ink300,
-  '--paper': T.paper,
-  '--paper-raised': T.paperRaised,
-  '--paper-sunken': T.paperSunken,
-  '--rule': T.rule,
-  '--rule-strong': T.ruleStrong,
-  '--band': T.band,
-  '--band-ink': T.bandInk,
-  '--band-ink-muted': T.bandInkMuted,
-  '--band-ink-strong': T.bandInkStrong,
-  '--accent': T.accent,
-  '--accent-strong': T.accentStrong,
-  '--accent-soft': T.accentSoft,
-  '--success': T.success,
-  '--warning': T.warning,
+
+  '--line': T.line,
+  '--line-strong': T.lineStrong,
+
+  '--mark': T.mark,
+  '--mark-strong': T.markStrong,
+  '--mark-soft': T.markSoft,
+
+  '--ok': T.ok,
+  '--ok-soft': T.okSoft,
+  '--wait': T.wait,
+  '--wait-soft': T.waitSoft,
   '--danger': T.danger,
+  '--danger-soft': T.dangerSoft,
 
-  // 间距：4 的倍数，页面只用这些档位
-  '--space-1': '4px',
-  '--space-2': '8px',
-  '--space-3': '12px',
-  '--space-4': '16px',
-  '--space-6': '24px',
-  '--space-8': '32px',
-  '--space-12': '48px',
-  '--space-16': '64px',
-  '--space-24': '96px',
+  '--action': T.action,
+  '--action-hover': T.actionHover,
+  '--shadow': SHADOW,
 
-  // 圆角：控件 10–14px，只有标签用 pill
-  '--radius-s': '8px',
-  '--radius-m': '10px',
-  '--radius-pill': '999px',
-  '--radius-avatar': '10px',
-  '--radius-bubble': '14px',
-  '--radius-inset': '10px',
-  '--radius-card': '14px',
+  // 圆角：小件 3–4，控件 4，面板 6，对话框与头像 8，标签 3
+  '--r-xs': '3px',
+  '--r-sm': '4px',
+  '--r-md': '6px',
+  '--r-lg': '8px',
+  '--r-pill': '999px',
 
-  // 字号：正文 16px，控件 14px，最小可用字号 12px
-  '--text-xs': '12px',
-  '--text-sm': '13px',
-  '--text-ui': '14px',
-  '--text-base': '16px',
-  '--text-lead': '18px',
-  '--text-h3': '20px',
-  '--text-h2': '26px',
-  '--text-h1': '32px',
-  '--text-display': '32px',
+  // 字号：正文 16，UI 14，最小 12
+  '--t-xs': '12px',
+  '--t-sm': '13px',
+  '--t-ui': '14px',
+  '--t-body': '16px',
+  '--t-lead': '18px',
+  '--t-h3': '20px',
+  '--t-h2': '24px',
+  '--t-h1': '30px',
 
-  '--qg-font': FONT_SANS,
+  // 间距：4 的倍数
+  '--s-1': '4px',
+  '--s-2': '8px',
+  '--s-3': '12px',
+  '--s-4': '16px',
+  '--s-5': '20px',
+  '--s-6': '24px',
+  '--s-8': '32px',
+  '--s-10': '40px',
 
-  // 等宽字体：时间、序号、代码 —— 出发板的数字列靠它对齐
-  '--font-mono': "'Geist Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace",
+  '--ease': 'cubic-bezier(.2, .7, .2, 1)',
+  '--d-fast': '120ms',
+  '--d-base': '180ms',
 
-  // 动效：短、克制，只动不透明度与颜色
-  '--ease': 'cubic-bezier(0.2, 0, 0, 1)',
-  '--dur-fast': '120ms',
-  '--dur-base': '180ms',
-  '--dur-slow': '240ms',
+  '--font': FONT_SANS,
+  '--mono': FONT_MONO,
 }
 
-/** 在首次渲染前把 token 写进 :root；与 antd 主题共用同一份数值。 */
+/** 在首屏渲染前把 token 写进 :root；antd 主题共用同一份数值。 */
 export function applyDesignTokens() {
   const root = document.documentElement
   for (const [name, value] of Object.entries(cssVars)) root.style.setProperty(name, value)

@@ -1,0 +1,451 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { App } from 'antd'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { authApi, notificationApi } from '@/api'
+import { useAuth } from '@/context/AuthContext'
+import { useAppUiStore } from '@/store/appUiStore'
+import { PATHS } from '@/routes/paths'
+import { formatApiError } from '@/utils/formatApiError'
+import { formatRelativeTime } from '@/utils/formatRelativeTime'
+import { useNotificationEvents } from '@/realtime/useNotificationEvents'
+import { useRealtimeConnectionStatus } from '@/realtime/realtimeClient'
+import type { Notification, Project, Team } from '@/types'
+import { Button, Icon, IconButton, Popover } from '@/components/ui'
+
+type Panel = 'project' | 'search' | 'bell' | 'me'
+
+interface AppBarProps {
+  mode: 'project' | 'team' | 'settings'
+  team: Team | undefined
+  projects: Project[] | undefined
+  projectsPending: boolean
+  project: Project | undefined
+  projectId: string | null
+  chatEnabled: boolean
+  onOpenCreateProject: () => void
+}
+
+/** 56px 顶栏：项目切换器（带搜索）、通知、群聊开关。团队切换只在产品设置里。 */
+export function AppBar({
+  mode,
+  team,
+  projects,
+  projectsPending,
+  project,
+  projectId,
+  chatEnabled,
+  onOpenCreateProject,
+}: AppBarProps) {
+  const [panel, setPanel] = useState<Panel | null>(null)
+  const close = () => setPanel(null)
+  const chatOpen = useAppUiStore((state) => state.chatContextOpen)
+  const setChatOpen = useAppUiStore((state) => state.setChatContextOpen)
+
+  const crumbLabel = mode === 'project' ? '项目' : mode === 'team' ? '团队' : '设置'
+  const crumbValue =
+    mode === 'project' ? (project?.name ?? '…') : mode === 'team' ? (team?.name ?? '…') : '账户与团队'
+
+  return (
+    <header className="appbar">
+      {mode === 'project' ? (
+        <div className="anchored">
+          <button
+            type="button"
+            className="crumb crumb--project"
+            aria-haspopup="menu"
+            aria-expanded={panel === 'project'}
+            onClick={() => setPanel(panel === 'project' ? null : 'project')}
+          >
+            <span className="crumb__label">{crumbLabel}</span>
+            <span className="crumb__value">{crumbValue}</span>
+            <Icon name="chevron" size={14} />
+          </button>
+          <Popover open={panel === 'project'} onClose={close} align="start" className="popover--wide">
+            <ProjectMenu
+              projects={projects}
+              projectsPending={projectsPending}
+              currentId={projectId}
+              teamId={team?.id}
+              onNavigate={close}
+              onCreate={() => {
+                close()
+                onOpenCreateProject()
+              }}
+            />
+          </Popover>
+        </div>
+      ) : (
+        <span className="crumb">
+          <span className="crumb__label">{crumbLabel}</span>
+          <span className="crumb__value">{crumbValue}</span>
+        </span>
+      )}
+
+      <div className="appbar__right">
+        <div className="anchored">
+          <button
+            type="button"
+            className="searchbtn"
+            aria-haspopup="dialog"
+            aria-expanded={panel === 'search'}
+            onClick={() => setPanel(panel === 'search' ? null : 'search')}
+          >
+            <Icon name="search" size={16} />
+            <span>搜索项目</span>
+            <kbd>⌘K</kbd>
+          </button>
+          <Popover open={panel === 'search'} onClose={close} align="end" className="popover--search">
+            <ProjectSearch
+              projects={projects}
+              pending={projectsPending}
+              onNavigate={close}
+              onClose={close}
+            />
+          </Popover>
+        </div>
+
+        <div className="anchored">
+          <NotificationBell open={panel === 'bell'} onToggle={() => setPanel(panel === 'bell' ? null : 'bell')} onClose={close} />
+        </div>
+
+        {chatEnabled ? (
+          <IconButton
+            label={chatOpen ? '收起群聊列表' : '展开群聊列表'}
+            className="ctx-toggle"
+            aria-expanded={chatOpen}
+            onClick={() => setChatOpen(!chatOpen)}
+          >
+            <Icon name="inbox" size={16} />
+          </IconButton>
+        ) : null}
+      </div>
+    </header>
+  )
+}
+
+function ProjectMenu({
+  projects,
+  projectsPending,
+  currentId,
+  teamId,
+  onNavigate,
+  onCreate,
+}: {
+  projects: Project[] | undefined
+  projectsPending: boolean
+  currentId: string | null
+  teamId: string | undefined
+  onNavigate: () => void
+  onCreate: () => void
+}) {
+  const navigate = useNavigate()
+  return (
+    <>
+      <p className="popover__label">切换项目</p>
+      {projectsPending ? (
+        <p className="popover__empty">正在加载项目…</p>
+      ) : !projects?.length ? (
+        <p className="popover__empty">当前团队还没有项目。</p>
+      ) : (
+        <ul className="menu">
+          {projects.map((item) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                className="menu__item"
+                aria-current={item.id === currentId}
+                onClick={() => {
+                  onNavigate()
+                  navigate(PATHS.projectChat(item.id))
+                }}
+              >
+                <span>{item.name}</span>
+                {item.status === 'ARCHIVED' ? <span className="meta">已归档</span> : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="popover__foot">
+        <button
+          type="button"
+          className="menu__item menu__item--quiet"
+          onClick={onCreate}
+        >
+          新建项目
+        </button>
+        <button
+          type="button"
+          className="menu__item menu__item--quiet"
+          onClick={() => {
+            onNavigate()
+            navigate(teamId ? PATHS.teamDetail(teamId) : PATHS.APP)
+          }}
+        >
+          项目管理
+        </button>
+      </div>
+    </>
+  )
+}
+
+function ProjectSearch({
+  projects,
+  pending,
+  onNavigate,
+  onClose,
+}: {
+  projects: Project[] | undefined
+  pending: boolean
+  onNavigate: () => void
+  onClose: () => void
+}) {
+  const navigate = useNavigate()
+  const [term, setTerm] = useState('')
+  const matches = useMemo(() => {
+    const keyword = term.trim().toLowerCase()
+    if (!keyword) return projects ?? []
+    return (projects ?? []).filter(
+      (item) =>
+        item.name.toLowerCase().includes(keyword) ||
+        (item.description ?? '').toLowerCase().includes(keyword),
+    )
+  }, [projects, term])
+
+  // ⌘K / Ctrl+K 打开，Esc 关闭；输入即筛，回车进第一项。
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        const trigger = document.querySelector<HTMLButtonElement>('.searchbtn')
+        trigger?.click()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const open = (project: Project) => {
+    onNavigate()
+    navigate(PATHS.projectChat(project.id))
+  }
+
+  return (
+    <>
+      <label className="sr" htmlFor="project-search">
+        搜索项目
+      </label>
+      <input
+        id="project-search"
+        type="search"
+        autoFocus
+        placeholder="输入项目名或仓库名"
+        value={term}
+        onChange={(event) => setTerm(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && matches[0]) open(matches[0])
+          if (event.key === 'Escape') onClose()
+        }}
+      />
+      {pending ? (
+        <p className="popover__empty">正在加载项目…</p>
+      ) : matches.length === 0 ? (
+        <p className="popover__empty">没有匹配的项目。</p>
+      ) : (
+        <ul className="menu">
+          {matches.map((item) => (
+            <li key={item.id}>
+              <button type="button" className="menu__item" onClick={() => open(item)}>
+                <span>{item.name}</span>
+                {item.status === 'ARCHIVED' ? <span className="meta">已归档</span> : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  )
+}
+
+function NotificationBell({
+  open,
+  onToggle,
+  onClose,
+}: {
+  open: boolean
+  onToggle: () => void
+  onClose: () => void
+}) {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const realtimeStatus = useRealtimeConnectionStatus()
+  useNotificationEvents(realtimeStatus !== 'connected')
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => notificationApi.list(),
+  })
+  const unread = notifications.filter((item) => !item.isRead).length
+  const markRead = useMutation({
+    mutationFn: (id: string) => notificationApi.markRead(id),
+    onSettled: () => void queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  })
+  const markAll = useMutation({
+    mutationFn: () => notificationApi.markAllRead(),
+    onSettled: () => void queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  })
+
+  const openNotification = (item: Notification) => {
+    if (!item.isRead) markRead.mutate(item.id)
+    onClose()
+    const target = targetPath(item)
+    if (target) navigate(target)
+  }
+
+  return (
+    <>
+      <IconButton
+        label="通知"
+        square
+        className="bellbtn"
+        aria-expanded={open}
+        onClick={onToggle}
+      >
+        <Icon name="bell" size={16} />
+        {unread > 0 ? <span className="dot dot--mark bellbtn__dot" aria-hidden /> : null}
+      </IconButton>
+      <Popover open={open} onClose={onClose} align="end" className="popover--bell">
+        <div className="row" style={{ justifyContent: 'space-between', padding: '0 4px 6px' }}>
+          <p className="popover__label">通知</p>
+          {notifications.length > 0 ? (
+            <Button
+              variant="link"
+              size="sm"
+              disabled={unread === 0 || markAll.isPending}
+              onClick={() => markAll.mutate()}
+            >
+              全部已读
+            </Button>
+          ) : null}
+        </div>
+        {notifications.length === 0 ? (
+          <p className="popover__empty">还没有通知。有人提到你或邀请你时会出现在这里。</p>
+        ) : (
+          <ul className="menu">
+            {notifications.map((item) => (
+              <li key={item.id}>
+                <button type="button" className="menu__item" onClick={() => openNotification(item)}>
+                  <span>
+                    <span className="notif__title">
+                      {!item.isRead ? <span className="dot dot--mark" aria-hidden /> : null}
+                      {item.title}
+                    </span>
+                    <span className="notif__meta">
+                      {item.description ? `${item.description} · ` : ''}
+                      {formatRelativeTime(item.createdAt)}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Popover>
+    </>
+  )
+}
+
+/** 通知 → 目标路由；没有对应项目时留在原页。 */
+function targetPath(item: Notification): string | null {
+  if (item.kind === 'INVITED') return PATHS.JOIN_TEAM
+  if (!item.projectId) return null
+  return PATHS.projectChat(
+    item.projectId,
+    item.kind === 'MESSAGE_MENTION' ? item.resourceId : undefined,
+    item.groupId,
+  )
+}
+
+/** 头像菜单：改昵称、进产品设置、退出。头像与团队切换在产品设置里。 */
+export function MeMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const navigate = useNavigate()
+  const { message } = App.useApp()
+  const { user, logout, updateUser } = useAuth()
+  const [name, setName] = useState(user?.displayName ?? '')
+  const dirty = name.trim() !== (user?.displayName ?? '')
+  const save = useMutation({
+    mutationFn: (displayName: string) => authApi.updateMe({ displayName }),
+    onSuccess: (updated) => {
+      updateUser(updated)
+      setName(updated.displayName)
+      void message.success('昵称已更新')
+    },
+    onError: (error) => void message.error(formatApiError(error)),
+  })
+
+  useEffect(() => {
+    if (open) setName(user?.displayName ?? '')
+  }, [open, user?.displayName])
+
+  return (
+    <Popover open={open} onClose={onClose} align="end" className="popover--me">
+      <div className="popover__me">
+        <span className="avatar avatar--lg">
+          {user?.avatarUrl ? (
+            <img src={user.avatarUrl} alt={user.displayName} />
+          ) : (
+            (user?.displayName ?? '?').slice(0, 1)
+          )}
+        </span>
+        <div className="od-fill">
+          <label className="sr" htmlFor="me-name">
+            昵称
+          </label>
+          <input
+            id="me-name"
+            className="inline-edit"
+            value={name}
+            maxLength={120}
+            onChange={(event) => setName(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && dirty && name.trim()) save.mutate(name.trim())
+            }}
+          />
+          <p className="meta mono">{user?.email}</p>
+        </div>
+        <Button
+          variant="quiet"
+          size="sm"
+          disabled={!dirty || !name.trim() || save.isPending}
+          onClick={() => save.mutate(name.trim())}
+        >
+          保存
+        </Button>
+      </div>
+      <div className="popover__foot">
+        <button
+          type="button"
+          className="menu__item menu__item--quiet"
+          onClick={() => {
+            onClose()
+            navigate(PATHS.SETTINGS)
+          }}
+        >
+          产品设置
+        </button>
+        <button
+          type="button"
+          className="menu__item menu__item--quiet"
+          onClick={async () => {
+            await logout()
+            onClose()
+            navigate(PATHS.LOGIN, { replace: true })
+          }}
+        >
+          退出登录
+        </button>
+      </div>
+    </Popover>
+  )
+}
+

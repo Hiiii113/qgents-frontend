@@ -1,15 +1,18 @@
-import { Spin } from 'antd'
 import './PageLoader.css'
 
-/** 页面加载保持原有背景，快速完成的请求不显示转圈图标。 */
+/** 页面加载：三条呼吸的软灰条，不用转圈。 */
 export function PageLoader({ fullscreen = false }: { fullscreen?: boolean }) {
   return (
     <div
-      className={`qg-page-loader${fullscreen ? ' qg-page-loader--fullscreen' : ''}`}
+      className={`page-loader${fullscreen ? ' page-loader--fullscreen' : ''}`}
       role="status"
       aria-label="加载中"
     >
-      <Spin size="large" delay={180} />
+      <div className="page-loader__bars" aria-hidden>
+        <span />
+        <span />
+        <span />
+      </div>
     </div>
   )
 }
