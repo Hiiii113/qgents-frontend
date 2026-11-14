@@ -4,7 +4,7 @@ import { Form } from 'antd'
 import { useAuth } from '@/context/AuthContext'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
-import { Button, TextField } from '@/components/ui'
+import { Button, Icon, TextField } from '@/components/ui'
 import { Gate, GateAside, GateForm } from './Gate'
 import { PasswordField } from './authFields'
 
@@ -71,13 +71,21 @@ export function LoginPage() {
           <Form.Item
             name="password"
             label="密码"
-            rules={[{ required: true, message: '请输入密码' }, { min: 6, message: '至少 6 位' }]}
+            rules={[
+              { required: true, message: '请输入密码' },
+              { min: 6, message: '至少 6 位' },
+            ]}
           >
             <PasswordField autoComplete="current-password" placeholder="至少 6 位" />
           </Form.Item>
           <div className="form__foot">
             <Link to={PATHS.FORGOT_PASSWORD}>忘记密码</Link>
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button
+              variant="primary"
+              type="submit"
+              icon={<Icon name="arrow-right" size={15} />}
+              disabled={submitting}
+            >
               {submitting ? '正在进入…' : '进入工作台'}
             </Button>
           </div>

@@ -116,7 +116,12 @@ function Account() {
         <Form.Item label="头像" extra="JPG 或 PNG，不超过 5MB。">
           <div className="row">
             <Avatar name={user?.displayName ?? '我'} src={user?.avatarUrl} size="lg" />
-            <Button variant="quiet" disabled={uploading} onClick={() => fileRef.current?.click()}>
+            <Button
+              variant="quiet"
+              icon={<Icon name="camera" size={15} />}
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+            >
               {uploading ? '上传中…' : '更换头像'}
             </Button>
             <input
@@ -180,7 +185,11 @@ function Teams() {
           title="团队列表加载失败"
           description={formatApiError(teams.error)}
           action={
-            <Button variant="link" onClick={() => void teams.refetch()}>
+            <Button
+              variant="link"
+              onClick={() => void teams.refetch()}
+              icon={<Icon name="refresh" size={15} />}
+            >
               重试
             </Button>
           }
@@ -210,6 +219,7 @@ function Teams() {
                   <Button
                     variant="quiet"
                     aria-label={`切换到${team.name}`}
+                    icon={<Icon name="check" size={15} />}
                     disabled={select.isPending}
                     onClick={() => select.mutate(team.id)}
                   >
@@ -222,10 +232,18 @@ function Teams() {
         </ul>
       )}
       <div className="row product-settings__actions">
-        <Button variant="quiet" onClick={() => navigate(PATHS.CREATE_TEAM)}>
+        <Button
+          variant="quiet"
+          onClick={() => navigate(PATHS.CREATE_TEAM)}
+          icon={<Icon name="plus" size={15} />}
+        >
           创建团队
         </Button>
-        <Button variant="quiet" onClick={() => navigate(PATHS.JOIN_TEAM)}>
+        <Button
+          variant="quiet"
+          onClick={() => navigate(PATHS.JOIN_TEAM)}
+          icon={<Icon name="people" size={15} />}
+        >
           加入团队
         </Button>
       </div>
@@ -247,7 +265,11 @@ function Security() {
         <div className="kv__row">
           <span className="kv__k">登录密码</span>
           <span className="kv__v">
-            <Button variant="quiet" onClick={() => signOutTo(PATHS.FORGOT_PASSWORD)}>
+            <Button
+              variant="quiet"
+              onClick={() => signOutTo(PATHS.FORGOT_PASSWORD)}
+              icon={<Icon name="logout" size={15} />}
+            >
               退出并重置密码
             </Button>
           </span>
@@ -259,7 +281,11 @@ function Security() {
         <div className="kv__row">
           <span className="kv__k">退出登录</span>
           <span className="kv__v">
-            <Button variant="quiet" onClick={() => signOutTo(PATHS.LOGIN)}>
+            <Button
+              variant="quiet"
+              onClick={() => signOutTo(PATHS.LOGIN)}
+              icon={<Icon name="logout" size={15} />}
+            >
               退出登录
             </Button>
           </span>

@@ -87,7 +87,11 @@ export default function MemoryPage() {
             title="项目记忆加载失败"
             description={formatApiError(memory.error)}
             action={
-              <Button variant="link" onClick={() => void memory.refetch()}>
+              <Button
+                variant="link"
+                onClick={() => void memory.refetch()}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             }

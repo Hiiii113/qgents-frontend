@@ -36,6 +36,7 @@ export function CodeField({
         onClick={onSend}
         disabled={sending || countdown > 0 || disabled}
         className="gate__code-btn"
+        icon={<Icon name="send" size={15} />}
       >
         {countdown > 0 ? `${countdown}s` : sending ? '发送中…' : '获取验证码'}
       </Button>

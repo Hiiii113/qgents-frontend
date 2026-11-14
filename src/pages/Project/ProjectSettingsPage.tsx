@@ -72,7 +72,11 @@ export default function ProjectSettingsPage() {
           <div className="block">
             <p className="h3">项目加载失败</p>
             <p className="sub">{formatApiError(project.error)}</p>
-            <Button variant="quiet" onClick={() => void project.refetch()}>
+            <Button
+              variant="quiet"
+              onClick={() => void project.refetch()}
+              icon={<Icon name="refresh" size={15} />}
+            >
               重试
             </Button>
           </div>
@@ -258,7 +262,11 @@ function Members({ project }: { project: Project }) {
             title="成员加载失败"
             description={formatApiError(members.error)}
             action={
-              <Button variant="link" onClick={() => void members.refetch()}>
+              <Button
+                variant="link"
+                onClick={() => void members.refetch()}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             }
@@ -324,7 +332,11 @@ function Members({ project }: { project: Project }) {
                 </TableCell>
                 <TableCell end>
                   {canRemove(member) ? (
-                    <Button variant="link" onClick={() => setRemoving(member)}>
+                    <Button
+                      variant="link"
+                      onClick={() => setRemoving(member)}
+                      icon={<Icon name="trash" size={15} />}
+                    >
                       移出
                     </Button>
                   ) : (
@@ -370,12 +382,17 @@ function Members({ project }: { project: Project }) {
             </Form.Item>
           )}
           <div className="dlg__foot">
-            <Button variant="quiet" onClick={() => setAddOpen(false)}>
+            <Button
+              variant="quiet"
+              onClick={() => setAddOpen(false)}
+              icon={<Icon name="close" size={15} />}
+            >
               取消
             </Button>
             <Button
               variant="primary"
               type="submit"
+              icon={<Icon name="plus" size={15} />}
               disabled={add.isPending || candidates.length === 0}
             >
               {add.isPending ? '添加中…' : '添加'}
@@ -396,11 +413,16 @@ function Members({ project }: { project: Project }) {
         }
       >
         <div className="dlg__foot">
-          <Button variant="quiet" onClick={() => setRemoving(null)}>
+          <Button
+            variant="quiet"
+            onClick={() => setRemoving(null)}
+            icon={<Icon name="close" size={15} />}
+          >
             取消
           </Button>
           <Button
             variant="danger"
+            icon={<Icon name="trash" size={15} />}
             disabled={remove.isPending}
             onClick={() => removing && remove.mutate(removing.userId)}
           >
@@ -491,12 +513,14 @@ function Archive({ project }: { project: Project }) {
                 setOpen(false)
                 form.resetFields()
               }}
+              icon={<Icon name="close" size={15} />}
             >
               取消
             </Button>
             <Button
               variant={archived ? 'primary' : 'danger'}
               type="submit"
+              icon={<Icon name={archived ? 'refresh' : 'archive'} size={15} />}
               disabled={run.isPending}
             >
               {run.isPending ? '处理中…' : archived ? '恢复项目' : '归档项目'}

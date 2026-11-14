@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useAppUiStore, useCurrentTeamId } from '@/store/appUiStore'
 import { PageLoader } from '@/components/PageLoader'
 import { PATHS } from '@/routes/paths'
-import { Button, EmptyState } from '@/components/ui'
+import { Button, EmptyState, Icon } from '@/components/ui'
 
 /** 首页直接进入最近团队，无团队时进入欢迎页。 */
 export function HomeRedirect() {
@@ -35,7 +35,11 @@ export function HomeRedirect() {
             title="首页加载失败"
             description={me.error instanceof Error ? me.error.message : undefined}
             action={
-              <Button variant="link" onClick={() => void me.refetch()}>
+              <Button
+                variant="link"
+                onClick={() => void me.refetch()}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             }

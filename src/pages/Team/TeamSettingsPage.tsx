@@ -91,7 +91,11 @@ export default function TeamSettingsPage() {
           <div className="block">
             <p className="h3">团队加载失败</p>
             <p className="sub">{formatApiError(team.error)}</p>
-            <Button variant="quiet" onClick={() => void team.refetch()}>
+            <Button
+              variant="quiet"
+              onClick={() => void team.refetch()}
+              icon={<Icon name="refresh" size={15} />}
+            >
               重试
             </Button>
           </div>
@@ -124,7 +128,11 @@ function Forbidden() {
       <p className="sub">
         你在这个团队里的角色是「成员」。成员管理、邀请与角色调整只对团队管理员开放。
       </p>
-      <Button variant="quiet" onClick={() => navigate(PATHS.APP)}>
+      <Button
+        variant="quiet"
+        onClick={() => navigate(PATHS.APP)}
+        icon={<Icon name="arrow-left" size={15} />}
+      >
         回到团队首页
       </Button>
     </div>
@@ -180,7 +188,11 @@ function Members({ teamId, isOwner }: { teamId: string; isOwner: boolean }) {
           title="成员加载失败"
           description={formatApiError(members.error)}
           action={
-            <Button variant="link" onClick={() => void members.refetch()}>
+            <Button
+              variant="link"
+              onClick={() => void members.refetch()}
+              icon={<Icon name="refresh" size={15} />}
+            >
               重试
             </Button>
           }
@@ -224,7 +236,11 @@ function Members({ teamId, isOwner }: { teamId: string; isOwner: boolean }) {
               </TableCell>
               <TableCell end>
                 {canRemove(member) ? (
-                  <Button variant="link" onClick={() => setRemoving(member)}>
+                  <Button
+                    variant="link"
+                    onClick={() => setRemoving(member)}
+                    icon={<Icon name="trash" size={15} />}
+                  >
                     移除
                   </Button>
                 ) : (
@@ -248,11 +264,16 @@ function Members({ teamId, isOwner }: { teamId: string; isOwner: boolean }) {
         }
       >
         <div className="dlg__foot">
-          <Button variant="quiet" onClick={() => setRemoving(null)}>
+          <Button
+            variant="quiet"
+            onClick={() => setRemoving(null)}
+            icon={<Icon name="close" size={15} />}
+          >
             取消
           </Button>
           <Button
             variant="danger"
+            icon={<Icon name="trash" size={15} />}
             disabled={remove.isPending}
             onClick={() => removing && remove.mutate(removing.userId)}
           >
@@ -289,7 +310,11 @@ function Invitations({ teamId }: { teamId: string }) {
           title="邀请加载失败"
           description={formatApiError(invitations.error)}
           action={
-            <Button variant="link" onClick={() => void invitations.refetch()}>
+            <Button
+              variant="link"
+              onClick={() => void invitations.refetch()}
+              icon={<Icon name="refresh" size={15} />}
+            >
               重试
             </Button>
           }
@@ -324,6 +349,7 @@ function Invitations({ teamId }: { teamId: string }) {
                     variant="link"
                     disabled={revoke.isPending}
                     onClick={() => revoke.mutate(invitation.id)}
+                    icon={<Icon name="undo" size={15} />}
                   >
                     撤销
                   </Button>
@@ -404,10 +430,15 @@ function InviteDialog({
           </SelectField>
         </Form.Item>
         <div className="dlg__foot">
-          <Button variant="quiet" onClick={onClose}>
+          <Button variant="quiet" onClick={onClose} icon={<Icon name="close" size={15} />}>
             取消
           </Button>
-          <Button variant="primary" type="submit" disabled={invite.isPending}>
+          <Button
+            variant="primary"
+            type="submit"
+            icon={<Icon name="send" size={15} />}
+            disabled={invite.isPending}
+          >
             {invite.isPending ? '发送中…' : '发送邀请'}
           </Button>
         </div>

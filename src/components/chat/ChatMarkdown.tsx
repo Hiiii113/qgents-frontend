@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Markdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Button } from '@/components/ui'
+import { Button, Icon } from '@/components/ui'
 
 /** 代码文本只可能是文本节点；嵌套时展平，供复制使用。 */
 function plainText(children: ReactNode): string {
@@ -34,7 +34,12 @@ export function ChatCodeBlock({ language, code }: { language?: string; code: str
     <div className="chat-md__code">
       <div className="chat-md__code-head">
         <span>{language || '代码'}</span>
-        <Button variant="link" size="sm" onClick={() => void copy()}>
+        <Button
+          variant="link"
+          size="sm"
+          icon={<Icon name={state === 'copied' ? 'check' : 'copy'} size={14} />}
+          onClick={() => void copy()}
+        >
           {COPY_LABEL[state]}
         </Button>
       </div>

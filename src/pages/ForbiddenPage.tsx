@@ -16,7 +16,11 @@ export default function ForbiddenPage() {
           你在这个团队里的角色是「成员」。成员管理、邀请与 GitHub 授权只对团队管理员开放。
         </p>
         <div className="status__actions">
-          <Button variant="primary" onClick={() => navigate('/app', { replace: true })}>
+          <Button
+            variant="primary"
+            onClick={() => navigate('/app', { replace: true })}
+            icon={<Icon name="arrow-left" size={15} />}
+          >
             回到团队首页
           </Button>
         </div>

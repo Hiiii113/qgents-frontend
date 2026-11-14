@@ -132,12 +132,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
       aria-label={`${name}的消息`}
       id={`message-${item.id}`}
     >
-      <Avatar
-        name={name}
-        src={sender?.avatarUrl}
-        type={agent ? 'agent' : 'user'}
-        size="md"
-      />
+      <Avatar name={name} src={sender?.avatarUrl} type={agent ? 'agent' : 'user'} size="md" />
       <div className="msg__body">
         <p className="msg__head">
           <span className="msg__name">{name}</span>
@@ -151,7 +146,11 @@ export const ChatMessageRow = memo(function ChatMessageRow({
           </time>
         </p>
         {item.replyToId ? (
-          <button type="button" className="msg__quote" onClick={() => onLocate(item.replyToId ?? '')}>
+          <button
+            type="button"
+            className="msg__quote"
+            onClick={() => onLocate(item.replyToId ?? '')}
+          >
             <strong>{reply?.senderName || '回复消息'}</strong>
             <span>{reply ? chatMessageText(reply).slice(0, 160) : '点击查看原消息'}</span>
           </button>
@@ -168,7 +167,12 @@ export const ChatMessageRow = memo(function ChatMessageRow({
           />
         ))}
         <div className="msg__actions">
-          <Button variant="link" size="sm" onClick={() => onReply(item)}>
+          <Button
+            variant="link"
+            size="sm"
+            onClick={() => onReply(item)}
+            icon={<Icon name="chat" size={15} />}
+          >
             回复
           </Button>
         </div>

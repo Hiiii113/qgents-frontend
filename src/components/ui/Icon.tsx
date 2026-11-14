@@ -37,6 +37,8 @@ const PATHS = {
     </>
   ),
   chevron: <path d="M7 10l5 5 5-5" />,
+  'arrow-left': <path d="M19 12H5M11 6l-6 6 6 6" />,
+  'arrow-right': <path d="M5 12h14M13 6l6 6-6 6" />,
   plus: <path d="M12 5v14M5 12h14" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   people: (
@@ -128,6 +130,24 @@ const PATHS = {
   ),
   paperclip: <path d="M8 12.5l6.2-6.2a2.8 2.8 0 0 1 4 4L10 18.5a4 4 0 0 1-5.7-5.7l7.8-7.8" />,
   stop: <rect x="6" y="6" width="12" height="12" rx="1.5" />,
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="1.5" />
+      <path d="M15 5H6a1 1 0 0 0-1 1v9" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M9 14L4 9l5-5" />
+      <path d="M4 9h9a6 6 0 0 1 0 12h-2" />
+    </>
+  ),
+  archive: (
+    <>
+      <rect x="4" y="5" width="16" height="4" rx="1" />
+      <path d="M6 9v10h12V9M10 13h4" />
+    </>
+  ),
   edit: (
     <>
       <path d="M4 20h4L19 9l-4-4L4 16z" />

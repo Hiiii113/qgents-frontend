@@ -101,7 +101,11 @@ export default function AgentsPage() {
             title="Agent 加载失败"
             description={formatApiError(agents.error)}
             action={
-              <Button variant="link" onClick={() => void agents.refetch()}>
+              <Button
+                variant="link"
+                onClick={() => void agents.refetch()}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             }
@@ -137,7 +141,11 @@ export default function AgentsPage() {
                   title="还没有默认 Agent"
                   description="默认 Agent 由项目创建时生成；刷新后仍没有时可以重新加载。"
                   action={
-                    <Button variant="link" onClick={() => void agents.refetch()}>
+                    <Button
+                      variant="link"
+                      onClick={() => void agents.refetch()}
+                      icon={<Icon name="refresh" size={15} />}
+                    >
                       重新加载
                     </Button>
                   }
@@ -156,7 +164,11 @@ export default function AgentsPage() {
                   title="还没有自定义 Agent"
                   description="成员可以按职责申请；通过后才会出现在群里可邀请的成员中。待审批的 Agent 不能邀请入群，到默认群 @Qgent 说明申请即可通过或拒绝。"
                   action={
-                    <Button variant="link" onClick={() => setOpen(true)}>
+                    <Button
+                      variant="link"
+                      onClick={() => setOpen(true)}
+                      icon={<Icon name="plus" size={15} />}
+                    >
                       申请新 Agent
                     </Button>
                   }
@@ -197,7 +209,12 @@ export default function AgentsPage() {
                     </>
                   ) : null}
                   {' · '}
-                  <Button variant="link" size="sm" onClick={() => setApplication(null)}>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => setApplication(null)}
+                    icon={<Icon name="close" size={15} />}
+                  >
                     关闭
                   </Button>
                 </p>
@@ -258,7 +275,7 @@ export default function AgentsPage() {
             <TextField maxLength={2048} placeholder="可选，留空使用默认头像" />
           </Form.Item>
           <div className="dlg__foot">
-            <Button variant="quiet" onClick={closeDialog}>
+            <Button variant="quiet" onClick={closeDialog} icon={<Icon name="close" size={15} />}>
               取消
             </Button>
             <Button

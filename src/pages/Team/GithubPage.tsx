@@ -109,7 +109,11 @@ export default function GithubPage() {
                   title="连接状态加载失败"
                   description={formatApiError(connections.error)}
                   action={
-                    <Button variant="link" onClick={() => void connections.refetch()}>
+                    <Button
+                      variant="link"
+                      onClick={() => void connections.refetch()}
+                      icon={<Icon name="refresh" size={15} />}
+                    >
                       重试
                     </Button>
                   }
@@ -153,6 +157,7 @@ export default function GithubPage() {
                         {isOwner ? (
                           <Button
                             variant="link"
+                            icon={<Icon name="refresh" size={15} />}
                             disabled={sync.isPending}
                             onClick={() => sync.mutate(connection.id)}
                           >
@@ -181,7 +186,11 @@ export default function GithubPage() {
                   title="仓库列表加载失败"
                   description={formatApiError(repositories.error)}
                   action={
-                    <Button variant="link" onClick={() => void repositories.refetch()}>
+                    <Button
+                      variant="link"
+                      onClick={() => void repositories.refetch()}
+                      icon={<Icon name="refresh" size={15} />}
+                    >
                       重试
                     </Button>
                   }

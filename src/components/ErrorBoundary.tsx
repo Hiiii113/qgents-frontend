@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react'
-import { Button } from '@/components/ui'
+import { Button, Icon } from '@/components/ui'
 
 interface Props {
   /** 变化时自动复位错误态（如切换路由/群聊/项目时），避免边界一直卡在错误态 */
@@ -55,10 +55,18 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="h3">页面渲染出错</p>
           <p className="sub">{error.message || '发生未知错误，请重试或刷新页面。'}</p>
           <div className="row row--tight">
-            <Button variant="quiet" onClick={this.handleReset}>
+            <Button
+              variant="quiet"
+              onClick={this.handleReset}
+              icon={<Icon name="refresh" size={15} />}
+            >
               重试
             </Button>
-            <Button variant="primary" onClick={() => window.location.reload()}>
+            <Button
+              variant="primary"
+              onClick={() => window.location.reload()}
+              icon={<Icon name="refresh" size={15} />}
+            >
               刷新页面
             </Button>
           </div>

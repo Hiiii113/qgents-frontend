@@ -175,7 +175,11 @@ export default function SkillsPage() {
             title="Skill 加载失败"
             description={formatApiError(skills.error)}
             action={
-              <Button variant="link" onClick={() => void skills.refetch()}>
+              <Button
+                variant="link"
+                onClick={() => void skills.refetch()}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             }
@@ -197,7 +201,11 @@ export default function SkillsPage() {
                   title="没有匹配的 Skill"
                   description="清空筛选可以看全部 Skill。"
                   action={
-                    <Button variant="link" onClick={resetFilters}>
+                    <Button
+                      variant="link"
+                      onClick={resetFilters}
+                      icon={<Icon name="close" size={15} />}
+                    >
                       清空筛选
                     </Button>
                   }
@@ -297,6 +305,7 @@ export default function SkillsPage() {
                             variant="quiet"
                             disabled={review.isPending}
                             onClick={() => setEditor({ skill: selected })}
+                            icon={<Icon name="edit" size={15} />}
                           >
                             编辑
                           </Button>
@@ -308,6 +317,7 @@ export default function SkillsPage() {
                             onClick={() =>
                               review.mutate({ skill: selected, action: 'submitReview' })
                             }
+                            icon={<Icon name="check" size={15} />}
                           >
                             提交审核
                           </Button>
@@ -318,6 +328,7 @@ export default function SkillsPage() {
                               variant="quiet"
                               disabled={review.isPending}
                               onClick={() => setConfirm({ skill: selected, action: 'reject' })}
+                              icon={<Icon name="close" size={15} />}
                             >
                               退回
                             </Button>
@@ -325,6 +336,7 @@ export default function SkillsPage() {
                               variant="primary"
                               disabled={review.isPending}
                               onClick={() => review.mutate({ skill: selected, action: 'approve' })}
+                              icon={<Icon name="check" size={15} />}
                             >
                               通过
                             </Button>
@@ -335,6 +347,7 @@ export default function SkillsPage() {
                             variant="danger"
                             disabled={review.isPending}
                             onClick={() => setConfirm({ skill: selected, action: 'archive' })}
+                            icon={<Icon name="archive" size={15} />}
                           >
                             归档
                           </Button>
@@ -379,11 +392,12 @@ export default function SkillsPage() {
           <p className="sub">归档后 Agent 不再调用这条 Skill，需要重新提交审核才能恢复。</p>
         )}
         <div className="dlg__foot">
-          <Button variant="quiet" onClick={closeConfirm}>
+          <Button variant="quiet" onClick={closeConfirm} icon={<Icon name="close" size={15} />}>
             取消
           </Button>
           <Button
             variant={confirm?.action === 'archive' ? 'danger' : 'primary'}
+            icon={<Icon name={confirm?.action === 'archive' ? 'archive' : 'close'} size={15} />}
             disabled={review.isPending || (confirm?.action === 'reject' && !reason.trim())}
             onClick={() => {
               if (!confirm) return
@@ -531,12 +545,13 @@ function SkillEditorDialog({
         {error ? <p className="err">{error}</p> : null}
 
         <div className="dlg__foot">
-          <Button variant="quiet" onClick={close}>
+          <Button variant="quiet" onClick={close} icon={<Icon name="close" size={15} />}>
             取消
           </Button>
           <Button
             variant="primary"
             type="submit"
+            icon={<Icon name="check" size={15} />}
             disabled={save.isPending || previewFile.isPending || (!skill && !file)}
           >
             {save.isPending ? '保存中…' : skill ? '保存' : '确认创建'}

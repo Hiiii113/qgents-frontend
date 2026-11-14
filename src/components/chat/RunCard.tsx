@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui'
+import { Button, Icon } from '@/components/ui'
 import { isTerminalStatus, type AgentRun } from '@/features/agent-runs/types'
 
 const STATUS_LABEL = {
@@ -45,7 +45,10 @@ export function RunCard({
   const running = !isTerminalStatus(run.status)
   const steps = run.tools.length
   return (
-    <section className={`run run--${TONE[run.status]}`} aria-label={`${agentName ?? 'Agent'} 运行状态`}>
+    <section
+      className={`run run--${TONE[run.status]}`}
+      aria-label={`${agentName ?? 'Agent'} 运行状态`}
+    >
       <div className="run__head">
         <span className={`dot dot--${DOT[run.status]}`} aria-hidden />
         <span className="run__state">{STATUS_LABEL[run.status]}</span>
@@ -55,11 +58,21 @@ export function RunCard({
           {run.status === 'CANCELLING' ? ' · 已请求停止' : ''}
         </span>
         {running && onStop ? (
-          <Button variant="link" onClick={onStop} disabled={stopping}>
+          <Button
+            variant="link"
+            icon={<Icon name="stop" size={14} />}
+            onClick={onStop}
+            disabled={stopping}
+          >
             {stopping ? '停止中…' : '停止'}
           </Button>
         ) : (
-          <Button variant="link" className="run__trace" onClick={onOpen}>
+          <Button
+            variant="link"
+            className="run__trace"
+            onClick={onOpen}
+            icon={<Icon name="activity" size={15} />}
+          >
             查看轨迹
           </Button>
         )}

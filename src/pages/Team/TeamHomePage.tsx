@@ -95,7 +95,11 @@ export default function TeamHomePage() {
           <div className="block">
             <p className="h3">团队加载失败</p>
             <p className="sub">{formatApiError(team.error)}</p>
-            <Button variant="quiet" onClick={() => void team.refetch()}>
+            <Button
+              variant="quiet"
+              onClick={() => void team.refetch()}
+              icon={<Icon name="refresh" size={15} />}
+            >
               重试
             </Button>
           </div>
@@ -122,7 +126,11 @@ export default function TeamHomePage() {
                 title="项目加载失败"
                 description={formatApiError(projects.error)}
                 action={
-                  <Button variant="link" onClick={() => void projects.refetch()}>
+                  <Button
+                    variant="link"
+                    onClick={() => void projects.refetch()}
+                    icon={<Icon name="refresh" size={15} />}
+                  >
                     重试
                   </Button>
                 }
@@ -132,10 +140,16 @@ export default function TeamHomePage() {
               <EmptyState
                 icon={keyword ? 'search' : 'repo'}
                 title={keyword ? '没有匹配的项目' : '还没有项目'}
-                description={keyword ? '清空筛选可以看全部项目。' : '建一个项目，就有了默认群与 Agent。'}
+                description={
+                  keyword ? '清空筛选可以看全部项目。' : '建一个项目，就有了默认群与 Agent。'
+                }
                 action={
                   keyword ? (
-                    <Button variant="link" onClick={() => setSearch('')}>
+                    <Button
+                      variant="link"
+                      onClick={() => setSearch('')}
+                      icon={<Icon name="close" size={15} />}
+                    >
                       清空筛选
                     </Button>
                   ) : canManage ? (
@@ -175,9 +189,7 @@ export default function TeamHomePage() {
                         </span>
                       </span>
                     </button>
-                    <TableCell className="mono">
-                      {project.repositoryCount ?? '—'}
-                    </TableCell>
+                    <TableCell className="mono">{project.repositoryCount ?? '—'}</TableCell>
                     <TableCell className="mono">{project.memberCount ?? '—'}</TableCell>
                     <TableCell className="meta">{formatDate(project.createdAt)}</TableCell>
                   </TableRow>
@@ -188,11 +200,7 @@ export default function TeamHomePage() {
         )}
       </Page>
 
-      <CreateProjectModal
-        teamId={teamId}
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-      />
+      <CreateProjectModal teamId={teamId} open={createOpen} onClose={() => setCreateOpen(false)} />
     </main>
   )
 }

@@ -5,7 +5,7 @@ import { authApi } from '@/api/auth'
 import { PATHS } from '@/routes/paths'
 import { RSA_KEY_ID, encryptPassword } from '@/utils/rsaConfig'
 import { formatApiError } from '@/utils/formatApiError'
-import { Button, TextField } from '@/components/ui'
+import { Button, TextField, Icon } from '@/components/ui'
 import { Gate, GateAside, GateForm } from './Gate'
 import { CodeField, PasswordField } from './authFields'
 import { useCountdown } from './useCountdown'
@@ -116,7 +116,12 @@ export default function ForgotPasswordPage() {
               <TextField type="email" autoComplete="email" autoFocus />
             </Form.Item>
             <div className="form__foot form__foot--start">
-              <Button variant="primary" type="submit" disabled={sending}>
+              <Button
+                variant="primary"
+                type="submit"
+                icon={<Icon name="send" size={15} />}
+                disabled={sending}
+              >
                 {sending ? '发送中…' : '发送验证码'}
               </Button>
             </div>
@@ -145,7 +150,10 @@ export default function ForgotPasswordPage() {
             <Form.Item
               name="password"
               label="新密码"
-              rules={[{ required: true, message: '请输入新密码' }, { min: 8, message: '至少 8 位' }]}
+              rules={[
+                { required: true, message: '请输入新密码' },
+                { min: 8, message: '至少 8 位' },
+              ]}
             >
               <PasswordField autoComplete="new-password" />
             </Form.Item>
@@ -165,7 +173,12 @@ export default function ForgotPasswordPage() {
               <PasswordField autoComplete="new-password" />
             </Form.Item>
             <div className="form__foot form__foot--start">
-              <Button variant="primary" type="submit" disabled={submitting}>
+              <Button
+                variant="primary"
+                type="submit"
+                icon={<Icon name="check" size={15} />}
+                disabled={submitting}
+              >
                 {submitting ? '提交中…' : '重置密码'}
               </Button>
             </div>
@@ -174,7 +187,11 @@ export default function ForgotPasswordPage() {
 
         {stage === 'done' ? (
           <div className="form__foot form__foot--start">
-            <Button variant="primary" onClick={() => navigate(PATHS.LOGIN, { replace: true })}>
+            <Button
+              variant="primary"
+              onClick={() => navigate(PATHS.LOGIN, { replace: true })}
+              icon={<Icon name="arrow-left" size={15} />}
+            >
               返回登录
             </Button>
           </div>

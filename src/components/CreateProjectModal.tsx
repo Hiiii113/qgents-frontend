@@ -97,7 +97,7 @@ export function CreateProjectModal({
           </Form.Item>
         ) : null}
         <div className="dlg__foot">
-          <Button variant="quiet" onClick={onClose}>
+          <Button variant="quiet" onClick={onClose} icon={<Icon name="close" size={15} />}>
             取消
           </Button>
           <Button

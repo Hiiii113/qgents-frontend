@@ -140,7 +140,11 @@ export default function ReposPage() {
             title="项目加载失败"
             description={formatApiError(project.error)}
             action={
-              <Button variant="link" onClick={() => void project.refetch()}>
+              <Button
+                variant="link"
+                onClick={() => void project.refetch()}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             }
@@ -153,7 +157,11 @@ export default function ReposPage() {
             title="GitHub 连接加载失败"
             description={formatApiError(connections.error)}
             action={
-              <Button variant="link" onClick={() => void connections.refetch()}>
+              <Button
+                variant="link"
+                onClick={() => void connections.refetch()}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             }
@@ -200,7 +208,11 @@ export default function ReposPage() {
                 title="仓库加载失败"
                 description={formatApiError(imported.error)}
                 action={
-                  <Button variant="link" onClick={() => void imported.refetch()}>
+                  <Button
+                    variant="link"
+                    onClick={() => void imported.refetch()}
+                    icon={<Icon name="refresh" size={15} />}
+                  >
                     重试
                   </Button>
                 }
@@ -213,7 +225,11 @@ export default function ReposPage() {
                   title="没有匹配的仓库"
                   description="清空筛选可以看全部已导入仓库。"
                   action={
-                    <Button variant="link" onClick={() => setSearch('')}>
+                    <Button
+                      variant="link"
+                      onClick={() => setSearch('')}
+                      icon={<Icon name="close" size={15} />}
+                    >
                       清空筛选
                     </Button>
                   }
@@ -266,7 +282,12 @@ export default function ReposPage() {
                     </TableCell>
                     <TableCell end>
                       {canManage ? (
-                        <Button variant="link" size="sm" onClick={() => setRemoval(repo)}>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          onClick={() => setRemoval(repo)}
+                          icon={<Icon name="trash" size={15} />}
+                        >
                           移除
                         </Button>
                       ) : null}
@@ -293,7 +314,11 @@ export default function ReposPage() {
         {available.isError ? (
           <div className="field">
             <p className="sub">{formatApiError(available.error)}</p>
-            <Button variant="quiet" onClick={() => void available.refetch()}>
+            <Button
+              variant="quiet"
+              onClick={() => void available.refetch()}
+              icon={<Icon name="refresh" size={15} />}
+            >
               重试
             </Button>
           </div>
@@ -302,7 +327,11 @@ export default function ReposPage() {
         ) : options.length === 0 ? (
           <div className="field">
             <p className="sub">没有可导入的仓库。请确认团队 GitHub App 已授权这些仓库。</p>
-            <Button variant="quiet" onClick={() => navigate(PATHS.githubIntegration(teamId))}>
+            <Button
+              variant="quiet"
+              onClick={() => navigate(PATHS.githubIntegration(teamId))}
+              icon={<Icon name="branch" size={15} />}
+            >
               管理团队 GitHub 授权
             </Button>
           </div>
@@ -334,11 +363,12 @@ export default function ReposPage() {
           </>
         )}
         <div className="dlg__foot">
-          <Button variant="quiet" onClick={closeImport}>
+          <Button variant="quiet" onClick={closeImport} icon={<Icon name="close" size={15} />}>
             取消
           </Button>
           <Button
             variant="primary"
+            icon={<Icon name="plus" size={15} />}
             disabled={!selected.length || importRepos.isPending}
             onClick={() =>
               importRepos.mutate(options.filter((repo) => selected.includes(repoKey(repo))))
@@ -360,11 +390,16 @@ export default function ReposPage() {
           移除只取消本项目引用，不会删除 GitHub 上的仓库，也不影响团队其他项目。
         </p>
         <div className="dlg__foot">
-          <Button variant="quiet" onClick={() => setRemoval(null)}>
+          <Button
+            variant="quiet"
+            onClick={() => setRemoval(null)}
+            icon={<Icon name="close" size={15} />}
+          >
             取消
           </Button>
           <Button
             variant="danger"
+            icon={<Icon name="trash" size={15} />}
             disabled={remove.isPending}
             onClick={() => {
               if (removal) remove.mutate(removal.id)

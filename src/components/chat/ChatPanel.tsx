@@ -214,7 +214,11 @@ export function ChatPanel({
             <div className="block">
               <p className="h3">聊天加载失败</p>
               <p className="sub">{formatApiError(chat.query.error)}</p>
-              <Button variant="quiet" onClick={() => void chat.query.refetch()}>
+              <Button
+                variant="quiet"
+                onClick={() => void chat.query.refetch()}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             </div>
@@ -234,8 +238,8 @@ export function ChatPanel({
               <h1 className="h2">{group.title}</h1>
               <p className="meta">
                 <span className="mono">{project.data?.name ?? projectId}</span> ·{' '}
-                {members.data?.length ?? group.memberCount ?? 0} 名成员，含{' '}
-                {agentNames.size} 个 Agent
+                {members.data?.length ?? group.memberCount ?? 0} 名成员，含 {agentNames.size} 个
+                Agent
               </p>
             </div>
             <div className="chathead__actions">
@@ -267,7 +271,12 @@ export function ChatPanel({
           {agentRuns.connectionStatus === 'error' && agentRuns.error ? (
             <p className="chat-notice" role="status">
               {agentRuns.error}
-              <Button variant="link" size="sm" onClick={agentRuns.retry}>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={agentRuns.retry}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             </p>

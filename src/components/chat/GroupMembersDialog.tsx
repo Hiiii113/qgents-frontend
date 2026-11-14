@@ -89,7 +89,9 @@ export function GroupMembersDialog({
         userIds: values.userIds ?? [],
         agentIds: values.agentIds ?? [],
       }
-      return group ? chatApi.invite(projectId, group.id, body) : chatApi.createGroup(projectId, body)
+      return group
+        ? chatApi.invite(projectId, group.id, body)
+        : chatApi.createGroup(projectId, body)
     },
     onSuccess: (result) => {
       void client.invalidateQueries({ queryKey: chatKeys.groups(projectId) })
@@ -167,6 +169,7 @@ export function GroupMembersDialog({
                 void teamMembers.refetch()
                 void agents.refetch()
               }}
+              icon={<Icon name="refresh" size={15} />}
             >
               重试
             </Button>
@@ -189,7 +192,7 @@ export function GroupMembersDialog({
           </div>
         ) : null}
         <div className="dlg__foot">
-          <Button variant="quiet" onClick={onClose}>
+          <Button variant="quiet" onClick={onClose} icon={<Icon name="close" size={15} />}>
             取消
           </Button>
           <Button

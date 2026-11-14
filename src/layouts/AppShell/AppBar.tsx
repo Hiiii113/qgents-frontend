@@ -54,7 +54,11 @@ export function AppBar({
 
   const crumbLabel = mode === 'project' ? '项目' : mode === 'team' ? '团队' : '设置'
   const crumbValue =
-    mode === 'project' ? (project?.name ?? '…') : mode === 'team' ? (team?.name ?? '…') : '账户与团队'
+    mode === 'project'
+      ? (project?.name ?? '…')
+      : mode === 'team'
+        ? (team?.name ?? '…')
+        : '账户与团队'
 
   return (
     <header className="appbar">
@@ -123,7 +127,11 @@ export function AppBar({
         </div>
 
         <div className="anchored">
-          <NotificationBell open={panel === 'bell'} onToggle={() => setPanel(panel === 'bell' ? null : 'bell')} onClose={close} />
+          <NotificationBell
+            open={panel === 'bell'}
+            onToggle={() => setPanel(panel === 'bell' ? null : 'bell')}
+            onClose={close}
+          />
         </div>
 
         {chatEnabled ? (
@@ -306,6 +314,7 @@ function NotificationBell({
               size="sm"
               disabled={unread === 0 || markAll.isPending}
               onClick={() => markAll.mutate()}
+              icon={<Icon name="check" size={15} />}
             >
               全部已读
             </Button>

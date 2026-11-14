@@ -77,7 +77,11 @@ export default function CreateTeamPage() {
             <TextAreaField rows={3} placeholder="团队用途、协作方向（可选）" />
           </Form.Item>
           <div className="form__foot">
-            <Button variant="quiet" onClick={() => navigate(PATHS.WELCOME)}>
+            <Button
+              variant="quiet"
+              onClick={() => navigate(PATHS.WELCOME)}
+              icon={<Icon name="close" size={15} />}
+            >
               取消
             </Button>
             <Button

@@ -85,7 +85,7 @@ export function AttachmentPreview({
           下载
         </a>
       ) : null}
-      <Button variant="primary" onClick={onClose}>
+      <Button variant="primary" onClick={onClose} icon={<Icon name="close" size={15} />}>
         关闭
       </Button>
     </div>
@@ -103,7 +103,11 @@ export function AttachmentPreview({
         <div className="block">
           <p className="h3">附件无法读取</p>
           <p className="sub">文件可能已被移除，或当前账号没有访问权限。</p>
-          <Button variant="quiet" onClick={() => void infoQuery.refetch()}>
+          <Button
+            variant="quiet"
+            onClick={() => void infoQuery.refetch()}
+            icon={<Icon name="refresh" size={15} />}
+          >
             重试
           </Button>
         </div>

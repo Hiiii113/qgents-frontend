@@ -59,9 +59,7 @@ export default function ChatWorkspace() {
   )
   const groupParam = params.get('groupId')
   const selectedId =
-    groupParam ||
-    groups.data?.find((group) => group.defaultGroup)?.id ||
-    groups.data?.[0]?.id
+    groupParam || groups.data?.find((group) => group.defaultGroup)?.id || groups.data?.[0]?.id
   const selected = groups.data?.find((group) => group.id === selectedId)
   const keyword = search.trim().toLowerCase()
   const visible = sorted.filter((group) => group.title.toLowerCase().includes(keyword))
@@ -190,7 +188,11 @@ export default function ChatWorkspace() {
             <div className="block">
               <p className="h3">群聊加载失败</p>
               <p className="sub">{formatApiError(groups.error)}</p>
-              <Button variant="quiet" onClick={() => void groups.refetch()}>
+              <Button
+                variant="quiet"
+                onClick={() => void groups.refetch()}
+                icon={<Icon name="refresh" size={15} />}
+              >
                 重试
               </Button>
             </div>
@@ -209,7 +211,11 @@ export default function ChatWorkspace() {
               title={groupParam ? '你未加入该群聊，或群聊不存在' : '项目群聊尚未就绪'}
               description="项目创建时会自动生成默认群。"
               action={
-                <Button variant="quiet" onClick={() => void groups.refetch()}>
+                <Button
+                  variant="quiet"
+                  onClick={() => void groups.refetch()}
+                  icon={<Icon name="refresh" size={15} />}
+                >
                   刷新
                 </Button>
               }

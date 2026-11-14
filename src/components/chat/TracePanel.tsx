@@ -125,7 +125,12 @@ export function TracePanel({
               <div className="row row--tight">
                 <span className="meta">{connectionError}</span>
                 {onRetry ? (
-                  <Button variant="link" size="sm" onClick={onRetry}>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={onRetry}
+                    icon={<Icon name="refresh" size={15} />}
+                  >
                     重试
                   </Button>
                 ) : null}

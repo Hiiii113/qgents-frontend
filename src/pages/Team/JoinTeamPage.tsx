@@ -6,7 +6,7 @@ import { teamApi } from '@/api/team'
 import { useAuth } from '@/context/AuthContext'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
-import { Button, EmptyState, Skeleton, TextField } from '@/components/ui'
+import { Button, EmptyState, Skeleton, TextField, Icon } from '@/components/ui'
 import type { MyTeamInvitation } from '@/types'
 import { Gate, GateAside, GateForm } from '../Auth/Gate'
 
@@ -81,10 +81,19 @@ export default function JoinTeamPage() {
             <TextField placeholder="例如：LIXING-8K3D" autoFocus />
           </Form.Item>
           <div className="form__foot">
-            <Button variant="quiet" onClick={() => navigate(PATHS.WELCOME)}>
+            <Button
+              variant="quiet"
+              onClick={() => navigate(PATHS.WELCOME)}
+              icon={<Icon name="close" size={15} />}
+            >
               取消
             </Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button
+              variant="primary"
+              type="submit"
+              icon={<Icon name="check" size={15} />}
+              disabled={submitting}
+            >
               {submitting ? '加入中…' : '加入'}
             </Button>
           </div>
@@ -98,7 +107,11 @@ export default function JoinTeamPage() {
             <EmptyState
               description="邀请列表加载失败。"
               action={
-                <Button variant="link" onClick={() => void invitations.refetch()}>
+                <Button
+                  variant="link"
+                  onClick={() => void invitations.refetch()}
+                  icon={<Icon name="refresh" size={15} />}
+                >
                   重试
                 </Button>
               }
@@ -114,8 +127,7 @@ export default function JoinTeamPage() {
                     <span className="od-fill">
                       <span className="name">{invite.teamName}</span>
                       <span className="meta">
-                        邀请人：{invite.inviterDisplayName} ·{' '}
-                        {formatDate(invite.createdAt)}
+                        邀请人：{invite.inviterDisplayName} · {formatDate(invite.createdAt)}
                       </span>
                     </span>
                     <Button
@@ -123,6 +135,7 @@ export default function JoinTeamPage() {
                       size="sm"
                       disabled={expired || accept.isPending}
                       onClick={() => accept.mutate(invite)}
+                      icon={<Icon name="check" size={15} />}
                     >
                       {expired ? '已过期' : '接受邀请'}
                     </Button>

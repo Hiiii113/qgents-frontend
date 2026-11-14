@@ -40,17 +40,15 @@ export function MembersPanel({
   }, [onClose])
 
   return (
-    <aside
-      id="group-members-panel"
-      className="sidepanel members-panel is-open"
-      aria-label="群成员"
-    >
+    <aside id="group-members-panel" className="sidepanel members-panel is-open" aria-label="群成员">
       <header className="sidepanel__head">
         <div>
           <p className="sidepanel__kicker">群成员</p>
           <p className="sidepanel__title od-truncate">{groupTitle}</p>
           <p className="meta">
-            {pending ? '正在加载成员…' : `${members?.length ?? 0} 名成员 · ${agents.length} 个 Agent`}
+            {pending
+              ? '正在加载成员…'
+              : `${members?.length ?? 0} 名成员 · ${agents.length} 个 Agent`}
           </p>
         </div>
         <IconButton label="收起成员列表" square onClick={onClose}>
@@ -63,7 +61,12 @@ export function MembersPanel({
         {!pending && error ? (
           <div className="members-panel__error">
             <p className="err">{formatApiError(error)}</p>
-            <Button variant="quiet" size="sm" onClick={onRetry}>
+            <Button
+              variant="quiet"
+              size="sm"
+              onClick={onRetry}
+              icon={<Icon name="refresh" size={15} />}
+            >
               重试
             </Button>
           </div>
@@ -71,9 +74,7 @@ export function MembersPanel({
         {!pending && !error ? (
           users.length || agents.length ? (
             <>
-              {users.length ? (
-                <MemberGroup label="成员" members={users} selfId={user?.id} />
-              ) : null}
+              {users.length ? <MemberGroup label="成员" members={users} selfId={user?.id} /> : null}
               {agents.length ? <MemberGroup label="Agent" members={agents} agent /> : null}
             </>
           ) : (

@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext'
 import { authApi } from '@/api/auth'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
-import { Button, TextField } from '@/components/ui'
+import { Button, Icon, TextField } from '@/components/ui'
 import { Gate, GateAside, GateForm } from './Gate'
 import { CodeField, PasswordField } from './authFields'
 import { useCountdown } from './useCountdown'
@@ -115,12 +115,20 @@ export function RegisterPage() {
           <Form.Item
             name="password"
             label="密码"
-            rules={[{ required: true, message: '请输入密码' }, { min: 8, message: '至少 8 位' }]}
+            rules={[
+              { required: true, message: '请输入密码' },
+              { min: 8, message: '至少 8 位' },
+            ]}
           >
             <PasswordField autoComplete="new-password" placeholder="至少 8 位" />
           </Form.Item>
           <div className="form__foot">
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button
+              variant="primary"
+              type="submit"
+              icon={<Icon name="arrow-right" size={15} />}
+              disabled={submitting}
+            >
               {submitting ? '正在提交…' : '注册并继续'}
             </Button>
           </div>
