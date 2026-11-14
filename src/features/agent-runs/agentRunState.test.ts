@@ -453,6 +453,20 @@ describe('终态、最终消息与刷新中断', () => {
     expect(Object.keys(state.runs)).toEqual(['101', '102', '201'])
   })
 
+  it('最终消息先到、快照后到：首次插入仍保留运行卡', () => {
+    let state = withVisibleTriggers('8801')
+    state = agentRunsReducer(state, { type: 'finalize', rootIds: ['101'] })
+    expect(state.runs['101']).toBeUndefined()
+
+    state = stream(state, 'agent-run.snapshot', {
+      run: snapshot('101', { status: 'SUCCEEDED', result: '已完成' }),
+    })
+    expect(state.runs['101']?.status).toBe('SUCCEEDED')
+    // 封存后仍不接受后续事件改写。
+    state = stream(state, 'agent-run.delta', delta('101', 9, 1, '迟到'))
+    expect(state.runs['101']?.segments).toEqual([])
+  })
+
   it('刷新后残留 FAILED（服务重启）显示结果：触发消息已加载且无最终消息', () => {
     let state = withVisibleTriggers('8801')
     state = stream(state, 'agent-run.snapshot', {

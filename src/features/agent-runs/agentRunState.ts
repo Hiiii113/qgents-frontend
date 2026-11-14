@@ -352,8 +352,9 @@ function applyUpdated(
 }
 
 function applySnapshot(state: AgentRunsState, snapshot: AgentRunSnapshot): AgentRunsState {
-  if (state.finalizedRoots[snapshot.rootRunId]) return state
   const existing = state.runs[snapshot.runId]
+  // 已封存的运行不再改写；但最终消息可能先于快照到达，首次插入仍允许，刷新后运行卡才不会丢。
+  if (state.finalizedRoots[snapshot.rootRunId] && existing) return state
   if (!existing) {
     if (isTerminalStatus(snapshot.status)) {
       // 刷新/服务重启：后端只把残留运行标 FAILED，不一定补最终消息。

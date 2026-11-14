@@ -42,6 +42,18 @@ export function AppBar({
   const chatOpen = useAppUiStore((state) => state.chatContextOpen)
   const setChatOpen = useAppUiStore((state) => state.setChatContextOpen)
 
+  // ⌘K / Ctrl+K 在任何页面都打开项目搜索，不依赖浮层先挂载。
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setPanel('search')
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   const crumbLabel = mode === 'project' ? '项目' : mode === 'team' ? '团队' : '设置'
   const crumbValue =
     mode === 'project' ? (project?.name ?? '…') : mode === 'team' ? (team?.name ?? '…') : '账户与团队'
@@ -213,19 +225,7 @@ function ProjectSearch({
     )
   }, [projects, term])
 
-  // ⌘K / Ctrl+K 打开，Esc 关闭；输入即筛，回车进第一项。
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault()
-        const trigger = document.querySelector<HTMLButtonElement>('.searchbtn')
-        trigger?.click()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
-
+  // 输入即筛，回车进第一项；Esc 由 Popover 统一处理。
   const open = (project: Project) => {
     onNavigate()
     navigate(PATHS.projectChat(project.id))

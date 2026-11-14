@@ -304,7 +304,7 @@ export function subscribeRealtime(): () => void {
 /**
  * 订阅全局实时通道的「断线重连成功」回调（可靠消息同步 ）。
  * 与 subscribeRealtime 共用同一条连接，不重复建连；返回退订函数。
- * 连接由 MainLayout 的 subscribeRealtime 持有 refCount，本函数只挂监听。
+ * 连接由 AppShell 的 useRealtimeEvents 持有 refCount，本函数只挂监听。
  * 子组件 effect 先于父组件执行：若连接尚未创建，先排队等 subscribeRealtime 创建后补挂。
  * 典型用途：断线重连后对当前群消息做增量补齐（reconcileMessages），比整页重拉更精准。
  */
