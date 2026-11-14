@@ -7,8 +7,6 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run"
@@ -39,7 +37,6 @@
     "jsdom": "^29.1.1",
     "msw": "^2.15.0",
     "oxlint": "^1.75.0",
-    "prettier": "^3.10.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
     "vitest": "^4.1.10"
