@@ -99,6 +99,7 @@
 }
 .msg__quote {
   display: grid;
+  transition: background-color var(--d-fast) var(--ease);
   gap: 2px;
   text-align: left;
   max-width: 68ch;
@@ -111,6 +112,9 @@
   cursor: pointer;
   color: var(--ink-500);
   font-size: var(--t-xs);
+}
+.msg__quote:hover {
+  background: var(--surface-sunken);
 }
 .msg__quote strong {
   font-size: var(--t-xs);
@@ -150,11 +154,16 @@
   overflow: hidden;
   background: none;
   cursor: zoom-in;
+  transition: border-color var(--d-fast) var(--ease);
+}
+.msg__image:hover {
+  border-color: var(--line-strong);
 }
 .msg__image img {
   display: block;
   max-width: 100%;
   height: auto;
+  animation: qg-fade-in var(--d-fast) var(--ease);
 }
 
 /* 运行卡：贴在触发消息下方，过程进右侧轨迹。 */
@@ -301,6 +310,7 @@
   border-radius: var(--r-md);
   background: var(--surface);
   padding: var(--s-2) var(--s-3);
+  transition: border-color var(--d-fast) var(--ease);
 }
 .composer__box:focus-within {
   border-color: var(--ink-900);

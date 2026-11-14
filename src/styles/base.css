@@ -60,6 +60,7 @@ code {
 a {
   color: var(--mark);
   text-decoration: none;
+  transition: color var(--d-fast) var(--ease);
 }
 a:hover {
   text-decoration: underline;
@@ -246,6 +247,35 @@ a.name {
   }
   50% {
     opacity: 0.25;
+  }
+}
+
+/* 进入动效：只用 transform / opacity，统一走 token 时长。 */
+@keyframes qg-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes qg-page-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes qg-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+@keyframes qg-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+}
+@keyframes qg-slide-in {
+  from {
+    transform: translateX(100%);
   }
 }
 

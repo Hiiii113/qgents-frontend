@@ -21,7 +21,16 @@
   transition:
     background var(--d-fast) var(--ease),
     border-color var(--d-fast) var(--ease),
-    color var(--d-fast) var(--ease);
+    color var(--d-fast) var(--ease),
+    opacity var(--d-fast) var(--ease),
+    transform var(--d-fast) var(--ease);
+}
+.btn:active:not([disabled]) {
+  transform: translateY(1px);
+}
+.btn--link:active:not([disabled]) {
+  transform: none;
+  opacity: 0.65;
 }
 .btn--primary {
   background: var(--action);
@@ -80,6 +89,14 @@
   color: var(--ink-700);
   font-size: var(--t-sm);
   cursor: pointer;
+  transition:
+    background var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease),
+    color var(--d-fast) var(--ease),
+    transform var(--d-fast) var(--ease);
+}
+.iconbtn:active:not([disabled]) {
+  transform: scale(0.96);
 }
 .iconbtn:hover {
   background: var(--surface-sunken);
@@ -151,6 +168,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  animation: qg-fade-in var(--d-fast) var(--ease);
 }
 .avatar--sm {
   width: 26px;
@@ -339,6 +357,7 @@ input[readonly] {
   padding: 12px 6px;
   border-top: 1px solid var(--line);
   border-radius: var(--r-sm);
+  transition: background-color var(--d-fast) var(--ease);
 }
 .table__row:not(.table__row--head):hover {
   background: var(--surface-soft);
@@ -548,6 +567,7 @@ input[readonly] {
   cursor: pointer;
   font-size: var(--t-ui);
   color: var(--ink-500);
+  transition: color var(--d-fast) var(--ease);
 }
 .tab:hover {
   color: var(--ink-900);
@@ -556,7 +576,7 @@ input[readonly] {
   color: var(--ink-900);
   font-weight: 500;
 }
-.tab[aria-selected='true']::after {
+.tab::after {
   content: '';
   position: absolute;
   left: 0;
@@ -564,6 +584,11 @@ input[readonly] {
   bottom: -1px;
   height: 2px;
   background: var(--mark);
+  transform: scaleX(0);
+  transition: transform var(--d-base) var(--ease);
+}
+.tab[aria-selected='true']::after {
+  transform: scaleX(1);
 }
 .kv {
   display: grid;
@@ -612,6 +637,9 @@ input[readonly] {
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
+  transition:
+    background-color var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease);
 }
 .teamrow--current {
   background: var(--surface-soft);
@@ -714,6 +742,9 @@ input[readonly] {
   border: 1px solid transparent;
   border-radius: var(--r-sm);
   color: var(--ink-900);
+  transition:
+    background-color var(--d-fast) var(--ease),
+    border-color var(--d-fast) var(--ease);
 }
 .masterrow:hover {
   background: var(--surface-soft);
@@ -795,6 +826,11 @@ input[readonly] {
   border: 1px solid var(--line-strong);
   border-radius: var(--r-md);
   box-shadow: var(--shadow);
+  animation: qg-pop-in var(--d-fast) var(--ease);
+  transform-origin: top right;
+}
+.popover--start {
+  transform-origin: top left;
 }
 .popover--wide {
   width: 288px;
@@ -923,6 +959,7 @@ input[readonly] {
   font-size: var(--t-ui);
   cursor: pointer;
   color: var(--ink-900);
+  transition: background-color var(--d-fast) var(--ease);
 }
 .menu__item:hover {
   background: var(--surface-soft);
@@ -955,6 +992,7 @@ input[readonly] {
   inset: 0;
   z-index: 30;
   background: rgba(16, 20, 24, 0.28);
+  animation: qg-fade-in var(--d-fast) var(--ease);
 }
 /* 桌面侧栏占列，不走遮罩；窄屏覆盖层才需要。 */
 .scrim--panel {
@@ -967,6 +1005,12 @@ input[readonly] {
 }
 
 /* ---------- 对话框 ---------- */
+.dlg[open] {
+  animation: qg-dialog-in var(--d-base) var(--ease);
+}
+.dlg::backdrop {
+  animation: qg-fade-in var(--d-fast) var(--ease);
+}
 .dlg {
   width: min(520px, calc(100vw - 32px));
   padding: var(--s-6);
@@ -1053,6 +1097,7 @@ input[readonly] {
 
 /* ---------- 状态页 403 / 404 ---------- */
 .status {
+  animation: qg-page-in var(--d-base) var(--ease);
   min-height: 100dvh;
   display: grid;
   place-items: center;

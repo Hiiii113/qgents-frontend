@@ -1,5 +1,6 @@
 .gate {
   display: grid;
+  animation: qg-page-in var(--d-base) var(--ease);
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   min-height: 100dvh;
 }
@@ -114,10 +115,15 @@
   cursor: pointer;
   transition:
     border-color var(--d-fast) var(--ease),
-    background var(--d-fast) var(--ease);
+    background-color var(--d-fast) var(--ease),
+    transform var(--d-fast) var(--ease);
 }
 .choice:hover {
   border-color: var(--ink-900);
+  transform: translateY(-1px);
+}
+.choice:active {
+  transform: none;
 }
 .choice__name {
   font-size: var(--t-body);
@@ -169,6 +175,9 @@
   background: none;
   color: var(--ink-400);
   cursor: pointer;
+  transition:
+    background-color var(--d-fast) var(--ease),
+    color var(--d-fast) var(--ease);
 }
 .gate__eye:hover {
   background: var(--surface-sunken);
