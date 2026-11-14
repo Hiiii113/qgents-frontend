@@ -559,15 +559,6 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.dlg__meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-3);
-  margin-top: var(--s-2);
-  font-size: var(--t-xs);
-  color: var(--ink-400);
-}
 .dialog-checks {
   display: grid;
   gap: var(--s-3);

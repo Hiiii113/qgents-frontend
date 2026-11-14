@@ -173,14 +173,6 @@
   width: 18px;
   height: 18px;
 }
-.avatar--t2 {
-  background: var(--ink-900);
-  color: var(--on-action);
-}
-.avatar--t3 {
-  background: var(--mark-soft);
-  color: var(--mark-strong);
-}
 
 /* ---------- 表单 ---------- */
 .form {
@@ -491,23 +483,6 @@ input[readonly] {
   border: 1px solid var(--line);
   border-radius: var(--r-md);
 }
-.row-empty {
-  display: grid;
-  gap: var(--s-1);
-  justify-items: start;
-  padding: var(--s-6) var(--s-2);
-  border-top: 1px solid var(--line);
-}
-.row-empty__icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  margin-bottom: var(--s-2);
-  border-radius: var(--r-md);
-  background: var(--surface-sunken);
-  color: var(--ink-500);
-}
 .row-empty__title {
   font-size: var(--t-body);
   font-weight: 500;
@@ -590,9 +565,6 @@ input[readonly] {
   height: 2px;
   background: var(--mark);
 }
-.tabpanel {
-  max-width: 760px;
-}
 .kv {
   display: grid;
 }
@@ -673,10 +645,6 @@ input[readonly] {
   align-items: start;
   margin-top: var(--s-4);
 }
-.split--diff {
-  grid-template-columns: 280px minmax(0, 1fr);
-  gap: var(--s-4);
-}
 .toc {
   display: grid;
   gap: var(--s-2);
@@ -730,23 +698,6 @@ input[readonly] {
 .doc li {
   margin: 3px 0;
 }
-.doc__table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: var(--s-3) 0;
-  font-size: var(--t-sm);
-}
-.doc__table th,
-.doc__table td {
-  text-align: left;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--line);
-}
-.doc__table th {
-  font-weight: 500;
-  color: var(--ink-400);
-  border-bottom-color: var(--line-strong);
-}
 .masterlist {
   display: flex;
   flex-direction: column;
@@ -788,8 +739,7 @@ input[readonly] {
   justify-content: space-between;
   gap: var(--s-3);
 }
-.panel__desc,
-.panel__text {
+.panel__desc {
   font-size: var(--t-body);
   line-height: 1.65;
   color: var(--ink-700);
@@ -835,71 +785,6 @@ input[readonly] {
   max-width: 60ch;
   margin-top: 4px;
 }
-.diffiles {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.diffile {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  width: 100%;
-  text-align: left;
-  padding: 8px 10px;
-  background: none;
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  color: var(--ink-700);
-  cursor: pointer;
-  font-size: var(--t-sm);
-}
-.diffile:hover {
-  background: var(--surface-soft);
-}
-.diffile[aria-current='true'] {
-  border-color: var(--line-strong);
-  background: var(--surface-soft);
-}
-.diffile__name {
-  flex: 1;
-  min-width: 0;
-}
-.diffile__stat {
-  color: var(--ok);
-  font-size: var(--t-xs);
-}
-.diffpane {
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  overflow: hidden;
-  max-height: calc(100dvh - 280px);
-}
-.diffpane__head {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--s-3);
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface-soft);
-  font-size: var(--t-xs);
-}
-.diff {
-  margin: 0;
-  padding: var(--s-3) 0;
-  font-family: var(--mono);
-  font-size: var(--t-xs);
-  line-height: 1.7;
-  overflow-x: auto;
-}
-.diff code {
-  background: none;
-  padding: 0;
-  font-size: inherit;
-  display: block;
-  white-space: pre;
-}
-
 /* ---------- 浮层 / 菜单 ---------- */
 .popover {
   position: absolute;
@@ -1141,6 +1026,7 @@ input[readonly] {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
   height: 30px;
   padding: 0 10px;
   background: var(--surface);
@@ -1150,6 +1036,12 @@ input[readonly] {
   cursor: pointer;
   color: var(--ink-700);
 }
+.attach__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .attach:hover {
   background: var(--surface-sunken);
   border-color: var(--ink-300);
@@ -1157,24 +1049,6 @@ input[readonly] {
 .attach__meta {
   color: var(--ink-400);
   font-size: var(--t-xs);
-}
-.msg__note {
-  font-size: var(--t-xs);
-  color: var(--ink-400);
-}
-.attach__body {
-  margin: var(--s-2) 0 0;
-  padding: var(--s-3);
-  max-height: 46dvh;
-  overflow: auto;
-  background: var(--surface-soft);
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-  font-family: var(--mono);
-  font-size: var(--t-xs);
-  line-height: 1.75;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
 }
 
 /* ---------- 状态页 403 / 404 ---------- */
@@ -1230,18 +1104,12 @@ input[readonly] {
   .split {
     grid-template-columns: minmax(0, 1fr);
   }
-  .split--diff {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .toc {
     position: static;
     border-bottom: 1px solid var(--line);
     padding-bottom: var(--s-2);
   }
   .doc {
-    max-height: none;
-  }
-  .diffpane {
     max-height: none;
   }
   .pagehead {

@@ -1,12 +1,6 @@
 /** antd 能力（Form / message）与浏览器默认件的统一外观修正。 */
 
-.ant-btn,
-.ant-tag,
-.ant-typography,
-.ant-alert,
-.ant-empty,
 .ant-form,
-.ant-space,
 .ant-checkbox-wrapper {
   font-family: var(--font);
 }
@@ -45,8 +39,4 @@
 }
 ::-webkit-scrollbar-button {
   display: none;
-}
-
-.qg-num {
-  font-variant-numeric: tabular-nums;
 }

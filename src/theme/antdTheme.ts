@@ -42,7 +42,6 @@ export const antdTheme: ThemeConfig = {
     motionEaseOut: 'cubic-bezier(.2,.7,.2,1)',
   },
   components: {
-    Button: { primaryShadow: 'none', defaultShadow: 'none', dangerShadow: 'none', fontWeight: 500 },
     Checkbox: { borderRadiusSM: 3 },
     Form: {
       labelColor: T.ink700,
@@ -50,7 +49,5 @@ export const antdTheme: ThemeConfig = {
       verticalLabelPadding: '0 0 8px',
       itemMarginBottom: 16,
     },
-    Tooltip: { colorBgSpotlight: T.ink900, borderRadius: 4 },
-    Modal: { contentBg: T.surface, headerBg: T.surface },
   },
 }

@@ -135,11 +135,6 @@ input:-webkit-autofill:focus {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.od-scroll {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  min-height: 0;
-}
 
 /* 品牌标记：墨环 + 朱砂点，全站唯一写出品牌的图形。 */
 .mark {
@@ -193,9 +188,6 @@ input:-webkit-autofill:focus {
   color: var(--ink-500);
   max-width: 62ch;
 }
-.sub--inverse {
-  max-width: 40ch;
-}
 .meta {
   font-size: var(--t-xs);
   color: var(--ink-400);
@@ -215,9 +207,6 @@ a.name {
 }
 .note--ok {
   color: var(--ok);
-}
-.note--error {
-  color: var(--danger);
 }
 .row {
   display: flex;

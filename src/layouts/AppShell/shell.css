@@ -101,9 +101,6 @@
   border-color: var(--line-strong);
   background: var(--surface);
 }
-.rail__me-name {
-  display: none;
-}
 
 .workspace {
   display: flex;
@@ -251,9 +248,6 @@ kbd {
 .view {
   padding: var(--s-6) var(--s-8) var(--s-10);
   max-width: 1160px;
-}
-.view--wide {
-  max-width: none;
 }
 .view--chat {
   padding: 0;
@@ -487,10 +481,6 @@ kbd {
   font-weight: 500;
 }
 .step__meta {
-  font-size: var(--t-xs);
-  color: var(--ink-400);
-}
-.step__time {
   font-size: var(--t-xs);
   color: var(--ink-400);
 }

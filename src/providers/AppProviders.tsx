@@ -23,10 +23,7 @@ function BootstrapGate({ children }: { children: ReactNode }) {
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <ConfigProvider
-      theme={antdTheme}
-      modal={{ centered: true }}
-    >
+    <ConfigProvider theme={antdTheme}>
       <AntdApp>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
