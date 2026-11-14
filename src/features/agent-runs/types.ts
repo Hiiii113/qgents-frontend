@@ -21,6 +21,10 @@ export interface AgentRunTool {
   tool: string
   round: number
   state: AgentRunToolState
+  /** 工具入参；服务端截断后下发，尚未收到为 null。 */
+  input: string | null
+  /** 工具结果；服务端截断后下发，执行中为 null。 */
+  output: string | null
 }
 
 /** 某个根/子运行的最新状态；runs 输出与组件都只读它。 */

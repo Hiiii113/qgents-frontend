@@ -56,8 +56,10 @@ Skill 与项目记忆在项目层维护。Skill 保留编辑、提交审核、�
 
 ## Agent 运行
 
-`GET /projects/{projectId}/groups/{groupId}/agent-events`（SSE）订阅群级运行事件：建连先下发活动运行快照，之后推送正文增量、阶段与工具事件；事件带 `revision`（状态版本）和 `seq`（正文缺口序号），旧快照不会把已完成的工具改回执行中。`GET /projects/{projectId}/agent-runs?groupId=&limit=` 返回群内最近运行（含子运行），用于刷新和 SSE 不可用时的轮询。
+`GET /projects/{projectId}/groups/{groupId}/agent-events`（SSE）订阅群级运行事件：建连先下发快照，之后推送正文增量、阶段与工具事件；事件带 `revision`（状态版本）和 `seq`（正文缺口序号），旧快照不会把已完成的工具改回执行中。`GET /projects/{projectId}/agent-runs?groupId=&limit=` 返回群内最近运行（含子运行），用于刷新和 SSE 不可用时的轮询。断线后前端按快照补齐再续 SSE，重新进入群聊同样先取快照，不依赖事件重放。
+
+快照与工具事件中的 `tools[]` 为 `{ toolCallId, tool, round, state, input, output }`：`state` 取 `running/ok/failed/done`，`input` 与 `output` 是服务端截断到 2000 字符的工具入参与结果（可能为 null）。`agent-run.tool` 事件在 `started` 带 `input`、`finished` 带 `output`。工具调用落库，运行结束后仍随快照返回，重新进群不会丢失历史。
 
 运行状态为 `RUNNING/CANCELLING/CANCELLED/SUCCEEDED/FAILED`。最终回复由服务端以 `clientMessageId = qgent-reply:<rootRunId>` 写入，前端据此替换临时正文；同一条消息 `@` 多个 Agent 时各自替换自己的回复。停止按触发消息取消该消息下的活动根运行，权限由后端校验（原发送者或项目管理员）。
 
-边界：正文增量只存在服务进程内存，多实例部署下其他实例看不到同一段增量，重启会丢掉未完成正文（终态与最终消息仍在库里）；群级 SSE 每 10 秒复检一次群成员权限。
+边界：正文增量只存在服务进程内存，多实例部署下其他实例看不到同一段增量，重启会丢掉未完成正文（终态、最终消息与工具调用记录仍在库里）；群级 SSE 每 10 秒复检一次群成员权限。

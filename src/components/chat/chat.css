@@ -166,7 +166,7 @@
   animation: qg-fade-in var(--d-fast) var(--ease);
 }
 
-/* 运行卡：贴在触发消息下方，过程进右侧轨迹。 */
+/* 运行卡：贴在触发消息下方，工具调用就地展开，不另开侧栏。 */
 .run {
   margin-top: var(--s-2);
   padding: 10px 12px;
@@ -202,16 +202,118 @@
 .run--fail .run__state {
   color: var(--danger);
 }
-.run__trace {
-  color: var(--ink-700);
-}
-.run__trace:hover {
-  color: var(--ink-900);
-}
 .run__note {
   margin-top: 6px;
   font-size: var(--t-xs);
   color: var(--ink-500);
+  overflow-wrap: anywhere;
+}
+.run__live {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: var(--t-sm);
+}
+.run__live-label {
+  margin-bottom: 4px;
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+}
+/* 工具调用：一行一个，展开看入参与结果。 */
+.run__tools {
+  margin-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.run__tools-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: 6px 0 2px;
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+  cursor: pointer;
+  list-style: none;
+}
+.run__tools-summary::-webkit-details-marker,
+.tool__summary::-webkit-details-marker {
+  display: none;
+}
+.run__tools-summary svg {
+  transform: rotate(-90deg);
+  transition: transform var(--d-fast) var(--ease);
+}
+.run__tools[open] > .run__tools-summary svg {
+  transform: none;
+}
+.run__tool-list {
+  display: grid;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tool {
+  border-top: 1px solid var(--line);
+}
+.tool:first-child {
+  border-top: 0;
+}
+.tool__summary,
+.tool--plain {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  padding: 6px 0;
+}
+.tool__summary {
+  cursor: pointer;
+  list-style: none;
+}
+.tool__i {
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+}
+.tool__name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-xs);
+  color: var(--ink-700);
+  overflow-wrap: anywhere;
+}
+.tool__state,
+.tool__round {
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+}
+.tool__state--running {
+  color: var(--mark);
+}
+.tool__state--ok {
+  color: var(--ok);
+}
+.tool__state--failed {
+  color: var(--danger);
+}
+.tool__body {
+  display: grid;
+  gap: 4px;
+  padding: 0 0 8px 22px;
+}
+.tool__label {
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+}
+.tool__pre {
+  margin: 0;
+  padding: 8px;
+  max-height: 220px;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .chatlog__history {
@@ -592,23 +694,6 @@
   font-size: var(--t-xs);
   color: var(--ink-400);
   margin-bottom: var(--s-2);
-}
-
-/* 执行轨迹里的实时正文 */
-.trace__live {
-  padding: var(--s-3) var(--s-4);
-  border-top: 1px solid var(--line);
-  background: var(--surface);
-  max-height: 40%;
-  overflow-y: auto;
-}
-.trace__live-label {
-  font-size: var(--t-xs);
-  color: var(--ink-400);
-  margin-bottom: 6px;
-}
-.trace__empty {
-  padding: var(--s-6) var(--s-4);
 }
 
 .members-panel__body {

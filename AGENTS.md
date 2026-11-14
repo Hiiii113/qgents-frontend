@@ -36,7 +36,7 @@ src/
   theme/                  tokens.ts（设计变量单一来源）+ antdTheme.ts
   styles/                 base.css 重置排版 / ui.css 组件 / antd.css 基础件修正
   components/ui/          通用设计系统组件
-  components/chat/        聊天消息、输入器、附件、成员、运行卡片与执行轨迹
+  components/chat/        聊天消息、输入器、附件、成员、运行卡与工具调用详情
   components/             跨业务但非通用的装配件（CreateProjectModal、PageLoader、ErrorBoundary、AuthedImage、StartupScreen）
   layouts/AppShell/       64px 竖轨 + 56px 顶栏、项目切换器、通知、公告条
   routes/                 PATHS 常量、路由表、守卫
@@ -89,7 +89,8 @@ design/prototype/         视觉原型，只作对照，不参与构建
 - 群聊：输入 `@` 只列当前群成员（人与 Agent），显式选择后以成员类型与真实 ID 发送；回复使用 `replyToId + content`；
   停止执行按触发消息取消；消息、成员与增量同步都使用后端返回的真实 Agent ID。
 - 聊天输入与历史消息渲染隔离；长消息列表动态高度虚拟化，保留分页游标、断线补齐与阅读锚点。
-- 执行轨迹在桌面常驻右侧面板、可收起；窄屏走覆盖层（`chatTraceOpen`）。
+- Agent 执行过程不占侧栏：触发消息下方的运行卡就地列出工具调用，每次调用可展开看入参与结果；
+  运行中默认展开，结束后收起。工具历史由后端持久化，重新进群仍可从快照恢复。
 - 群设置只列本项目已启用 Agent 供邀请；Agent 与人在成员列表中按成员类型区分。新群只有在用户选择后才邀请成员与 Agent。
 - GitHub 不设项目级开关：团队连接 GitHub App，项目管理员导入需要的仓库；不提供凭证引用或部署 Token 配置。
 - 团队与项目成员管理分别在团队设置、项目设置中完成；群聊成员名单与邀请仍在聊天内管理。

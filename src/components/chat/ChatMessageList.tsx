@@ -21,7 +21,6 @@ interface Props {
   onReply: (item: ChatMessage) => void
   onPreview: (item: ChatMessage) => void
   onLocate: (id: string) => void
-  onOpenRun: (runId: string) => void
   onStop: (item: ChatMessage) => void
   onMention?: (member: ChatMember) => void
   onReadingLatestChange?: (reading: boolean) => void
@@ -240,7 +239,6 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     onReply={props.onReply}
                     onPreview={props.onPreview}
                     onLocate={props.onLocate}
-                    onOpenRun={props.onOpenRun}
                     onStop={props.onStop}
                     canStop={props.canStop?.(item) ?? false}
                     stopping={props.stoppingMessageId === item.id}

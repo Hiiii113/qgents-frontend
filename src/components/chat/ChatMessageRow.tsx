@@ -18,7 +18,6 @@ interface Props {
   onReply: (item: ChatMessage) => void
   onPreview: (item: ChatMessage) => void
   onLocate: (id: string) => void
-  onOpenRun: (runId: string) => void
   onStop: (item: ChatMessage) => void
   canStop?: boolean
   stopping?: boolean
@@ -110,7 +109,6 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   onReply,
   onPreview,
   onLocate,
-  onOpenRun,
   onStop,
   canStop,
   stopping,
@@ -161,8 +159,8 @@ export const ChatMessageRow = memo(function ChatMessageRow({
             key={run.runId}
             run={run}
             agentName={agentNames?.get(run.agentId)}
-            onOpen={() => onOpenRun(run.runId)}
-            onStop={canStop ? () => onStop(item) : undefined}
+            // 子 Agent 跟着根运行一起被叫停，不再多给一个重复的停止按钮。
+            onStop={canStop && run.parentRunId === null ? () => onStop(item) : undefined}
             stopping={stopping}
           />
         ))}

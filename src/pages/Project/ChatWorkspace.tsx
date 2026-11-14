@@ -15,7 +15,7 @@ import { GroupMembersDialog } from '@/components/chat/GroupMembersDialog'
 import '@/components/chat/chat.css'
 
 /**
- * 项目聊天路由：左侧群聊列（可搜索、置顶、变更提示），主列聊天，右侧执行轨迹。
+ * 项目聊天路由：左侧群聊列（可搜索、置顶、变更提示），主列聊天与工具调用。
  * 群聊列只在聊天页出现；非聊天页不加载也不占位。
  */
 export default function ChatWorkspace() {

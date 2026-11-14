@@ -53,6 +53,11 @@ const demo = {
 }
 const listeners = new Set<(event: string, data: unknown) => void>()
 
+/** 运行结束时未收到 finished 的工具按中性结束收尾，与真实后端一致。 */
+function settleTools(tools: AgentRunTool[]): AgentRunTool[] {
+  return tools.map((tool) => (tool.state === 'running' ? { ...tool, state: 'done' } : tool))
+}
+
 /** 仅 mock 测试使用：复位演示状态并让仍在跑的播放循环失效。 */
 export function resetAgentRunDemo(): void {
   demo.generation += 1
@@ -119,25 +124,42 @@ function appendDelta(runId: string, text: string): RunEvent {
   return liveEvent(runId)
 }
 
-function startTool(runId: string, toolCallId: string, tool: string): void {
+function startTool(runId: string, toolCallId: string, tool: string, input: string): void {
   const live = liveOf(runId)
   live.revision += 1
-  live.tools.push({ toolCallId, tool, round: live.round, state: 'running' })
+  live.tools.push({ toolCallId, tool, round: live.round, state: 'running', input, output: null })
   broadcast('agent-run.tool', {
     ...liveEvent(runId),
     phase: 'started',
     toolCallId,
     tool,
     ok: null,
+    input,
   })
 }
 
-function finishTool(runId: string, toolCallId: string, tool: string, ok: boolean): void {
+function finishTool(
+  runId: string,
+  toolCallId: string,
+  tool: string,
+  ok: boolean,
+  output: string,
+): void {
   const live = liveOf(runId)
   live.revision += 1
   const entry = live.tools.find((item) => item.toolCallId === toolCallId)
-  if (entry) entry.state = ok ? 'ok' : 'failed'
-  broadcast('agent-run.tool', { ...liveEvent(runId), phase: 'finished', toolCallId, tool, ok })
+  if (entry) {
+    entry.state = ok ? 'ok' : 'failed'
+    entry.output = output
+  }
+  broadcast('agent-run.tool', {
+    ...liveEvent(runId),
+    phase: 'finished',
+    toolCallId,
+    tool,
+    ok,
+    output,
+  })
 }
 
 function startRound(runId: string, round: number): void {
@@ -152,7 +174,7 @@ function finishRun(runId: string, status: AgentRunStatus, result: string | null 
   live.status = status
   live.revision += 1
   if (result) live.result = result
-  live.tools = live.tools.filter((tool) => tool.state !== 'running')
+  live.tools = settleTools(live.tools)
   broadcast('agent-run.updated', liveEvent(runId))
 }
 
@@ -170,22 +192,34 @@ async function playDemo(generation: number): Promise<void> {
   await wait(STEP_MS)
   if (!alive()) return
 
-  startTool(ROOT_RUN_ID, 'call_demo_1', 'run_command')
+  startTool(ROOT_RUN_ID, 'call_demo_1', 'run_command', '{"command":"ls -R src"}')
   appendDelta(CHILD_RUN_ID, '子任务：检查虚拟列表在动态高度消息下的定位。')
   await wait(STEP_MS)
   if (!alive()) return
 
-  finishTool(ROOT_RUN_ID, 'call_demo_1', 'run_command', true)
+  finishTool(
+    ROOT_RUN_ID,
+    'call_demo_1',
+    'run_command',
+    true,
+    'src/api\nsrc/components\nsrc/features/agent-runs',
+  )
   startRound(ROOT_RUN_ID, 2)
   await wait(STEP_MS)
   if (!alive()) return
 
   appendDelta(ROOT_RUN_ID, '确认了：运行进度要紧跟触发消息，并复用真实的 Markdown 渲染。')
-  startTool(CHILD_RUN_ID, 'call_demo_2', 'read_attachment')
+  startTool(CHILD_RUN_ID, 'call_demo_2', 'read_attachment', '{"attachmentId":"att_9"}')
   await wait(STEP_MS)
   if (!alive()) return
 
-  finishTool(CHILD_RUN_ID, 'call_demo_2', 'read_attachment', true)
+  finishTool(
+    CHILD_RUN_ID,
+    'call_demo_2',
+    'read_attachment',
+    true,
+    '虚拟列表按消息 ID 定位，新增长度不打断阅读位置。',
+  )
   appendDelta(CHILD_RUN_ID, '虚拟列表已按消息 ID 定位，新增长度不会打断阅读位置。')
   finishRun(CHILD_RUN_ID, 'SUCCEEDED')
   await wait(STEP_MS)
@@ -215,7 +249,7 @@ function cancelDemo(): number {
     if (live.status !== 'RUNNING' && live.status !== 'CANCELLING') return false
     live.status = 'CANCELLED'
     live.revision += 1
-    live.tools = live.tools.filter((tool) => tool.state !== 'running')
+    live.tools = settleTools(live.tools)
     broadcast('agent-run.updated', liveEvent(runId))
     return true
   }

@@ -179,7 +179,10 @@ describe('revision 防旧状态 / 终态恢复', () => {
     expect(state.runs['101'].status).toBe('FAILED')
     expect(state.runs['101'].result).toBe('服务重启，运行已中断')
     expect(textOf(state, '101')).toBe('断线前正文')
-    expect(state.runs['101'].tools).toEqual([])
+    // 没等到 finished 的工具收成中性结束，不丢掉这条记录。
+    expect(state.runs['101'].tools).toEqual([
+      { toolCallId: 'call_a', tool: 'run_command', round: 1, state: 'done', input: null, output: null },
+    ])
   })
 
   it('root 终态的 revision=0 事件同样接受，RUNNING 不能借此复活', () => {
@@ -327,8 +330,8 @@ describe('工具阶段', () => {
     })
 
     expect(state.runs['101'].tools).toEqual([
-      { toolCallId: 'call_a', tool: 'run_command', round: 1, state: 'running' },
-      { toolCallId: 'call_b', tool: 'run_command', round: 1, state: 'running' },
+      { toolCallId: 'call_a', tool: 'run_command', round: 1, state: 'running', input: null, output: null },
+      { toolCallId: 'call_b', tool: 'run_command', round: 1, state: 'running', input: null, output: null },
     ])
 
     state = stream(state, 'agent-run.tool', {
@@ -340,8 +343,8 @@ describe('工具阶段', () => {
       ok: false,
     })
     expect(state.runs['101'].tools).toEqual([
-      { toolCallId: 'call_a', tool: 'run_command', round: 1, state: 'running' },
-      { toolCallId: 'call_b', tool: 'run_command', round: 1, state: 'failed' },
+      { toolCallId: 'call_a', tool: 'run_command', round: 1, state: 'running', input: null, output: null },
+      { toolCallId: 'call_b', tool: 'run_command', round: 1, state: 'failed', input: null, output: null },
     ])
   })
 
@@ -405,7 +408,7 @@ describe('工具阶段', () => {
     expect(textOf(state, '101')).toBe('后续正文')
   })
 
-  it('快照 tools 整体替换，终态清掉仍在执行的工具行', () => {
+  it('快照 tools 整体替换，终态把未结束的工具收成中性结束', () => {
     let state = withVisibleTriggers('8801')
     state = snapshots(state, [snapshot('101')])
     state = stream(state, 'agent-run.tool', {
@@ -424,7 +427,7 @@ describe('工具阶段', () => {
       }),
     })
     expect(state.runs['101'].tools).toEqual([
-      { toolCallId: 'call_c', tool: 'run_command', round: 2, state: 'running' },
+      { toolCallId: 'call_c', tool: 'run_command', round: 2, state: 'running', input: null, output: null },
     ])
 
     state = stream(
@@ -432,7 +435,62 @@ describe('工具阶段', () => {
       'agent-run.updated',
       root('101', { revision: 4, status: 'SUCCEEDED', round: 2 }),
     )
-    expect(state.runs['101'].tools).toEqual([])
+    expect(state.runs['101'].tools).toEqual([
+      { toolCallId: 'call_c', tool: 'run_command', round: 2, state: 'done', input: null, output: null },
+    ])
+  })
+
+  it('工具事件带出入参与结果，结束后快照仍能恢复完整历史', () => {
+    let state = withVisibleTriggers('8801')
+    state = snapshots(state, [snapshot('101')])
+    state = stream(state, 'agent-run.tool', {
+      ...root('101'),
+      revision: 2,
+      phase: 'started',
+      toolCallId: 'call_a',
+      tool: 'read_file',
+      ok: null,
+      input: '{"path":"src/app.ts"}',
+    })
+    state = stream(state, 'agent-run.tool', {
+      ...root('101'),
+      revision: 3,
+      phase: 'finished',
+      toolCallId: 'call_a',
+      tool: 'read_file',
+      ok: true,
+      output: 'export const app = 1',
+    })
+    expect(state.runs['101'].tools[0]).toEqual({
+      toolCallId: 'call_a',
+      tool: 'read_file',
+      round: 1,
+      state: 'ok',
+      input: '{"path":"src/app.ts"}',
+      output: 'export const app = 1',
+    })
+
+    // 最终消息先封存根运行，重新进群后到达到的快照仍需把工具历史补齐。
+    state = agentRunsReducer(state, { type: 'finalize', rootIds: ['101'] })
+    state = snapshots(state, [
+      snapshot('101', {
+        revision: 9,
+        status: 'SUCCEEDED',
+        result: '完成',
+        tools: [
+          {
+            toolCallId: 'call_a',
+            tool: 'read_file',
+            round: 1,
+            state: 'ok',
+            input: '{"path":"src/app.ts"}',
+            output: 'export const app = 1',
+          },
+        ],
+      }),
+    ])
+    expect(state.runs['101'].tools).toHaveLength(1)
+    expect(state.runs['101'].tools[0].output).toBe('export const app = 1')
   })
 })
 

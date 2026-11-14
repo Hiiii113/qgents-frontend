@@ -49,6 +49,9 @@ export type AgentRunStreamEvent =
       toolCallId: string
       tool: string
       ok: boolean | null
+      /** started 时带工具入参；finished 时带工具结果。 */
+      input: string | null
+      output: string | null
     }
   | {
       kind: 'delta'
@@ -94,6 +97,8 @@ const STATUSES: readonly AgentRunStatus[] = [
   'SUCCEEDED',
   'FAILED',
 ]
+
+const TOOL_STATES: readonly AgentRunToolState[] = ['running', 'ok', 'failed', 'done']
 
 type Json = Record<string, unknown>
 
@@ -181,8 +186,16 @@ function readTool(value: unknown): AgentRunTool | null {
   const tool = text(record, 'tool')
   const round = readInteger(record, 'round')
   if (!toolCallId || !tool || round === null) return null
-  // 快照里只带仍在执行的工具。
-  return { toolCallId, tool, round, state: 'running' }
+  // 快照带完整历史：state 缺省按执行中处理，避免旧服务端把已结束的工具当成新步骤。
+  const state = TOOL_STATES.find((item) => item === record.state) ?? 'running'
+  return {
+    toolCallId,
+    tool,
+    round,
+    state,
+    input: optionalText(record, 'input'),
+    output: optionalText(record, 'output'),
+  }
 }
 
 function readTools(value: unknown): AgentRunTool[] {
@@ -247,7 +260,17 @@ export function parseAgentRunEvent(eventName: string, data: string): AgentRunStr
     const revision = readInteger(record, 'revision')
     const ok = typeof record.ok === 'boolean' ? record.ok : null
     if (!phase || !toolCallId || !tool || revision === null) return null
-    return { kind: 'tool', run, phase, toolCallId, tool, ok, revision }
+    return {
+      kind: 'tool',
+      run,
+      phase,
+      toolCallId,
+      tool,
+      ok,
+      input: optionalText(record, 'input'),
+      output: optionalText(record, 'output'),
+      revision,
+    }
   }
   return null
 }
@@ -295,6 +318,11 @@ function fromEvent(run: AgentRunEventBase, revision: number): AgentRun {
 
 function withRun(state: AgentRunsState, run: AgentRun): AgentRunsState {
   return { ...state, runs: { ...state.runs, [run.runId]: run } }
+}
+
+/** 运行结束时还没等到 finished 的工具按中性“结束”收尾，保留这条记录。 */
+function settleTools(tools: AgentRunTool[]): AgentRunTool[] {
+  return tools.map((tool) => (tool.state === 'running' ? { ...tool, state: 'done' } : tool))
 }
 
 /** 只有服务端新版本才能改状态/工具；正文由 delta.seq 单独排序。 */
@@ -346,27 +374,26 @@ function applyUpdated(
     ...existing,
     status: event.status,
     round,
-    tools: existing.tools.filter((tool) => tool.state !== 'running'),
+    tools: settleTools(existing.tools),
     revision: nextRevision,
   })
 }
 
 function applySnapshot(state: AgentRunsState, snapshot: AgentRunSnapshot): AgentRunsState {
   const existing = state.runs[snapshot.runId]
-  // 已封存的运行不再改写；但最终消息可能先于快照到达，首次插入仍允许，刷新后运行卡才不会丢。
-  if (state.finalizedRoots[snapshot.rootRunId] && existing) return state
   if (!existing) {
     if (isTerminalStatus(snapshot.status)) {
       // 刷新/服务重启：后端只把残留运行标 FAILED，不一定补最终消息。
       // 只给触发消息在当前消息列表里、又没有最终消息的终态运行建气泡。
       if (!state.visibleTriggers[snapshot.triggerMessageId]) return state
-      if (!snapshot.result && !snapshot.segments.length) return state
+      if (!snapshot.result && !snapshot.segments.length && !snapshot.tools.length) return state
       if (snapshot.parentRunId && !state.runs[snapshot.parentRunId]) return state
     }
     return withRun(state, fromSnapshot(snapshot))
   }
-  // root 的 DB 终态不受本地 revision 限制（结束后进程内 revision 归 0），
-  // 但仍只用来收尾：保留已流式收到的正文，丢掉未完成的工具行。
+  // 已封存的运行不再接受事件，但快照仍是工具历史的唯一来源：重新进群后靠它把工具列表补齐。
+  // root 的 DB 终态不受本地 revision 限制（结束后进程内 revision 归 0），只用来收尾：
+  // 保留已流式收到的正文，没等到 finished 的工具按中性结束保留。
   const acceptingTerminalRoot = existing.parentRunId === null && isTerminalStatus(snapshot.status)
   if (!acceptingTerminalRoot && isStale(existing, snapshot.revision)) return state
   const revision = Math.max(existing.revision, snapshot.revision)
@@ -383,11 +410,12 @@ function applySnapshot(state: AgentRunsState, snapshot: AgentRunSnapshot): Agent
           revision,
         }),
       )
-    // 终态快照的 segments 通常已被服务端清理；保留已流式收到的正文，只补结果。
+    // 终态快照的 segments 通常已被服务端清理；保留已流式收到的正文，补结果与工具历史。
     return withRun(state, {
       ...existing,
       result: snapshot.result ?? existing.result,
       segments: existing.segments.length ? existing.segments : snapshot.segments,
+      tools: snapshot.tools.length ? snapshot.tools : existing.tools,
       lastSeq: Math.max(existing.lastSeq, snapshot.seq),
       revision,
     })
@@ -398,9 +426,7 @@ function applySnapshot(state: AgentRunsState, snapshot: AgentRunSnapshot): Agent
       fromSnapshot(snapshot, {
         round: Math.max(existing.round, snapshot.round),
         segments: snapshot.segments.length ? snapshot.segments : existing.segments,
-        tools: snapshot.tools.length
-          ? snapshot.tools
-          : existing.tools.filter((tool) => tool.state !== 'running'),
+        tools: snapshot.tools.length ? snapshot.tools : settleTools(existing.tools),
         lastSeq: Math.max(existing.lastSeq, snapshot.seq),
         result: snapshot.result ?? existing.result,
         revision,
@@ -465,7 +491,14 @@ function applyTool(state: AgentRunsState, event: AgentRunStreamEvent & { kind: '
   const known = existing.tools.some((tool) => tool.toolCallId === event.toolCallId)
   const tools = known
     ? existing.tools.map((tool) =>
-        tool.toolCallId === event.toolCallId ? { ...tool, state: toolState } : tool,
+        tool.toolCallId === event.toolCallId
+          ? {
+              ...tool,
+              state: toolState,
+              input: event.input ?? tool.input,
+              output: event.output ?? tool.output,
+            }
+          : tool,
       )
     : [
         ...existing.tools,
@@ -474,6 +507,8 @@ function applyTool(state: AgentRunsState, event: AgentRunStreamEvent & { kind: '
           tool: event.tool,
           round: event.run.round,
           state: toolState,
+          input: event.input,
+          output: event.output,
         },
       ]
   const nextStatus = isTerminalStatus(event.run.status) ? event.run.status : existing.status
@@ -481,14 +516,14 @@ function applyTool(state: AgentRunsState, event: AgentRunStreamEvent & { kind: '
     ...existing,
     status: nextStatus,
     round: Math.max(existing.round, event.run.round),
-    tools: isTerminalStatus(nextStatus) ? tools.filter((tool) => tool.state !== 'running') : tools,
+    tools: isTerminalStatus(nextStatus) ? settleTools(tools) : tools,
     revision: Math.max(existing.revision, event.revision),
   })
 }
 
 /**
  * 最终消息到达：只封存根运行，丢弃后续迟到事件。
- * 运行记录本身保留——聊天侧靠它渲染触发消息下方的运行卡与执行轨迹。
+ * 运行记录本身保留——聊天侧靠它渲染触发消息下方的运行卡与工具历史。
  */
 function finalize(state: AgentRunsState, rootIds: string[]): AgentRunsState {
   const pending = rootIds.filter((rootId) => !state.finalizedRoots[rootId])

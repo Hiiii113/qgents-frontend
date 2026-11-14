@@ -6,7 +6,7 @@ import { chatApi } from '@/api/chat'
 import { projectApi } from '@/api/project'
 import { useAuth } from '@/context/AuthContext'
 import { useAgentRuns } from '@/features/agent-runs'
-import { isTerminalStatus, type AgentRun } from '@/features/agent-runs/types'
+import type { AgentRun } from '@/features/agent-runs/types'
 import { formatApiError } from '@/utils/formatApiError'
 import type { Page } from '@/types/api'
 import { messageField, type ChatGroup, type ChatMessage, type SendChatMessage } from '@/types/chat'
@@ -15,10 +15,8 @@ import { chatKeys, mergeChatMessages, useChatMessages } from './useChatMessages'
 import { ChatComposer, type ChatComposerHandle } from './ChatComposer'
 import { ChatMessageList } from './ChatMessageList'
 import { GroupMembersDialog } from './GroupMembersDialog'
-import { TracePanel } from './TracePanel'
 import { MembersPanel } from './MembersPanel'
 import { Button, Icon } from '@/components/ui'
-import { useAppUiStore } from '@/store/appUiStore'
 import './chat.css'
 
 const AttachmentPreviewLazy = lazy(async () => ({
@@ -26,7 +24,8 @@ const AttachmentPreviewLazy = lazy(async () => ({
 }))
 
 /**
- * 聊天工作区：群聊列（由页面传入）+ 消息画布 + 执行轨迹。
+ * 聊天工作区：群聊列（由页面传入）+ 消息画布 + 群成员侧栏。
+ * Agent 的工具调用在触发消息下方的运行卡里展开，不再单独占一列。
  * 输入、历史消息、运行状态各自独立，打字不会重渲染消息列表。
  */
 export function ChatPanel({
@@ -48,11 +47,8 @@ export function ChatPanel({
   const [inviteOpen, setInviteOpen] = useState(false)
   const [targetId, setTargetId] = useState<string | null>(params.get('messageId'))
   const [readingLatest, setReadingLatest] = useState(true)
-  const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const composerRef = useRef<ChatComposerHandle>(null)
   const membersButtonRef = useRef<HTMLButtonElement>(null)
-  const traceOpen = useAppUiStore((state) => state.chatTraceOpen)
-  const setTraceOpen = useAppUiStore((state) => state.setChatTraceOpen)
   const groupId = group.id
 
   const closeMembers = useCallback(() => {
@@ -61,27 +57,9 @@ export function ChatPanel({
   }, [])
 
   const toggleMembers = useCallback(() => {
-    if (membersOpen) {
-      closeMembers()
-      return
-    }
-    setTraceOpen(false)
-    setMembersOpen(true)
-  }, [closeMembers, membersOpen, setTraceOpen])
-
-  const toggleTrace = useCallback(() => {
-    if (traceOpen) {
-      setTraceOpen(false)
-      return
-    }
-    setMembersOpen(false)
-    setTraceOpen(true)
-  }, [setTraceOpen, traceOpen])
-
-  // 窄屏轨迹是覆盖层：首次进入先不叠在画布上，点运行卡或页头按钮再打开。
-  useEffect(() => {
-    if (window.matchMedia('(max-width: 1100px)').matches) setTraceOpen(false)
-  }, [setTraceOpen])
+    if (membersOpen) closeMembers()
+    else setMembersOpen(true)
+  }, [closeMembers, membersOpen])
 
   const project = useQuery({
     queryKey: ['projects', projectId],
@@ -126,39 +104,10 @@ export function ChatPanel({
   const runsByMessage = useMemo(() => {
     const map = new Map<string, AgentRun[]>()
     for (const run of agentRuns.runs) {
-      if (run.parentRunId !== null) continue
       map.set(run.triggerMessageId, [...(map.get(run.triggerMessageId) ?? []), run])
     }
     return map
   }, [agentRuns.runs])
-
-  const activeRun = useMemo(() => {
-    const roots = agentRuns.runs.filter((run) => run.parentRunId === null)
-    return (
-      roots.find((run) => run.runId === selectedRunId) ??
-      roots.find((run) => !isTerminalStatus(run.status)) ??
-      roots.at(-1) ??
-      null
-    )
-  }, [agentRuns.runs, selectedRunId])
-  const childRuns = useMemo(
-    () => (activeRun ? agentRuns.runs.filter((run) => run.parentRunId === activeRun.runId) : []),
-    [activeRun, agentRuns.runs],
-  )
-  const triggerMessage = activeRun
-    ? chat.messages.find((item) => item.id === activeRun.triggerMessageId)
-    : undefined
-  const trigger = activeRun
-    ? `${triggerMessage?.senderName ?? '成员'}${
-        triggerMessage
-          ? ' ' +
-            new Date(triggerMessage.createdAt).toLocaleTimeString('zh-CN', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          : ''
-      }`
-    : undefined
 
   const locate = useCallback(
     async (id: string) => {
@@ -252,14 +201,6 @@ export function ChatPanel({
               >
                 成员
               </Button>
-              <Button
-                variant="quiet"
-                aria-expanded={traceOpen}
-                icon={<Icon name="activity" size={16} aria-hidden />}
-                onClick={toggleTrace}
-              >
-                执行轨迹
-              </Button>
             </div>
           </header>
 
@@ -302,11 +243,6 @@ export function ChatPanel({
             onReply={setReply}
             onPreview={setPreview}
             onLocate={(id) => void locate(id)}
-            onOpenRun={(runId) => {
-              setSelectedRunId(runId)
-              setMembersOpen(false)
-              setTraceOpen(true)
-            }}
             onStop={handleStop}
             onMention={(member) => composerRef.current?.mention(member)}
           />
@@ -326,29 +262,14 @@ export function ChatPanel({
         </section>
       </main>
 
-      {(traceOpen || membersOpen) && (
+      {membersOpen && (
         <button
           type="button"
           className="scrim scrim--panel"
           aria-label="关闭侧栏"
-          onClick={() => {
-            if (membersOpen) closeMembers()
-            setTraceOpen(false)
-          }}
+          onClick={closeMembers}
         />
       )}
-
-      {traceOpen ? (
-        <TracePanel
-          run={activeRun}
-          childrenRuns={childRuns}
-          agentName={activeRun ? agentNames.get(activeRun.agentId) : undefined}
-          trigger={trigger}
-          connectionError={agentRuns.connectionStatus === 'error' ? agentRuns.error : null}
-          onRetry={agentRuns.retry}
-          onClose={() => setTraceOpen(false)}
-        />
-      ) : null}
 
       {membersOpen ? (
         <MembersPanel

@@ -5,11 +5,9 @@ interface AppUiStore {
   currentTeamId: string | null
   setCurrentTeam: (teamId: string | null) => void
   clearContext: () => void
-  /** 窄屏群聊列与执行轨迹的覆盖层开关；只在聊天页有内容。 */
+  /** 窄屏群聊列的覆盖层开关；只在聊天页有内容。 */
   chatContextOpen: boolean
   setChatContextOpen: (open: boolean) => void
-  chatTraceOpen: boolean
-  setChatTraceOpen: (open: boolean) => void
 }
 
 export const useAppUiStore = create<AppUiStore>((set) => ({
@@ -18,8 +16,6 @@ export const useAppUiStore = create<AppUiStore>((set) => ({
   clearContext: () => set({ currentTeamId: null }),
   chatContextOpen: false,
   setChatContextOpen: (chatContextOpen) => set({ chatContextOpen }),
-  chatTraceOpen: true,
-  setChatTraceOpen: (chatTraceOpen) => set({ chatTraceOpen }),
 }))
 
 export const useCurrentTeamId = () => useAppUiStore((state) => state.currentTeamId)
