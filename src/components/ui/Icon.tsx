@@ -152,7 +152,13 @@ interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
 /** 用内联 symbol 引用，图标定义只出现一次。 */
 export function Icon({ name, size = 16, ...rest }: IconProps) {
   return (
-    <svg className="od-icon" style={{ '--od-icon-size': `${size}px` } as never} {...rest}>
+    <svg
+      className="od-icon"
+      style={{ '--od-icon-size': `${size}px` } as never}
+      aria-hidden
+      focusable="false"
+      {...rest}
+    >
       <use href={`#i-${name}`} />
     </svg>
   )

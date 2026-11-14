@@ -379,7 +379,14 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
               <Icon name="paperclip" size={15} />
             </IconButton>
             <span className="meta">
-              {disabled && disabledHint ? disabledHint : 'Enter 发送 · Shift + Enter 换行'}
+              {disabled && disabledHint ? (
+                disabledHint
+              ) : (
+                <>
+                  <span className="composer__hint">Enter 发送 · Shift + Enter 换行</span>
+                  <span className="composer__hint--touch">点按发送</span>
+                </>
+              )}
             </span>
           </div>
           <Button

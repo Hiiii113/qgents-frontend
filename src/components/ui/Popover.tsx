@@ -3,6 +3,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 interface PopoverProps {
   open: boolean
   onClose: () => void
+  label: string
   align?: 'start' | 'end'
   className?: string
   children: ReactNode
@@ -12,7 +13,14 @@ interface PopoverProps {
  * 锚在触发按钮下方的小浮层。点击浮层外或按 Esc 关闭；
  * 点击触发按钮本身不在这里处理，交给按钮切换开关。
  */
-export function Popover({ open, onClose, align = 'end', className = '', children }: PopoverProps) {
+export function Popover({
+  open,
+  onClose,
+  label,
+  align = 'end',
+  className = '',
+  children,
+}: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -43,6 +51,7 @@ export function Popover({ open, onClose, align = 'end', className = '', children
       className={`popover popover--${align} ${className}`.trim()}
       role="dialog"
       aria-modal="false"
+      aria-label={label}
     >
       {children}
     </div>

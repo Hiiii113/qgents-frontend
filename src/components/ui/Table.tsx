@@ -12,10 +12,12 @@ interface DataTableProps {
 /** 表格：表头 12px 元信息，行间单条行界，主列更宽。 */
 export function DataTable({ layout = 'plain', columns, children, className = '' }: DataTableProps) {
   return (
-    <ul className={`table table--${layout} ${className}`.trim()}>
-      <li className="table__row table__row--head" aria-hidden>
+    <ul className={`table table--${layout} ${className}`.trim()} role="table">
+      <li className="table__row table__row--head" role="row">
         {columns.map((column, index) => (
-          <span key={index}>{column}</span>
+          <span key={index} role="columnheader">
+            {column}
+          </span>
         ))}
       </li>
       {children}
@@ -24,7 +26,11 @@ export function DataTable({ layout = 'plain', columns, children, className = '' 
 }
 
 export function TableRow({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <li className={`table__row ${className}`.trim()}>{children}</li>
+  return (
+    <li className={`table__row ${className}`.trim()} role="row">
+      {children}
+    </li>
+  )
 }
 
 export function TableCell({
@@ -37,7 +43,10 @@ export function TableCell({
   className?: string
 }) {
   return (
-    <span className={`table__cell${end ? ' table__cell--end' : ''} ${className}`.trim()}>
+    <span
+      className={`table__cell${end ? ' table__cell--end' : ''} ${className}`.trim()}
+      role="cell"
+    >
       {children}
     </span>
   )

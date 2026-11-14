@@ -268,7 +268,7 @@ kbd {
   gap: var(--s-4);
   padding: 8px var(--s-5);
   background: var(--mark-soft);
-  border-bottom: 1px solid #efd8d3;
+  border-bottom: 1px solid var(--mark-line);
 }
 .banner-bar__main {
   display: flex;
@@ -337,7 +337,7 @@ kbd {
   color: var(--ink-900);
 }
 .grouprow:hover {
-  background: #eff1f3;
+  background: var(--surface-sunken);
 }
 .grouprow[aria-current='true'] {
   background: var(--surface);

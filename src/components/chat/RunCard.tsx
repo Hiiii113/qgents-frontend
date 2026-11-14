@@ -59,7 +59,7 @@ export function RunCard({
             {stopping ? '停止中…' : '停止'}
           </Button>
         ) : (
-          <Button variant="link" onClick={onOpen}>
+          <Button variant="link" className="run__trace" onClick={onOpen}>
             查看轨迹
           </Button>
         )}

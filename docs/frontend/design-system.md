@@ -22,10 +22,12 @@
 | `--ink-300` | `#9AA3AC` | 图标与禁用态，**不承载文字** |
 | `--line` / `--line-strong` | `#E3E6E9` / `#CED4DA` | 行界 / 控件边框 |
 | `--mark` / `--mark-strong` / `--mark-soft` | `#B03A2B` / `#8C2B1F` / `#F9EAE7` | 人的决定：选中、当前导航、链接、焦点、派活与叫停 |
+| `--mark-line` | `#EFD8D3` | 朱砂细线（提示条边线） |
 | `--ok` / `--ok-soft` | `#1F6B4A` / `#EAF3EE` | 完成、已启用、已合并 |
 | `--wait` / `--wait-soft` | `#8A5A00` / `#F8F0DF` | 待审批、待接受邀请、送达未读 |
-| `--danger` / `--danger-soft` | `#A2261C` / `#FBECEA` | 归档、移除等不可逆动作 |
+| `--danger` / `--danger-strong` / `--danger-soft` | `#A2261C` / `#8B1C14` / `#FBECEA` | 归档、移除等不可逆动作 |
 | `--action` / `--action-hover` | `#191D21` / `#2B323A` | 主按钮实心墨 |
+| `--on-action` | `#FFFFFF` | 实心墨 / 朱砂上的文字 |
 
 规则：朱砂=人的动作与当前位置；琥珀=等别人；墨绿=已经成了；深红=不可逆。四者不同时出现在同一行。
 所有数值只在 `src/theme/tokens.ts` 定义，运行时写入 `:root`；页面 CSS 只引用变量。

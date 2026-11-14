@@ -22,11 +22,13 @@ const PRIMITIVES = {
   red700: '#B03A2B',
   red800: '#8C2B1F',
   red050: '#F9EAE7',
+  redLine: '#EFD8D3',
   green700: '#1F6B4A',
   green050: '#EAF3EE',
   amber700: '#8A5A00',
   amber050: '#F8F0DF',
   crimson700: '#A2261C',
+  crimson800: '#8B1C14',
   crimson050: '#FBECEA',
   ink900: '#191D21',
   ink800: '#2B323A',
@@ -53,16 +55,19 @@ export const T = {
   mark: PRIMITIVES.red700,
   markStrong: PRIMITIVES.red800,
   markSoft: PRIMITIVES.red050,
+  markLine: PRIMITIVES.redLine,
   // 状态
   ok: PRIMITIVES.green700,
   okSoft: PRIMITIVES.green050,
   wait: PRIMITIVES.amber700,
   waitSoft: PRIMITIVES.amber050,
   danger: PRIMITIVES.crimson700,
+  dangerStrong: PRIMITIVES.crimson800,
   dangerSoft: PRIMITIVES.crimson050,
   // 实心动作
   action: PRIMITIVES.ink900,
   actionHover: PRIMITIVES.ink800,
+  onAction: PRIMITIVES.white,
 } as const
 
 /**
@@ -96,16 +101,19 @@ export const cssVars: Record<string, string> = {
   '--mark': T.mark,
   '--mark-strong': T.markStrong,
   '--mark-soft': T.markSoft,
+  '--mark-line': T.markLine,
 
   '--ok': T.ok,
   '--ok-soft': T.okSoft,
   '--wait': T.wait,
   '--wait-soft': T.waitSoft,
   '--danger': T.danger,
+  '--danger-strong': T.dangerStrong,
   '--danger-soft': T.dangerSoft,
 
   '--action': T.action,
   '--action-hover': T.actionHover,
+  '--on-action': T.onAction,
   '--shadow': SHADOW,
 
   // 圆角：小件 3–4，控件 4，面板 6，对话框与头像 8，标签 3

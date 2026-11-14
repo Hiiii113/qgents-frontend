@@ -154,7 +154,7 @@ export default function AgentsPage() {
                 <EmptyState
                   icon="agent"
                   title="还没有自定义 Agent"
-                  description="成员可以按职责申请；通过后才会出现在群里可邀请的成员中。"
+                  description="成员可以按职责申请；通过后才会出现在群里可邀请的成员中。待审批的 Agent 不能邀请入群，到默认群 @Qgent 说明申请即可通过或拒绝。"
                   action={
                     <Button variant="link" onClick={() => setOpen(true)}>
                       申请新 Agent
@@ -179,10 +179,12 @@ export default function AgentsPage() {
                   ))}
                 </DataTable>
               )}
-              <p className="note">
-                待审批的 Agent 不能邀请入群。到默认群 <code>@Qgent</code>{' '}
-                说明申请，即可通过或拒绝；前端没有独立的审批操作。
-              </p>
+              {customAgents.length > 0 ? (
+                <p className="note">
+                  待审批的 Agent 不能邀请入群。到默认群 <code>@Qgent</code>{' '}
+                  说明申请，即可通过或拒绝；前端没有独立的审批操作。
+                </p>
+              ) : null}
               {application ? (
                 <p className="note note--ok">
                   {`「${application.name}」已提交，${STATUS[application.status].label}`}

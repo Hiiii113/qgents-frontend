@@ -193,6 +193,12 @@
 .run--fail .run__state {
   color: var(--danger);
 }
+.run__trace {
+  color: var(--ink-700);
+}
+.run__trace:hover {
+  color: var(--ink-900);
+}
 .run__note {
   margin-top: 6px;
   font-size: var(--t-xs);
@@ -299,6 +305,10 @@
 .composer__box:focus-within {
   border-color: var(--ink-900);
 }
+.composer__box:has(textarea:focus) {
+  border-color: var(--ink-900);
+  box-shadow: 0 0 0 3px var(--mark-soft);
+}
 .composer textarea {
   border: 0;
   padding: 4px 0 6px;
@@ -317,6 +327,24 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s-3);
+}
+.composer__hint--touch {
+  display: none;
+}
+@media (hover: none) {
+  .composer__hint {
+    display: none;
+  }
+  .composer__hint--touch {
+    display: inline;
+  }
+  .composer__foot .iconbtn--square {
+    width: 40px;
+    height: 40px;
+  }
+  .composer__foot .btn {
+    height: 40px;
+  }
 }
 .composer__tools {
   display: flex;

@@ -87,6 +87,7 @@ export function Rail({ mode, teamId, projectId, meOpen, onOpenMe, onCloseMe }: R
             type="button"
             className="rail__me"
             aria-label="打开个人菜单"
+            aria-haspopup="dialog"
             aria-expanded={meOpen}
             onClick={onOpenMe}
           >

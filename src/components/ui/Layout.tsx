@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Icon, type IconName } from './Icon'
 
 /** 页面画布：统一的左右留白与最大宽度。 */
@@ -74,8 +74,15 @@ export function EmptyState({ icon, title, description, action, stacked }: EmptyS
 }
 
 export function Skeleton({ rows = 4 }: { rows?: number }) {
+  // 300ms 内返回的请求不闪骨架；再慢才出现。
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setVisible(true), 300)
+    return () => window.clearTimeout(timer)
+  }, [])
+  if (!visible) return null
   return (
-    <div className="sk" aria-busy="true" aria-label="正在加载">
+    <div className="sk" role="status" aria-label="正在加载">
       <div className="sk__bar sk__bar--title" />
       {Array.from({ length: rows }, (_, index) => (
         <div

@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import Markdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { memoryApi } from '@/api'
+import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
 import { Button, EmptyState, Page, PageHead, Skeleton, Tag } from '@/components/ui'
 import './memory.css'
@@ -57,6 +58,7 @@ function outlineOf(content: string): { id: string; label: string }[] {
  */
 export default function MemoryPage() {
   const { projectId = '' } = useParams<{ projectId: string }>()
+  const navigate = useNavigate()
   const memory = useQuery({
     queryKey: ['memory', projectId],
     queryFn: () => memoryApi.get(projectId),
@@ -96,6 +98,11 @@ export default function MemoryPage() {
             icon="book"
             title="还没有项目记忆"
             description="在聊天里告诉 Qgent 需要长期保留的约定；项目管理员确认后由它写入 memory.md。"
+            action={
+              <Button variant="link" onClick={() => navigate(PATHS.projectChat(projectId))}>
+                去群聊
+              </Button>
+            }
             stacked
           />
         ) : (

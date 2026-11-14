@@ -25,7 +25,7 @@
 }
 .btn--primary {
   background: var(--action);
-  color: #fff;
+  color: var(--on-action);
 }
 .btn--primary:hover {
   background: var(--action-hover);
@@ -41,10 +41,10 @@
 }
 .btn--danger {
   background: var(--danger);
-  color: #fff;
+  color: var(--on-action);
 }
 .btn--danger:hover {
-  background: #8b1c14;
+  background: var(--danger-strong);
 }
 .btn--link {
   height: auto;
@@ -114,7 +114,7 @@
 }
 .tag--agent {
   background: var(--ink-900);
-  color: #fff;
+  color: var(--on-action);
 }
 .tag--ok {
   background: var(--ok-soft);
@@ -175,7 +175,7 @@
 }
 .avatar--t2 {
   background: var(--ink-900);
-  color: #fff;
+  color: var(--on-action);
 }
 .avatar--t3 {
   background: var(--mark-soft);
@@ -231,8 +231,8 @@ input:focus,
 textarea:focus,
 .select:focus {
   border-color: var(--ink-900);
-  outline: 2px solid var(--mark-soft);
-  outline-offset: 0;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--mark-soft);
 }
 input[readonly] {
   background: var(--surface-soft);
@@ -383,7 +383,7 @@ input[readonly] {
   text-underline-offset: 3px;
 }
 .table--projects .table__row {
-  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.2fr) 80px 120px;
+  grid-template-columns: minmax(0, 1fr) 100px 80px 100px;
 }
 .table--agents .table__row {
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) 90px 80px;
@@ -423,6 +423,10 @@ input[readonly] {
 }
 .inline-search input:focus {
   outline: none;
+}
+.inline-search:focus-within {
+  border-color: var(--ink-900);
+  box-shadow: 0 0 0 3px var(--mark-soft);
 }
 
 /* ---------- 空态 / 阻断 / 骨架 / 横幅 ---------- */
@@ -1066,7 +1070,7 @@ input[readonly] {
   padding: 9px 16px;
   border-radius: var(--r-sm);
   background: var(--action);
-  color: #fff;
+  color: var(--on-action);
   box-shadow: var(--shadow);
   font-size: var(--t-sm);
 }
@@ -1074,7 +1078,7 @@ input[readonly] {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  color: #fff;
+  color: var(--on-action);
 }
 .ant-message .ant-message-custom-content .anticon {
   color: inherit;

@@ -63,7 +63,7 @@ export function AppBar({
           <button
             type="button"
             className="crumb crumb--project"
-            aria-haspopup="menu"
+            aria-haspopup="dialog"
             aria-expanded={panel === 'project'}
             onClick={() => setPanel(panel === 'project' ? null : 'project')}
           >
@@ -71,7 +71,13 @@ export function AppBar({
             <span className="crumb__value">{crumbValue}</span>
             <Icon name="chevron" size={14} />
           </button>
-          <Popover open={panel === 'project'} onClose={close} align="start" className="popover--wide">
+          <Popover
+            open={panel === 'project'}
+            onClose={close}
+            label="切换项目"
+            align="start"
+            className="popover--wide"
+          >
             <ProjectMenu
               projects={projects}
               projectsPending={projectsPending}
@@ -100,7 +106,13 @@ export function AppBar({
             <span>搜索项目</span>
             <kbd>⌘K</kbd>
           </button>
-          <Popover open={panel === 'search'} onClose={close} align="end" className="popover--search">
+          <Popover
+            open={panel === 'search'}
+            onClose={close}
+            label="搜索项目"
+            align="end"
+            className="popover--search"
+          >
             <ProjectSearch
               projects={projects}
               pending={projectsPending}
@@ -278,13 +290,14 @@ function NotificationBell({
         label="通知"
         square
         className="bellbtn"
+        aria-haspopup="dialog"
         aria-expanded={open}
         onClick={onToggle}
       >
         <Icon name="bell" size={16} />
         {unread > 0 ? <span className="dot dot--mark bellbtn__dot" aria-hidden /> : null}
       </IconButton>
-      <Popover open={open} onClose={onClose} align="end" className="popover--bell">
+      <Popover open={open} onClose={onClose} label="通知" align="end" className="popover--bell">
         <div className="row" style={{ justifyContent: 'space-between', padding: '0 4px 6px' }}>
           <p className="popover__label">通知</p>
           {notifications.length > 0 ? (
@@ -377,7 +390,7 @@ export function MeMenu({ open, onClose }: { open: boolean; onClose: () => void }
   }
 
   return (
-    <Popover open={open} onClose={onClose} align="end" className="popover--me">
+    <Popover open={open} onClose={onClose} label="账户菜单" align="end" className="popover--me">
       <div className="popover__me">
         <Avatar name={user?.displayName ?? '我'} src={user?.avatarUrl} size="lg" />
         <div className="od-fill">
