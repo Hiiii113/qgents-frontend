@@ -1,8 +1,13 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Alert, App, Avatar, Button, Dropdown, Mentions, Tag, Upload } from 'antd'
-import type { MenuProps } from 'antd'
-import { CloseOutlined, PaperClipOutlined, RobotOutlined, SendOutlined } from '@ant-design/icons'
-import type { MentionsRef } from 'antd/es/mentions'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { App } from 'antd'
 import { attachmentApi, uploadAttachment } from '@/api/attachment'
 import { formatApiError } from '@/utils/formatApiError'
 import {
@@ -12,25 +17,18 @@ import {
   type ChatMessage,
   type SendChatMessage,
 } from '@/types/chat'
+import { Avatar, Button, Icon, IconButton, Tag } from '@/components/ui'
 
-type Attachment = { id: string; file: File; attachmentId?: string }
+type Attachment = { id: string; file: File }
+
+const memberKey = (member: ChatMember) => `${member.memberType}:${member.id}`
+
+/** 昵称可重复：只有草稿里仍按独立词出现 @昵称，才把它算作这次提及。 */
 function containsMention(text: string, name: string) {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   return new RegExp(`(?:^|[\\s，。！？、,!?;；:：])@${escaped}(?=$|[\\s，。！？、,!?;；:：])`).test(
     text,
   )
-}
-const memberKey = (member: ChatMember) => `${member.memberType}:${member.id}`
-interface Props {
-  projectId: string
-  reply: ChatMessage | null
-  recipients: ChatMember[]
-  onSend: (body: SendChatMessage) => Promise<unknown>
-  onClearReply: () => void
-  disabled?: boolean
-  /** 输入被禁用时的原因，例如项目已归档、聊天还在加载。 */
-  disabledHint?: string
-  draftKey?: string
 }
 
 function readDraft(key?: string): { text: string; selected: string[] } {
@@ -52,12 +50,29 @@ function readDraft(key?: string): { text: string; selected: string[] } {
   }
 }
 
+interface MentionQuery {
+  start: number
+  term: string
+  index: number
+}
+
 export interface ChatComposerHandle {
-  /** 从消息头像等处把某人 @ 进草稿：追加 @名字 并把它记入提及列表。 */
+  /** 从成员列表等处把某人 @ 进草稿。 */
   mention: (member: ChatMember) => void
 }
 
-/** 输入状态留在编辑器，打字不会重新渲染历史消息列表。 */
+interface Props {
+  projectId: string
+  reply: ChatMessage | null
+  recipients: ChatMember[]
+  onSend: (body: SendChatMessage) => Promise<unknown>
+  onClearReply: () => void
+  disabled?: boolean
+  disabledHint?: string
+  draftKey?: string
+}
+
+/** 输入器：草稿、提及、附件都在这里自持，打字不重渲染历史消息。 */
 export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatComposer(
   {
     projectId,
@@ -74,42 +89,19 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
   const { message } = App.useApp()
   const [savedDraft] = useState(() => readDraft(draftKey))
   const [draft, setDraft] = useState(savedDraft.text)
+  const [selected, setSelected] = useState<string[]>(savedDraft.selected)
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selected, setSelected] = useState<string[]>(savedDraft.selected)
+  const [mention, setMention] = useState<MentionQuery | null>(null)
+  const suppressed = useRef(false)
+  const caret = useRef(0)
   const messageId = useRef(crypto.randomUUID())
-  const inputRef = useRef<MentionsRef>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const locked = busy || disabled
 
-  const insertMention = useCallback((member: ChatMember) => {
-    const token = `@${member.displayName} `
-    setDraft((prev) => (!prev ? token : /[ \n]$/.test(prev) ? prev + token : `${prev} ${token}`))
-    setSelected((prev) => (prev.includes(memberKey(member)) ? prev : [...prev, memberKey(member)]))
-    // 草稿变了就是新内容：换 clientMessageId，否则后端会按旧 ID 去重丢掉这条。
-    messageId.current = crypto.randomUUID()
-    setError(null)
-    // 等受控文本更新后再定位光标，避免覆盖用户后续输入。
-    requestAnimationFrame(() => {
-      const textarea = inputRef.current?.nativeElement.querySelector('textarea')
-      textarea?.focus({ preventScroll: true })
-      const end = textarea?.value.length ?? 0
-      textarea?.setSelectionRange(end, end)
-    })
-  }, [])
-  useImperativeHandle(ref, () => ({ mention: insertMention }), [insertMention])
-
-  const sending = useRef(false)
-  const previousReplyId = useRef(reply?.id)
-  useEffect(() => {
-    if (previousReplyId.current !== reply?.id) {
-      messageId.current = crypto.randomUUID()
-      previousReplyId.current = reply?.id
-    }
-    if (reply && !busy)
-      inputRef.current?.nativeElement.querySelector('textarea')?.focus({ preventScroll: true })
-  }, [reply, busy])
-  // 按用户和群聊保存文字与提及，切换会话后继续编辑；附件需重新选择。
+  // 草稿与提及按用户+群保存，切换会话后继续编辑；附件需要重新选择。
   useEffect(() => {
     if (!draftKey) return
     try {
@@ -120,26 +112,108 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
       /* 存储不可用时仍可正常聊天。 */
     }
   }, [draftKey, draft, selected])
+
+  // 多行输入随内容长高，最多 168px。
   useEffect(() => {
-    if (!busy && !disabled)
-      inputRef.current?.nativeElement.querySelector('textarea')?.focus({ preventScroll: true })
+    const node = textareaRef.current
+    if (!node) return
+    node.style.height = 'auto'
+    node.style.height = `${Math.min(node.scrollHeight, 168)}px`
+  }, [draft])
+
+  useEffect(() => {
+    if (!busy && !disabled) textareaRef.current?.focus({ preventScroll: true })
   }, [busy, disabled])
 
-  const edit = useCallback(
-    (value: string) => {
-      setDraft(value)
-      setSelected((current) =>
-        current.filter((key) =>
-          recipients.some(
-            (item) => memberKey(item) === key && containsMention(value, item.displayName),
-          ),
-        ),
-      )
+  const previousReplyId = useRef(reply?.id)
+  useEffect(() => {
+    if (previousReplyId.current !== reply?.id) {
       messageId.current = crypto.randomUUID()
+      previousReplyId.current = reply?.id
+    }
+    if (reply && !busy) textareaRef.current?.focus({ preventScroll: true })
+  }, [reply, busy])
+
+  const matches = useMemo(() => {
+    if (!mention) return []
+    const keyword = mention.term.trim().toLowerCase()
+    return recipients
+      .filter((member) => member.displayName.toLowerCase().includes(keyword))
+      .slice(0, 8)
+  }, [mention, recipients])
+
+  function findMention(text: string, at: number): MentionQuery | null {
+    const before = text.slice(0, at)
+    const match = /@([^\s@]*)$/.exec(before)
+    if (!match) return null
+    return { start: at - match[0].length, term: match[1], index: 0 }
+  }
+
+  function resetId() {
+    messageId.current = crypto.randomUUID()
+  }
+
+  function edit(value: string, at: number) {
+    setDraft(value)
+    setSelected((current) =>
+      current.filter((key) =>
+        recipients.some(
+          (member) => memberKey(member) === key && containsMention(value, member.displayName),
+        ),
+      ),
+    )
+    if (suppressed.current) {
+      suppressed.current = false
+      setMention(null)
+    } else {
+      setMention(findMention(value, at))
+    }
+    caret.current = at
+    setError(null)
+  }
+
+  const insertMention = useCallback(
+    (member: ChatMember, query?: MentionQuery) => {
+      const at = caret.current
+      const start = query?.start ?? at
+      const token = `@${member.displayName} `
+      setDraft((previous) => previous.slice(0, start) + token + previous.slice(at))
+      setSelected((previous) =>
+        previous.includes(memberKey(member)) ? previous : [...previous, memberKey(member)],
+      )
+      setMention(null)
+      resetId()
       setError(null)
+      const nextCaret = start + token.length
+      caret.current = nextCaret
+      requestAnimationFrame(() => {
+        const node = textareaRef.current
+        node?.focus({ preventScroll: true })
+        node?.setSelectionRange(nextCaret, nextCaret)
+      })
     },
-    [recipients],
+    [],
   )
+
+  useImperativeHandle(
+    ref,
+    () => ({ mention: (member: ChatMember) => insertMention(member) }),
+    [insertMention],
+  )
+
+  function addFiles(files: File[]) {
+    if (!files.length || locked) return
+    if (attachments.length + files.length > 10) {
+      void message.info('每次最多添加 10 个附件')
+      return
+    }
+    setAttachments((current) => [
+      ...current,
+      ...files.map((file) => ({ id: crypto.randomUUID(), file })),
+    ])
+  }
+
+  const sending = useRef(false)
   async function send() {
     if (locked || sending.current || (!draft.trim() && !attachments.length)) return
     sending.current = true
@@ -147,10 +221,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
     setError(null)
     try {
       for (const item of attachments) {
-        const attachmentId = item.attachmentId ?? (await uploadAttachment(projectId, item.file))
-        setAttachments((current) =>
-          current.map((file) => (file.id === item.id ? { ...file, attachmentId } : file)),
-        )
+        const attachmentId = await uploadAttachment(projectId, item.file)
         await onSend({
           type: item.file.type.startsWith('image/') ? 'IMAGE' : 'FILE',
           content: {
@@ -169,7 +240,8 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
         const mentions: ChatMention[] = recipients
           .filter(
             (item) =>
-              selected.includes(memberKey(item)) && containsMention(draft, item.displayName),
+              selected.includes(memberKey(item)) &&
+              containsMention(draft, item.displayName),
           )
           .map((item) => ({ type: item.memberType, id: item.id }))
         await onSend({
@@ -180,9 +252,11 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
           clientMessageId: messageId.current,
         })
       }
-      edit('')
+      setDraft('')
       setSelected([])
+      setMention(null)
       onClearReply()
+      resetId()
     } catch (failure) {
       setError(formatApiError(failure))
     } finally {
@@ -191,185 +265,179 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
     }
   }
 
-  const mentionItems: MenuProps['items'] = recipients.map((item) => ({
-    key: memberKey(item),
-    label: (
-      <span className="chat-composer__mention-target">
-        <Avatar
-          size={24}
-          src={item.avatarUrl}
-          icon={item.memberType === 'AGENT' ? <RobotOutlined /> : undefined}
-        >
-          {item.memberType === 'USER' ? item.displayName.slice(0, 1) : undefined}
-        </Avatar>
-        <span>{item.displayName}</span>
-        <small>{item.memberType === 'AGENT' ? 'Agent' : '成员'}</small>
-      </span>
-    ),
-  }))
+  function onKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.nativeEvent.isComposing) return
+    if (mention) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault()
+        if (!matches.length) return
+        const delta = event.key === 'ArrowDown' ? 1 : -1
+        setMention({
+          ...mention,
+          index: (mention.index + delta + matches.length) % matches.length,
+        })
+        return
+      }
+      if (event.key === 'Enter' || event.key === 'Tab') {
+        event.preventDefault()
+        const target = matches[mention.index]
+        if (target) insertMention(target, mention)
+        return
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        suppressed.current = true
+        setMention(null)
+        return
+      }
+    }
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      void send()
+    }
+  }
 
   return (
-    <div className="chat-composer" aria-busy={busy || undefined}>
-      {reply && (
-        <div className="chat-composer__reply">
+    <div className="composer" aria-busy={busy || undefined}>
+      {reply ? (
+        <div className="composer__reply">
           <div>
             <strong>回复 {reply.senderName || '成员'}</strong>
             <span>{chatMessageText(reply).slice(0, 140) || '点击查看原消息'}</span>
           </div>
-          <Button
-            type="text"
-            aria-label="取消回复"
-            disabled={busy}
-            icon={<CloseOutlined />}
-            onClick={onClearReply}
-          />
+          <IconButton label="取消回复" square disabled={busy} onClick={onClearReply}>
+            <Icon name="close" size={14} />
+          </IconButton>
         </div>
-      )}
-      {attachments.length > 0 && (
-        <div className="chat-composer__files">
+      ) : null}
+
+      {attachments.length ? (
+        <div className="composer__files">
           {attachments.map((item) => (
-            <Tag
-              key={item.id}
-              closable={!busy}
-              onClose={() =>
-                setAttachments((current) => current.filter((file) => file.id !== item.id))
-              }
-            >
+            <Tag key={item.id}>
               {item.file.name}
+              {busy ? null : (
+                <button
+                  type="button"
+                  className="tag__close"
+                  aria-label={`移除 ${item.file.name}`}
+                  onClick={() =>
+                    setAttachments((current) => current.filter((file) => file.id !== item.id))
+                  }
+                >
+                  <Icon name="close" size={11} />
+                </button>
+              )}
             </Tag>
           ))}
         </div>
-      )}
-      {error && (
-        <Alert type="error" showIcon message={error} closable onClose={() => setError(null)} />
-      )}
-      <Mentions
-        ref={inputRef}
-        aria-label="消息内容"
-        placeholder={disabled ? '暂时不能发送消息' : '写下想法，输入 @ 选择 Agent 或成员…'}
-        value={draft}
-        onChange={edit}
-        autoSize={{ minRows: 1, maxRows: 7 }}
-        placement="top"
-        notFoundContent="没有匹配的 Agent 或成员"
-        validateSearch={(text) => !/\s/.test(text)}
-        options={recipients.map((item) => ({
-          key: memberKey(item),
-          memberKey: memberKey(item),
-          value: item.displayName,
-          label: (
-            <span className="chat-mention-option">
-              <Avatar
-                size={28}
-                src={item.avatarUrl}
-                icon={item.memberType === 'AGENT' ? <RobotOutlined /> : undefined}
-              >
-                {item.memberType === 'USER' ? item.displayName.slice(0, 1) : undefined}
-              </Avatar>
-              <span>
-                {item.displayName}
-                <small>{item.memberType === 'AGENT' ? 'Agent' : item.email || '成员'}</small>
-              </span>
-            </span>
-          ),
-        }))}
-        onSelect={(option) => {
-          // 昵称可重复，选项单独携带成员 ID，发送时不靠昵称推断对象。
-          const key: unknown = Reflect.get(option, 'memberKey')
-          if (typeof key === 'string') setSelected((current) => [...new Set([...current, key])])
-        }}
-        onKeyDownCapture={(event) => {
-          // 换行与输入法确认交给浏览器，避免被候选菜单当成选择操作。
-          if (event.key === 'Enter' && (event.shiftKey || event.nativeEvent.isComposing))
-            event.stopPropagation()
-        }}
-        disabled={locked}
-        onPaste={(event) => {
-          const files = Array.from(event.clipboardData.files)
-          if (!files.length || locked) return
-          event.preventDefault()
-          if (attachments.length + files.length > 10) {
-            void message.info('每次最多添加 10 个附件')
-            return
-          }
-          setAttachments((current) => [
-            ...current,
-            ...files.map((file) => ({ id: crypto.randomUUID(), file })),
-          ])
-        }}
-        onPressEnter={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-            event.preventDefault()
-            void send()
-          }
-        }}
-      />
-      {disabled && disabledHint && (
-        <p className="chat-composer__note" role="status">
-          {disabledHint}
+      ) : null}
+
+      {error ? (
+        <p className="err" role="alert">
+          {error}
         </p>
-      )}
-      <div className="chat-composer__toolbar">
-        <div className="chat-composer__tools">
-          <Upload
-            showUploadList={false}
-            multiple
-            disabled={locked}
-            beforeUpload={(file, files) => {
-              if (attachments.length + files.length > 10) {
-                void message.info('每次最多添加 10 个附件')
-                return Upload.LIST_IGNORE
-              }
-              setAttachments((current) => [...current, { id: crypto.randomUUID(), file }])
-              return false
-            }}
-          >
-            <Button
-              type="text"
-              aria-label="添加附件"
-              icon={<PaperClipOutlined />}
+      ) : null}
+
+      <div className="composer__box">
+        <label className="sr" htmlFor="composer-input">
+          消息内容
+        </label>
+        <textarea
+          id="composer-input"
+          ref={textareaRef}
+          rows={1}
+          value={draft}
+          disabled={locked}
+          placeholder={
+            disabled ? '暂时不能发送消息' : '写下想法，输入 @ 选择 Agent 或成员…'
+          }
+          onChange={(event) => {
+            const node = event.currentTarget
+            edit(node.value, node.selectionStart ?? node.value.length)
+          }}
+          onSelect={(event) => {
+            const node = event.currentTarget
+            caret.current = node.selectionStart ?? 0
+          }}
+          onKeyDown={onKeyDown}
+          onPaste={(event) => {
+            const files = Array.from(event.clipboardData.files)
+            if (!files.length || locked) return
+            event.preventDefault()
+            addFiles(files)
+          }}
+        />
+        <div className="composer__foot">
+          <div className="composer__tools">
+            <IconButton
+              label="添加附件"
+              square
               disabled={locked}
+              onClick={() => fileRef.current?.click()}
             >
-              附件
-            </Button>
-          </Upload>
-          <Dropdown
-            trigger={['click']}
-            rootClassName="chat-mention-menu"
-            disabled={locked || !recipients.length}
-            menu={{
-              items: mentionItems,
-              onClick: ({ key }) => {
-                const member = recipients.find((item) => memberKey(item) === key)
-                if (member) insertMention(member)
-              },
-            }}
-          >
-            <Button
-              type="text"
-              aria-label="提及成员"
-              disabled={locked || !recipients.length}
-              title="把成员 @ 进输入框"
-            >
-              <span aria-hidden="true">@</span> 提及
-            </Button>
-          </Dropdown>
-        </div>
-        <div className="chat-composer__send">
-          <span className="chat-composer__hint" aria-hidden="true">
-            Enter 发送 · Shift + Enter 换行
-          </span>
+              <Icon name="paperclip" size={15} />
+            </IconButton>
+            <span className="meta">
+              {disabled && disabledHint ? disabledHint : 'Enter 发送 · Shift + Enter 换行'}
+            </span>
+          </div>
           <Button
-            type="primary"
-            icon={<SendOutlined />}
-            loading={busy}
+            variant="primary"
+            icon={<Icon name="send" size={15} aria-hidden />}
             disabled={locked || (!draft.trim() && !attachments.length)}
             onClick={() => void send()}
           >
-            发送
+            {busy ? '发送中…' : '发送'}
           </Button>
         </div>
       </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        multiple
+        hidden
+        onChange={(event) => {
+          addFiles(Array.from(event.target.files ?? []))
+          event.target.value = ''
+        }}
+      />
+
+      {mention && !locked ? (
+        <div className="mention" role="listbox" aria-label="群成员">
+          <p className="mention__title">群成员</p>
+          {matches.length === 0 ? (
+            <p className="mention__empty">没有匹配的成员。</p>
+          ) : (
+            <ul>
+              {matches.map((member, index) => (
+                <li key={memberKey(member)}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={index === mention.index}
+                    className={`mention__item${index === mention.index ? ' is-active' : ''}`}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => insertMention(member, mention)}
+                  >
+                    <Avatar
+                      name={member.displayName}
+                      src={member.avatarUrl}
+                      type={member.memberType === 'AGENT' ? 'agent' : 'user'}
+                      size="sm"
+                    />
+                    <span>{member.displayName}</span>
+                    <span className="mention__kind">
+                      {member.memberType === 'AGENT' ? 'Agent' : (member.email || '成员')}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
     </div>
   )
 })

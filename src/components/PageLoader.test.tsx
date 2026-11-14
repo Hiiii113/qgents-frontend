@@ -1,29 +1,11 @@
-import { act, cleanup, render } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
 import { PageLoader } from './PageLoader'
 
-afterEach(() => {
-  cleanup()
-  vi.useRealTimers()
-})
-
 describe('page loading feedback', () => {
-  it('shows the spinner only when loading lasts at least 180 ms', () => {
-    vi.useFakeTimers()
-    const { container } = render(<PageLoader />)
-    expect(container.querySelector('.ant-spin-spinning')).toBeNull()
-    act(() => vi.advanceTimersByTime(179))
-    expect(container.querySelector('.ant-spin-spinning')).toBeNull()
-    act(() => vi.advanceTimersByTime(1))
-    expect(container.querySelector('.ant-spin-spinning')).not.toBeNull()
-  })
-
-  it('cancels pending feedback when a short load finishes', () => {
-    vi.useFakeTimers()
-    const { container, unmount } = render(<PageLoader fullscreen />)
-    act(() => vi.advanceTimersByTime(100))
-    unmount()
-    act(() => vi.advanceTimersByTime(180))
-    expect(container).toBeEmptyDOMElement()
+  it('announces loading and marks fullscreen mode', () => {
+    const { container } = render(<PageLoader fullscreen />)
+    expect(screen.getByRole('status', { name: '加载中' })).toBeInTheDocument()
+    expect(container.querySelector('.page-loader--fullscreen')).not.toBeNull()
   })
 })

@@ -1,4 +1,3 @@
-export { AgentRunProgress, type AgentRunProgressProps } from './AgentRunProgress'
 export { useAgentRuns, type UseAgentRunsOptions, type UseAgentRunsResult } from './useAgentRuns'
 export {
   isTerminalStatus,

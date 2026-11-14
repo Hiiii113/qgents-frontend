@@ -1,26 +1,27 @@
-import { memo, useState } from 'react'
-import { Avatar, Button, Dropdown, Tag } from 'antd'
-import { EnterOutlined, FileOutlined, RobotOutlined } from '@ant-design/icons'
-import { AuthedImage } from '@/components/AuthedImage'
+import { memo } from 'react'
 import { attachmentApi } from '@/api/attachment'
+import { AuthedImage } from '@/components/AuthedImage'
 import { chatMessageText, messageField, type ChatMember, type ChatMessage } from '@/types/chat'
+import type { AgentRun } from '@/features/agent-runs/types'
+import { Avatar, Button, Icon, Tag } from '@/components/ui'
 import { ChatCodeBlock } from './ChatMarkdown'
 import { LazyChatMarkdown } from './LazyChatMarkdown'
+import { RunCard } from './RunCard'
 
 interface Props {
   item: ChatMessage
   projectId?: string
   sender?: ChatMember
   reply?: ChatMessage
-  currentUserId?: string
+  runs?: AgentRun[]
+  agentNames?: Map<string, string>
   onReply: (item: ChatMessage) => void
   onPreview: (item: ChatMessage) => void
   onLocate: (id: string) => void
-  /** 选中头像菜单里的「@名字」后，把该成员 @ 进输入框；右键本身不修改草稿。 */
-  onMention?: (member: ChatMember) => void
-  /** 同一发送者连续发言时，只有组首渲染作者行与头像；本人头像在右侧。 */
-  groupStart?: boolean
-  groupEnd?: boolean
+  onOpenRun: (runId: string) => void
+  onStop: (item: ChatMessage) => void
+  stopping?: boolean
+  located?: boolean
 }
 
 function LinkedText({ text }: { text: string }) {
@@ -39,74 +40,7 @@ function LinkedText({ text }: { text: string }) {
   )
 }
 
-/**
- * 头像即「@ ta」入口：右键或点击打开同一个动作菜单，选中才把成员 @ 进输入框。
- * 只有当前群成员（participants 里解析出的 sender）且不是自己时才给菜单：
- * 历史发送者、已不在群里的成员和自己都无法真正发出提及，只显示静态头像。
- */
-function MentionAvatar({
-  name,
-  agent,
-  avatarUrl,
-  member,
-  onMention,
-}: {
-  name: string
-  agent: boolean
-  avatarUrl?: string | null
-  member: ChatMember | null
-  onMention?: (member: ChatMember) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const avatar = (
-    <Avatar
-      className="chat-message__avatar"
-      size={32}
-      src={avatarUrl}
-      icon={agent ? <RobotOutlined /> : undefined}
-    >
-      {agent ? undefined : name.slice(0, 1)}
-    </Avatar>
-  )
-  if (!member || !onMention)
-    return (
-      <span className="chat-message__avatar-static" aria-hidden="true">
-        {avatar}
-      </span>
-    )
-  return (
-    <Dropdown
-      trigger={['contextMenu']}
-      autoFocus
-      rootClassName="chat-mention-menu"
-      placement="bottomLeft"
-      open={open}
-      onOpenChange={setOpen}
-      menu={{
-        items: [{ key: 'mention', label: `@${name}` }],
-        onClick: () => {
-          setOpen(false)
-          onMention(member)
-        },
-      }}
-    >
-      <button
-        type="button"
-        className="chat-message__avatar-hit"
-        aria-label={`提及 ${name}`}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        title={`点击或右键 @${name}`}
-        // 打开交给菜单；关闭由 antd 的点击外部 / Escape / 选中菜单项处理。
-        onClick={() => setOpen(true)}
-      >
-        {avatar}
-      </button>
-    </Dropdown>
-  )
-}
-
-/** 正文按消息类型分流：只有 Agent 的文字消息按 Markdown 渲染。 */
+/** 正文按类型分流：只有 Agent 的文字按 Markdown 渲染，图片用带鉴权地址。 */
 function MessageBody({
   item,
   projectId,
@@ -119,7 +53,7 @@ function MessageBody({
   onPreview: (item: ChatMessage) => void
 }) {
   const attachmentId = messageField(item, 'attachmentId')
-  // 不信任消息内容里的 url：用当前项目与附件 ID 重建内容地址，避免把 Bearer 发到外部地址。
+  // 不信任消息内容里的 url：用当前项目与附件 ID 重建内容地址。
   const imageUrl =
     projectId && attachmentId ? attachmentApi.contentUrl(projectId, attachmentId) : null
   if (item.type === 'CODE')
@@ -128,7 +62,7 @@ function MessageBody({
     )
   if (item.type === 'IMAGE')
     return (
-      <button className="chat-message__image" aria-label="预览图片" onClick={() => onPreview(item)}>
+      <button className="msg__image" aria-label="预览图片" onClick={() => onPreview(item)}>
         <AuthedImage
           preview={false}
           loading="lazy"
@@ -139,21 +73,35 @@ function MessageBody({
     )
   if (item.type === 'FILE')
     return (
-      <button
-        className="chat-message__file"
-        onClick={() => onPreview(item)}
-        disabled={!attachmentId}
-      >
-        <FileOutlined aria-hidden="true" />
-        <strong>{messageField(item, 'name') || '附件'}</strong>
-      </button>
+      <div className="attaches">
+        <button
+          type="button"
+          className="attach"
+          onClick={() => onPreview(item)}
+          disabled={!attachmentId}
+        >
+          <Icon name="file" size={15} />
+          <span className="attach__name">{messageField(item, 'name') || '附件'}</span>
+          {typeof Reflect.get(item.content as object, 'size') === 'number' ? (
+            <span className="attach__meta mono">
+              {formatSize(Number(Reflect.get(item.content as object, 'size')))}
+            </span>
+          ) : null}
+        </button>
+      </div>
     )
   if (agent) return <LazyChatMarkdown text={chatMessageText(item)} />
   return (
-    <div className="chat-message__text">
+    <div className="msg__text">
       <LinkedText text={chatMessageText(item)} />
     </div>
   )
+}
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 export const ChatMessageRow = memo(function ChatMessageRow({
@@ -161,83 +109,71 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   projectId,
   sender,
   reply,
-  currentUserId,
+  runs = [],
+  agentNames,
   onReply,
   onPreview,
   onLocate,
-  onMention,
-  groupStart = true,
-  groupEnd = true,
+  onOpenRun,
+  onStop,
+  stopping,
+  located,
 }: Props) {
   if (item.senderType === 'SYSTEM')
-    return <div className="chat-system-message">{chatMessageText(item)}</div>
+    return <div className="msg msg--system">{chatMessageText(item)}</div>
   const agent = item.senderType === 'AGENT'
-  // 人和 Agent 的 id 各自从 1 开始，会撞号；只比 id 会把 Agent 当成自己在说话。
-  const own = item.senderType === 'USER' && item.senderId === currentUserId
   const name = sender?.displayName || item.senderName || (agent ? 'Agent' : '成员')
   const timestamp = new Date(item.createdAt)
   const validTime = !Number.isNaN(timestamp.getTime())
   const time = validTime
     ? timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
     : ''
-  // sender 就是 participants 里与发送者匹配的那条成员记录；本人即当前用户的那条，头像与昵称取自它。
-  const mentionTarget: ChatMember | null = !own && sender ? sender : null
+
   return (
     <article
-      className={`chat-message${agent ? ' chat-message--agent' : ''}${
-        own ? ' chat-message--own' : ''
-      }${groupStart ? ' chat-message--group-start' : ''}${
-        groupEnd ? ' chat-message--group-end' : ''
-      }`}
+      className={`msg${located ? ' msg--located' : ''}`}
       aria-label={`${name}的消息`}
+      id={`message-${item.id}`}
     >
-      {/* 每个人都有头像：他人靠左、本人靠右（own 时 mentionTarget 为空，只显示静态头像）；
-          组内其余消息用同尺寸占位格，避免列宽塌陷导致气泡横移。 */}
-      {groupStart ? (
-        <MentionAvatar
-          name={name}
-          agent={agent}
-          avatarUrl={sender?.avatarUrl}
-          member={mentionTarget}
-          onMention={onMention}
-        />
-      ) : (
-        <span className="chat-message__avatar-placeholder" aria-hidden="true" />
-      )}
-      <div className="chat-message__main">
-        {groupStart && (
-          <div className="chat-message__head">
-            <strong className="chat-message__author">{name}</strong>
-            {agent && <Tag className="chat-message__tag">Agent</Tag>}
-            <time
-              dateTime={item.createdAt}
-              title={validTime ? timestamp.toLocaleString('zh-CN') : ''}
-            >
-              {time}
-            </time>
-          </div>
-        )}
-        <div className="chat-message__bubble">
-          {item.replyToId && (
-            <button className="chat-message__quote" onClick={() => onLocate(item.replyToId ?? '')}>
-              <strong>{reply?.senderName || '回复消息'}</strong>
-              <span>{reply ? chatMessageText(reply).slice(0, 160) : '点击查看原消息'}</span>
-            </button>
-          )}
-          <div className="chat-message__body">
-            <MessageBody item={item} projectId={projectId} agent={agent} onPreview={onPreview} />
-          </div>
-          <div className="chat-message__actions">
-            <Button
-              type="text"
-              size="small"
-              aria-label="回复这条消息"
-              onClick={() => onReply(item)}
-            >
-              <EnterOutlined className="chat-message__reply-icon" aria-hidden="true" />
-              <span className="chat-message__reply-label">回复</span>
-            </Button>
-          </div>
+      <Avatar
+        name={name}
+        src={sender?.avatarUrl}
+        type={agent ? 'agent' : 'user'}
+        size="md"
+      />
+      <div className="msg__body">
+        <p className="msg__head">
+          <span className="msg__name">{name}</span>
+          {agent ? <Tag tone="agent">Agent</Tag> : null}
+          <time
+            className="msg__time"
+            dateTime={item.createdAt}
+            title={validTime ? timestamp.toLocaleString('zh-CN') : ''}
+          >
+            {time}
+          </time>
+        </p>
+        {item.replyToId ? (
+          <button type="button" className="msg__quote" onClick={() => onLocate(item.replyToId ?? '')}>
+            <strong>{reply?.senderName || '回复消息'}</strong>
+            <span>{reply ? chatMessageText(reply).slice(0, 160) : '点击查看原消息'}</span>
+          </button>
+        ) : null}
+        <MessageBody item={item} projectId={projectId} agent={agent} onPreview={onPreview} />
+        {runs.map((run) => (
+          <RunCard
+            key={run.runId}
+            run={run}
+            agentName={agentNames?.get(run.agentId)}
+            onOpen={() => onOpenRun(run.runId)}
+            onStop={() => onStop(item)}
+            stopping={stopping}
+          />
+        ))}
+        <div className="msg__actions">
+          <Button variant="link" size="sm" onClick={() => onReply(item)}>
+            回复
+          </Button>
         </div>
       </div>
     </article>
