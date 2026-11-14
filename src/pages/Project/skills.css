@@ -1,0 +1,133 @@
+/* Skill 页：左侧列表 + 右侧详情，内容与预览的排版。 */
+.skill-master {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.skill-search {
+  width: 100%;
+}
+
+.skill-search input {
+  width: 100%;
+}
+
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* 详情正文按文档排版；内容来自 SKILL.md，不接管聊天消息的样式。 */
+.skill-content {
+  color: var(--ink-700);
+  font-size: var(--t-ui);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.skill-content > :first-child {
+  margin-top: 0;
+}
+
+.skill-content > :last-child {
+  margin-bottom: 0;
+}
+
+.skill-content h1,
+.skill-content h2,
+.skill-content h3,
+.skill-content h4 {
+  margin: var(--s-4) 0 var(--s-2);
+  color: var(--ink-900);
+  font-size: var(--t-ui);
+  font-weight: 600;
+}
+
+.skill-content p,
+.skill-content ul,
+.skill-content ol,
+.skill-content blockquote,
+.skill-content pre,
+.skill-content table {
+  margin: 0 0 var(--s-3);
+}
+
+.skill-content ul,
+.skill-content ol {
+  padding-left: var(--s-5);
+}
+
+.skill-content ul {
+  list-style: disc;
+}
+
+.skill-content ol {
+  list-style: decimal;
+}
+
+.skill-content pre {
+  max-height: 320px;
+  padding: var(--s-3);
+  overflow: auto;
+  background: var(--surface-sunken);
+  border-radius: var(--r-sm);
+  font-size: var(--t-sm);
+}
+
+.skill-content pre code {
+  padding: 0;
+  background: none;
+}
+
+.skill-content table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: var(--t-sm);
+}
+
+.skill-content th,
+.skill-content td {
+  padding: var(--s-2) var(--s-3);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.skill-content blockquote {
+  padding-left: var(--s-3);
+  border-left: 2px solid var(--line-strong);
+  color: var(--ink-500);
+}
+
+.skill-actions {
+  flex-wrap: wrap;
+}
+
+/* 导入弹窗里的文件解析预览：与正文同色，长内容局部滚动。 */
+.skill-preview {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-3);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.skill-preview__body {
+  max-height: 180px;
+  margin: 0;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.field input[type='file'] {
+  font-size: var(--t-sm);
+  color: var(--ink-500);
+}

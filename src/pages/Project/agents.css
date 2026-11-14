@@ -1,0 +1,18 @@
+/* Agent 页：默认 Agent 卡片的内容列与窄屏状态标签换行。 */
+.agent-default__body {
+  display: grid;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.agent-default__desc {
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  /* 窄屏卡片两列：状态标签落到正文列，不挤在头像下面。 */
+  .agent-default > .tag {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
