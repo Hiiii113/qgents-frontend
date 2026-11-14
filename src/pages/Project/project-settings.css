@@ -1,0 +1,4 @@
+/* 项目设置：成员表格的角色选择只占自身宽度，其余排版来自设计系统。 */
+.project-settings__role {
+  max-width: 160px;
+}

@@ -1,0 +1,15 @@
+/* GitHub：连接与可访问仓库都是「信息列 + 行尾操作」，窄屏交给设计系统的单列堆叠。 */
+.github-page__connections .table__row {
+  grid-template-columns: minmax(0, 1.6fr) 110px 96px max-content;
+}
+
+.github-page__repos .table__row {
+  grid-template-columns: minmax(0, 2.4fr) 120px 90px max-content;
+}
+
+@media (max-width: 760px) {
+  .github-page__connections .table__row,
+  .github-page__repos .table__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,16 @@
+/* 产品设置：团队入口按钮与安全页键值行，窄屏改为上下两行。 */
+.product-settings__actions {
+  margin-top: var(--s-4);
+}
+
+@media (max-width: 760px) {
+  .product-settings .kv__row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--s-2);
+  }
+
+  .product-settings .kv__v {
+    justify-content: flex-start;
+  }
+}
