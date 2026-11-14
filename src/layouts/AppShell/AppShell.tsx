@@ -7,7 +7,6 @@ import { useRememberTeam } from '@/hooks/useRememberTeam'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { PageLoader } from '@/components/PageLoader'
-import { CreateProjectModal } from '@/components/CreateProjectModal'
 import { AppBar } from './AppBar'
 import { Rail } from './Rail'
 import { GithubBanner } from './GithubBanner'
@@ -26,7 +25,6 @@ export function AppShell() {
   const projectId = /^\/app\/projects\/([^/]+)/.exec(pathname)?.[1] ?? null
   const routeTeamId = /^\/app\/teams\/([^/]+)/.exec(pathname)?.[1] ?? null
   const isSettings = pathname.startsWith('/app/settings')
-  const [createOpen, setCreateOpen] = useState(false)
   const [meOpen, setMeOpen] = useState(false)
 
   useRealtimeEvents()
@@ -72,7 +70,6 @@ export function AppShell() {
           project={project.data}
           projectId={projectId}
           chatEnabled={Boolean(projectId)}
-          onOpenCreateProject={() => setCreateOpen(true)}
         />
         {teamId ? (
           <GithubBanner key={teamId} teamId={teamId} />
@@ -89,12 +86,6 @@ export function AppShell() {
           </Suspense>
         </ErrorBoundary>
       </section>
-
-      <CreateProjectModal
-        teamId={teamId ?? ''}
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-      />
     </div>
   )
 }

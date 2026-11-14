@@ -11,7 +11,7 @@ import { formatRelativeTime } from '@/utils/formatRelativeTime'
 import { useNotificationEvents } from '@/realtime/useNotificationEvents'
 import { useRealtimeConnectionStatus } from '@/realtime/realtimeClient'
 import type { Notification, Project, Team } from '@/types'
-import { Button, Icon, IconButton, Popover } from '@/components/ui'
+import { Avatar, Button, Icon, IconButton, Popover } from '@/components/ui'
 
 type Panel = 'project' | 'search' | 'bell' | 'me'
 
@@ -23,7 +23,6 @@ interface AppBarProps {
   project: Project | undefined
   projectId: string | null
   chatEnabled: boolean
-  onOpenCreateProject: () => void
 }
 
 /** 56px 顶栏：项目切换器（带搜索）、通知、群聊开关。团队切换只在产品设置里。 */
@@ -35,7 +34,6 @@ export function AppBar({
   project,
   projectId,
   chatEnabled,
-  onOpenCreateProject,
 }: AppBarProps) {
   const [panel, setPanel] = useState<Panel | null>(null)
   const close = () => setPanel(null)
@@ -78,12 +76,7 @@ export function AppBar({
               projects={projects}
               projectsPending={projectsPending}
               currentId={projectId}
-              teamId={team?.id}
               onNavigate={close}
-              onCreate={() => {
-                close()
-                onOpenCreateProject()
-              }}
             />
           </Popover>
         </div>
@@ -140,16 +133,12 @@ function ProjectMenu({
   projects,
   projectsPending,
   currentId,
-  teamId,
   onNavigate,
-  onCreate,
 }: {
   projects: Project[] | undefined
   projectsPending: boolean
   currentId: string | null
-  teamId: string | undefined
   onNavigate: () => void
-  onCreate: () => void
 }) {
   const navigate = useNavigate()
   return (
@@ -179,25 +168,6 @@ function ProjectMenu({
           ))}
         </ul>
       )}
-      <div className="popover__foot">
-        <button
-          type="button"
-          className="menu__item menu__item--quiet"
-          onClick={onCreate}
-        >
-          新建项目
-        </button>
-        <button
-          type="button"
-          className="menu__item menu__item--quiet"
-          onClick={() => {
-            onNavigate()
-            navigate(teamId ? PATHS.teamDetail(teamId) : PATHS.APP)
-          }}
-        >
-          项目管理
-        </button>
-      </div>
     </>
   )
 }
@@ -366,11 +336,12 @@ function targetPath(item: Notification): string | null {
   )
 }
 
-/** 头像菜单：改昵称、进产品设置、退出。头像与团队切换在产品设置里。 */
+/** 头像菜单：昵称默认是文本，点旁边的编辑图标才进入输入；底部只保留退出登录。 */
 export function MeMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate()
   const { message } = App.useApp()
   const { user, logout, updateUser } = useAuth()
+  const [editing, setEditing] = useState(false)
   const [name, setName] = useState(user?.displayName ?? '')
   const dirty = name.trim() !== (user?.displayName ?? '')
   const save = useMutation({
@@ -378,61 +349,82 @@ export function MeMenu({ open, onClose }: { open: boolean; onClose: () => void }
     onSuccess: (updated) => {
       updateUser(updated)
       setName(updated.displayName)
+      setEditing(false)
       void message.success('昵称已更新')
     },
     onError: (error) => void message.error(formatApiError(error)),
   })
 
   useEffect(() => {
-    if (open) setName(user?.displayName ?? '')
+    if (!open) return
+    setEditing(false)
+    setName(user?.displayName ?? '')
   }, [open, user?.displayName])
+
+  function cancelEditing() {
+    setName(user?.displayName ?? '')
+    setEditing(false)
+  }
+
+  function submitName() {
+    const next = name.trim()
+    if (!next || save.isPending) return
+    if (!dirty) {
+      setEditing(false)
+      return
+    }
+    save.mutate(next)
+  }
 
   return (
     <Popover open={open} onClose={onClose} align="end" className="popover--me">
       <div className="popover__me">
-        <span className="avatar avatar--lg">
-          {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt={user.displayName} />
-          ) : (
-            (user?.displayName ?? '?').slice(0, 1)
-          )}
-        </span>
+        <Avatar name={user?.displayName ?? '我'} src={user?.avatarUrl} size="lg" />
         <div className="od-fill">
-          <label className="sr" htmlFor="me-name">
-            昵称
-          </label>
-          <input
-            id="me-name"
-            className="inline-edit"
-            value={name}
-            maxLength={120}
-            onChange={(event) => setName(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && dirty && name.trim()) save.mutate(name.trim())
-            }}
-          />
+          {editing ? (
+            <div className="me-editor">
+              <label className="sr" htmlFor="me-name">
+                昵称
+              </label>
+              <input
+                id="me-name"
+                className="inline-edit"
+                value={name}
+                maxLength={120}
+                autoFocus
+                onChange={(event) => setName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') submitName()
+                  if (event.key === 'Escape') cancelEditing()
+                }}
+              />
+              <IconButton
+                label="保存昵称"
+                square
+                disabled={!dirty || !name.trim() || save.isPending}
+                onClick={submitName}
+              >
+                <Icon name="check" size={14} />
+              </IconButton>
+            </div>
+          ) : (
+            <div className="me-name-row">
+              <span className="me-name">{user?.displayName ?? '用户'}</span>
+              <button
+                type="button"
+                className="me-edit"
+                aria-label="修改昵称"
+                title="修改昵称"
+                onClick={() => setEditing(true)}
+              >
+                <Icon name="edit" size={13} />
+              </button>
+            </div>
+          )}
           <p className="meta mono">{user?.email}</p>
         </div>
-        <Button
-          variant="quiet"
-          size="sm"
-          disabled={!dirty || !name.trim() || save.isPending}
-          onClick={() => save.mutate(name.trim())}
-        >
-          保存
-        </Button>
       </div>
       <div className="popover__foot">
-        <button
-          type="button"
-          className="menu__item menu__item--quiet"
-          onClick={() => {
-            onClose()
-            navigate(PATHS.SETTINGS)
-          }}
-        >
-          产品设置
-        </button>
         <button
           type="button"
           className="menu__item menu__item--quiet"
@@ -448,4 +440,3 @@ export function MeMenu({ open, onClose }: { open: boolean; onClose: () => void }
     </Popover>
   )
 }
-

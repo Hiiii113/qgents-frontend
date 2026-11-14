@@ -84,13 +84,18 @@
 .rail__me {
   display: flex;
   align-items: center;
-  gap: var(--s-2);
-  margin: var(--s-2) 6px 0;
-  padding: 4px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: var(--s-2) auto 0;
+  padding: 0;
   background: none;
   border: 1px solid transparent;
   border-radius: var(--r-sm);
   cursor: pointer;
+}
+.rail__foot .anchored {
+  justify-content: center;
 }
 .rail__me:hover {
   border-color: var(--line-strong);
@@ -596,7 +601,7 @@ kbd {
     border-radius: 2px 2px 0 0;
   }
   .rail__me {
-    margin: 0;
+    margin: 0 auto;
   }
   .context {
     left: 0;

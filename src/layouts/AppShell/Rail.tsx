@@ -90,7 +90,7 @@ export function Rail({ mode, teamId, projectId, meOpen, onOpenMe, onCloseMe }: R
             aria-expanded={meOpen}
             onClick={onOpenMe}
           >
-            <Avatar name={name} src={user?.avatarUrl} size="sm" />
+            <Avatar name={name} src={user?.avatarUrl} />
           </button>
           {meOpen ? <MeMenu open={meOpen} onClose={onCloseMe} /> : null}
         </div>
