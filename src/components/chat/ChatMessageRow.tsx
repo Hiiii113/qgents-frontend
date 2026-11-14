@@ -20,6 +20,7 @@ interface Props {
   onLocate: (id: string) => void
   onOpenRun: (runId: string) => void
   onStop: (item: ChatMessage) => void
+  canStop?: boolean
   stopping?: boolean
   located?: boolean
 }
@@ -116,6 +117,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   onLocate,
   onOpenRun,
   onStop,
+  canStop,
   stopping,
   located,
 }: Props) {
@@ -166,7 +168,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
             run={run}
             agentName={agentNames?.get(run.agentId)}
             onOpen={() => onOpenRun(run.runId)}
-            onStop={() => onStop(item)}
+            onStop={canStop ? () => onStop(item) : undefined}
             stopping={stopping}
           />
         ))}

@@ -16,6 +16,7 @@ interface Props {
   loadingOlder: boolean
   targetId: string | null
   stoppingMessageId?: string
+  canStop?: (item: ChatMessage) => boolean
   onLoadOlder: () => Promise<unknown>
   onReply: (item: ChatMessage) => void
   onPreview: (item: ChatMessage) => void
@@ -81,19 +82,6 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
   const newMessages = awayFromBottom
     ? messages.filter((item) => (item.sequence ?? 0) > seenSequence).length
     : 0
-
-  // 运行卡出现/消失会改变行高，重新量一次。
-  const runsVersion = useMemo(
-    () =>
-      [...runsByMessage.values()].reduce(
-        (total, runs) => total + runs.reduce((sum, run) => sum + run.tools.length, 0),
-        runsByMessage.size,
-      ),
-    [runsByMessage],
-  )
-  useLayoutEffect(() => {
-    virtualizer.measure()
-  }, [runsVersion, virtualizer])
 
   useLayoutEffect(() => {
     if (anchor.current) {
@@ -254,6 +242,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     onLocate={props.onLocate}
                     onOpenRun={props.onOpenRun}
                     onStop={props.onStop}
+                    canStop={props.canStop?.(item) ?? false}
                     stopping={props.stoppingMessageId === item.id}
                     located={props.targetId === item.id}
                   />

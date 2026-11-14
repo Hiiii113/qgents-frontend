@@ -485,15 +485,16 @@ function applyTool(state: AgentRunsState, event: AgentRunStreamEvent & { kind: '
   })
 }
 
+/**
+ * 最终消息到达：只封存根运行，丢弃后续迟到事件。
+ * 运行记录本身保留——聊天侧靠它渲染触发消息下方的运行卡与执行轨迹。
+ */
 function finalize(state: AgentRunsState, rootIds: string[]): AgentRunsState {
   const pending = rootIds.filter((rootId) => !state.finalizedRoots[rootId])
   if (!pending.length) return state
   const finalizedRoots = { ...state.finalizedRoots }
   for (const rootId of pending) finalizedRoots[rootId] = true
-  const runs = Object.fromEntries(
-    Object.entries(state.runs).filter(([, run]) => !finalizedRoots[run.rootRunId]),
-  )
-  return { ...state, runs, finalizedRoots }
+  return { ...state, finalizedRoots }
 }
 
 function setVisibleTriggers(state: AgentRunsState, triggerMessageIds: string[]): AgentRunsState {

@@ -53,6 +53,11 @@ export function ChatPanel({
   const setTraceOpen = useAppUiStore((state) => state.setChatTraceOpen)
   const groupId = group.id
 
+  // 窄屏轨迹是覆盖层：首次进入先不叠在画布上，点运行卡或页头按钮再打开。
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 1100px)').matches) setTraceOpen(false)
+  }, [setTraceOpen])
+
   const project = useQuery({
     queryKey: ['projects', projectId],
     queryFn: () => projectApi.getById(projectId),
@@ -255,6 +260,7 @@ export function ChatPanel({
             loadingOlder={chat.query.isFetchingNextPage}
             targetId={targetId}
             stoppingMessageId={stop.isPending ? stop.variables?.id : undefined}
+            canStop={canStop}
             onLoadOlder={chat.query.fetchNextPage}
             onReadingLatestChange={setReadingLatest}
             onReply={setReply}

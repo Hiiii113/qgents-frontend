@@ -437,7 +437,7 @@ describe('工具阶段', () => {
 })
 
 describe('终态、最终消息与刷新中断', () => {
-  it('最终消息按 clientMessageId 删除对应根运行与子运行，后续事件不复活', () => {
+  it('最终消息封存对应根运行与子运行：保留运行卡数据，后续事件不复活', () => {
     let state = withVisibleTriggers('8801')
     state = snapshots(state, [
       snapshot('101'),
@@ -446,11 +446,11 @@ describe('终态、最终消息与刷新中断', () => {
     ])
 
     state = agentRunsReducer(state, { type: 'finalize', rootIds: ['101'] })
-    expect(Object.keys(state.runs)).toEqual(['201'])
+    expect(Object.keys(state.runs)).toEqual(['101', '102', '201'])
 
     state = stream(state, 'agent-run.delta', delta('101', 9, 1, '迟到增量'))
     state = stream(state, 'agent-run.snapshot', { run: snapshot('101', { revision: 9 }) })
-    expect(Object.keys(state.runs)).toEqual(['201'])
+    expect(Object.keys(state.runs)).toEqual(['101', '102', '201'])
   })
 
   it('刷新后残留 FAILED（服务重启）显示结果：触发消息已加载且无最终消息', () => {

@@ -169,7 +169,7 @@ describe('useAgentRuns 连接与快照', () => {
     expect(result.current.runs[0]?.status).toBe('RUNNING')
   })
 
-  it('最终消息按 clientMessageId 删除根/子运行，迟到 SSE 事件不再复活', async () => {
+  it('最终消息封存根/子运行：保留运行卡数据，迟到 SSE 事件不再改写', async () => {
     vi.mocked(fetchAgentRunSnapshots).mockResolvedValue([
       snapshot('123'),
       snapshot('124', { parentRunId: '123', rootRunId: '123' }),
@@ -178,10 +178,11 @@ describe('useAgentRuns 连接与快照', () => {
     await waitFor(() => expect(result.current.runs).toHaveLength(2))
 
     rerender({ projectId: 'p1', groupId: 'g1', messages: [chatMessage('m1', 'qgent-reply:123')] })
-    await waitFor(() => expect(result.current.runs).toHaveLength(0))
+    expect(result.current.runs).toHaveLength(2)
 
     emit(streams[0], 'agent-run.delta', { ...event('123'), seq: 1, text: '迟到' })
-    expect(result.current.runs).toHaveLength(0)
+    expect(result.current.runs).toHaveLength(2)
+    expect(result.current.runs[0]?.segments).not.toEqual([{ round: 1, text: '迟到' }])
   })
 
   it('切群时 abort 旧连接、清空旧运行并连到新群', async () => {
