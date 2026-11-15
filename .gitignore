@@ -30,3 +30,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 内部文档与视觉原型只在本地保留，不公开。
+docs/
+design/
