@@ -18,7 +18,7 @@ interface Values {
 export default function JoinTeamPage() {
   const navigate = useNavigate()
   const client = useQueryClient()
-  const { setHasTeam } = useAuth()
+  const { hasTeam, setHasTeam } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const invitations = useQuery({
@@ -83,7 +83,7 @@ export default function JoinTeamPage() {
           <div className="form__foot">
             <Button
               variant="quiet"
-              onClick={() => navigate(PATHS.WELCOME)}
+              onClick={() => navigate(hasTeam ? PATHS.SETTINGS : PATHS.WELCOME)}
               icon={<Icon name="close" size={15} />}
             >
               取消
