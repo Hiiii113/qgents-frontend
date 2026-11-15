@@ -1,6 +1,17 @@
+<div align="center">
+
 # Qgents 前端
 
-在群聊里 @ 一个 Agent 派活，看它一轮轮调用工具、改代码、把分支推回 GitHub；跑偏了按那条消息停掉。
+**在群聊里 @ 一个 Agent 派活，看它调工具、改代码、推分支，跑偏了按那条消息停掉。**
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF.svg)](https://vite.dev/)
+
+[快速开始](#快速开始) · [界面](#界面里有什么) · [技术栈](#技术栈与硬约束) · [配置](#配置) · [部署](#部署)
+
+</div>
 
 ## 这是什么
 
