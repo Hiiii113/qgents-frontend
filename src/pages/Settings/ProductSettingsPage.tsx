@@ -267,10 +267,10 @@ function Security() {
           <span className="kv__v">
             <Button
               variant="quiet"
-              onClick={() => signOutTo(PATHS.FORGOT_PASSWORD)}
-              icon={<Icon name="logout" size={15} />}
+              onClick={() => navigate(PATHS.FORGOT_PASSWORD)}
+              icon={<Icon name="refresh" size={15} />}
             >
-              退出并重置密码
+              重置密码
             </Button>
           </span>
         </div>
@@ -291,7 +291,6 @@ function Security() {
           </span>
         </div>
       </div>
-      <p className="note">重置密码需要先退出登录，再用邮箱验证码设置新密码。</p>
     </Section>
   )
 }

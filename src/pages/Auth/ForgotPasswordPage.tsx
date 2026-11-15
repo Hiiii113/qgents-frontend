@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Form } from 'antd'
 import { authApi } from '@/api/auth'
+import { useAuth } from '@/context/AuthContext'
 import { PATHS } from '@/routes/paths'
 import { RSA_KEY_ID, encryptPassword } from '@/utils/rsaConfig'
 import { formatApiError } from '@/utils/formatApiError'
@@ -25,6 +26,7 @@ interface ResetValues {
 /** 找回密码：先发验证码，再用验证码设置新密码。新密码走 RSA 加密。 */
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
+  const { isAuthenticated, logout } = useAuth()
   const [stage, setStage] = useState<Stage>('request')
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -68,6 +70,8 @@ export default function ForgotPasswordPage() {
         newPassword: await encryptPassword(values.password),
         passwordKeyId: RSA_KEY_ID,
       })
+      // 重置后服务端已撤销全部会话：本机也主动退出，回登录页用新密码重登。
+      if (isAuthenticated) await logout()
       setStage('done')
     } catch (failure) {
       setError(formatApiError(failure))

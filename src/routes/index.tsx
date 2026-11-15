@@ -52,11 +52,7 @@ export function AppRouter() {
           />
           <Route
             path={PATHS.FORGOT_PASSWORD}
-            element={
-              <RedirectIfAuthed>
-                <ForgotPasswordPage />
-              </RedirectIfAuthed>
-            }
+            element={<ForgotPasswordPage />}
           />
 
           <Route element={<RequireAuth />}>
