@@ -38,3 +38,6 @@ design/
 # 内部规范与产品说明只在本地保留，不公开。
 AGENTS.md
 PRODUCT.md
+
+# 设计工具的本地产物，不公开。
+.impeccable/
