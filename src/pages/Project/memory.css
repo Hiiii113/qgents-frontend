@@ -1,4 +1,18 @@
 /* 项目记忆：memory.md 的文档排版；TOC 与分栏来自设计系统。 */
+
+/* 目录按内容收窄，目录与正文整体居中：固定的 260px 列会把正文推远，整页偏左。 */
+.split--doc {
+  grid-template-columns: fit-content(200px) minmax(0, 72ch);
+  column-gap: var(--s-4);
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .split--doc {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .memory-doc {
   max-height: none;
   overflow-wrap: anywhere;

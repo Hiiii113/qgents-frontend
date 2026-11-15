@@ -264,8 +264,8 @@ input[readonly] {
   color: var(--ink-500);
 }
 .hint {
-  font-size: var(--t-xs);
-  color: var(--ink-400);
+  font-size: var(--t-sm);
+  color: var(--ink-500);
 }
 .err {
   font-size: var(--t-xs);
@@ -329,8 +329,8 @@ input[readonly] {
   padding-top: 6px;
 }
 .form .ant-form-item-extra {
-  font-size: var(--t-xs);
-  color: var(--ink-400);
+  font-size: var(--t-sm);
+  color: var(--ink-500);
   padding-top: 6px;
   min-height: 0;
 }
@@ -477,9 +477,10 @@ input[readonly] {
 }
 .empty--stacked {
   display: grid;
-  justify-items: start;
+  justify-items: center;
   gap: var(--s-1);
   padding: var(--s-6) var(--s-2);
+  text-align: center;
 }
 .empty__icon {
   display: grid;

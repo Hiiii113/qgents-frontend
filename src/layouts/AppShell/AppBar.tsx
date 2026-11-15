@@ -53,12 +53,13 @@ export function AppBar({
   }, [])
 
   const crumbLabel = mode === 'project' ? '项目' : mode === 'team' ? '团队' : '设置'
+  // 设置页的页面标题已经写明分区，面包屑不再重复一遍。
   const crumbValue =
     mode === 'project'
       ? (project?.name ?? '…')
       : mode === 'team'
         ? (team?.name ?? '…')
-        : '账户与团队'
+        : ''
 
   return (
     <header className="appbar">
@@ -93,7 +94,7 @@ export function AppBar({
       ) : (
         <span className="crumb">
           <span className="crumb__label">{crumbLabel}</span>
-          <span className="crumb__value">{crumbValue}</span>
+          {crumbValue ? <span className="crumb__value">{crumbValue}</span> : null}
         </span>
       )}
 

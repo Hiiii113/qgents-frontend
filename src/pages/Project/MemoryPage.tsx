@@ -114,7 +114,7 @@ export default function MemoryPage() {
             stacked
           />
         ) : (
-          <div className={outline.length ? 'split' : undefined}>
+          <div className={outline.length ? 'split split--doc' : undefined}>
             {outline.length ? (
               <nav className="toc" aria-label="文档目录">
                 <p className="toc__label">目录</p>

@@ -38,7 +38,7 @@ export default function ProductSettingsPage() {
   return (
     <main className="canvas">
       <Page className="product-settings">
-        <PageHead kicker="产品设置" title="账户与团队" />
+        <PageHead title="账户与团队" />
         <Tabs
           label="产品设置分区"
           items={TABS.map((item) => ({ key: item.key, label: item.label }))}

@@ -188,6 +188,8 @@ input:-webkit-autofill:focus {
   font-size: var(--t-ui);
   color: var(--ink-500);
   max-width: 62ch;
+  /* 两行说明均分宽度，避免末行只剩一个字。 */
+  text-wrap: balance;
 }
 .meta {
   font-size: var(--t-xs);

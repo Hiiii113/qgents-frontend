@@ -265,6 +265,7 @@ kbd {
 .view {
   padding: var(--s-6) var(--s-8) var(--s-10);
   max-width: 1160px;
+  margin-inline: auto;
   animation: qg-page-in var(--d-base) var(--ease);
 }
 .view--chat {
