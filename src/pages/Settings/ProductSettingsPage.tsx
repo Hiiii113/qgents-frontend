@@ -177,7 +177,27 @@ function Teams() {
   })
 
   return (
-    <Section title="我的团队">
+    <Section
+      title="我的团队"
+      aside={
+        <div className="row">
+          <Button
+            variant="quiet"
+            onClick={() => navigate(PATHS.CREATE_TEAM)}
+            icon={<Icon name="plus" size={15} />}
+          >
+            创建团队
+          </Button>
+          <Button
+            variant="quiet"
+            onClick={() => navigate(PATHS.JOIN_TEAM)}
+            icon={<Icon name="people" size={15} />}
+          >
+            加入团队
+          </Button>
+        </div>
+      }
+    >
       {teams.isPending ? (
         <Skeleton rows={3} />
       ) : teams.isError ? (
@@ -231,22 +251,6 @@ function Teams() {
           })}
         </ul>
       )}
-      <div className="row product-settings__actions">
-        <Button
-          variant="quiet"
-          onClick={() => navigate(PATHS.CREATE_TEAM)}
-          icon={<Icon name="plus" size={15} />}
-        >
-          创建团队
-        </Button>
-        <Button
-          variant="quiet"
-          onClick={() => navigate(PATHS.JOIN_TEAM)}
-          icon={<Icon name="people" size={15} />}
-        >
-          加入团队
-        </Button>
-      </div>
     </Section>
   )
 }

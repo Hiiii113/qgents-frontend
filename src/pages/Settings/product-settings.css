@@ -1,8 +1,9 @@
-/* 产品设置：团队入口按钮与安全页键值行，窄屏改为上下两行。 */
-.product-settings__actions {
-  margin-top: var(--s-4);
+/* 团队列表不撑满整行，与同页账户表单的窄栏一致。 */
+.product-settings .teamlist {
+  max-width: 520px;
 }
 
+/* 产品设置：安全页键值行窄屏改为上下两行。 */
 @media (max-width: 760px) {
   .product-settings .kv__row {
     flex-direction: column;
