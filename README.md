@@ -60,12 +60,6 @@ src/theme/       设计变量
 src/utils/       格式化、加密等工具
 ```
 
-## 文档
-
-- `AGENTS.md`：开发规范与提交约定
-
-领域词（什么叫项目记忆、群记忆、来源群）看后端仓库的 `GLOSSARY.md`。
-
 ## 参与开发
 
 项目还在 MVP 阶段，接口和页面会随实现改。提交前跑 `npm run lint` 和 `npm run test:run`；改动大一点的话先开 issue 说清楚要解决什么。

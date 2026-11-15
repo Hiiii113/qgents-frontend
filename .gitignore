@@ -34,3 +34,7 @@ dist-ssr
 # 内部文档与视觉原型只在本地保留，不公开。
 docs/
 design/
+
+# 内部规范与产品说明只在本地保留，不公开。
+AGENTS.md
+PRODUCT.md
