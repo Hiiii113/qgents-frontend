@@ -115,39 +115,55 @@
 .tag {
   display: inline-flex;
   align-items: center;
-  height: 20px;
-  padding: 0 6px;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
   font-size: var(--t-xs);
   font-weight: 500;
-  border-radius: var(--r-xs);
+  border-radius: var(--r-pill);
   background: var(--surface-sunken);
   color: var(--ink-700);
+  box-shadow: inset 0 0 0 1px var(--line);
   white-space: nowrap;
 }
 .tag--role {
   background: transparent;
   color: var(--ink-400);
-  border: 1px solid var(--line);
 }
 .tag--agent {
   background: var(--ink-900);
   color: var(--on-action);
+  box-shadow: none;
 }
 .tag--ok {
   background: var(--ok-soft);
   color: var(--ok);
+  box-shadow: none;
 }
 .tag--wait {
   background: var(--wait-soft);
   color: var(--wait);
+  box-shadow: none;
 }
 .tag--stop {
   background: var(--mark-soft);
   color: var(--mark-strong);
+  box-shadow: none;
 }
 .tag--readonly {
   background: var(--surface-sunken);
   color: var(--ink-500);
+}
+/* 状态类标签前面加一个同色小圆点，读起来是“状态”而不是“标签”。 */
+.tag--ok::before,
+.tag--wait::before,
+.tag--stop::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 /* ---------- 头像 ---------- */

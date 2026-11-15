@@ -228,9 +228,11 @@ export default function GithubPage() {
                       <TableCell className="mono">{repository.defaultBranch ?? '—'}</TableCell>
                       <TableCell>
                         {repository.privateRepository ? (
-                          <Tag tone="readonly">私有</Tag>
+                          <Tag tone="readonly" icon="lock">
+                            私有
+                          </Tag>
                         ) : (
-                          <Tag>公开</Tag>
+                          <Tag icon="eye">公开</Tag>
                         )}
                       </TableCell>
                       <TableCell end>
