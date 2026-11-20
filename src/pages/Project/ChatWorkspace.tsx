@@ -32,7 +32,6 @@ export default function ChatWorkspace() {
   const { message } = App.useApp()
   const client = useQueryClient()
   const [search, setSearch] = useState('')
-  const [tab, setTab] = useState<ChatTab>(() => (params.get('dm') ? 'direct' : 'groups'))
   const [createOpen, setCreateOpen] = useState(false)
   const [startDirectOpen, setStartDirectOpen] = useState(false)
   const contextOpen = useAppUiStore((state) => state.chatContextOpen)
@@ -74,6 +73,9 @@ export default function ChatWorkspace() {
   )
   const groupParam = params.get('groupId')
   const conversationParam = params.get('dm')
+  // 页签也由 URL 决定：?dm= 或 ?view=direct 是私聊，其余是群聊。
+  // 这样后退、直达链接和浏览器刷新都不会出现「URL 是群聊、界面停在私聊」。
+  const tab: ChatTab = conversationParam || params.get('view') === 'direct' ? 'direct' : 'groups'
   const selectedId =
     groupParam || groups.data?.find((group) => group.defaultGroup)?.id || groups.data?.[0]?.id
   const selected = groups.data?.find((group) => group.id === selectedId)
@@ -84,11 +86,6 @@ export default function ChatWorkspace() {
   )
   const keyword = search.trim().toLowerCase()
   const visible = sorted.filter((group) => group.title.toLowerCase().includes(keyword))
-
-  // 从别的入口带着 ?dm= 进来时切到私聊列；没有 dm 参数就不改动当前页签。
-  useEffect(() => {
-    if (conversationParam) setTab('direct')
-  }, [conversationParam])
 
   // 变更的行亮着直到你看过：进入某个群就把当前活动时间记为已见。
   const seenAt = useRef(new Map<string, number>())
@@ -107,11 +104,12 @@ export default function ChatWorkspace() {
   // 离开聊天页时收起窄屏覆盖层。
   useEffect(() => () => setContextOpen(false), [setContextOpen])
 
-  const routeTo = (next: { groupId?: string; dm?: string }) => {
+  const routeTo = (next: { groupId?: string; dm?: string; view?: 'direct' }) => {
     setContextOpen(false)
     const url = new URLSearchParams()
     if (next.groupId) url.set('groupId', next.groupId)
     if (next.dm) url.set('dm', next.dm)
+    if (next.view) url.set('view', next.view)
     setParams(url, { replace: true })
   }
 
@@ -121,10 +119,9 @@ export default function ChatWorkspace() {
   const switchTab = (next: ChatTab) => {
     if (next === tab) return
     setSearch('')
-    setTab(next)
     // 切回群聊时保留默认群；切到私聊只列会话，不替用户打开某一条（否则会直接把它标成已读）。
-    if (next === 'groups' && selected) routeTo({ groupId: selected.id })
-    else routeTo({})
+    if (next === 'groups') routeTo(selected ? { groupId: selected.id } : {})
+    else routeTo({ view: 'direct' })
   }
 
   const archived = project.data?.status === 'ARCHIVED'
@@ -265,10 +262,7 @@ export default function ChatWorkspace() {
         teamId={project.data?.teamId ?? ''}
         open={startDirectOpen}
         onClose={() => setStartDirectOpen(false)}
-        onOpened={(opened) => {
-          setTab('direct')
-          selectConversation(opened.id)
-        }}
+        onOpened={(opened) => selectConversation(opened.id)}
       />
     </>
   )
