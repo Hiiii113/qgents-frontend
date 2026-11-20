@@ -142,7 +142,7 @@ export function AppBar({
             aria-expanded={chatOpen}
             onClick={() => setChatOpen(!chatOpen)}
           >
-            {chatOpen ? '收起群聊' : '群聊'}
+            {chatOpen ? '收起会话' : '会话'}
           </button>
         ) : null}
       </div>

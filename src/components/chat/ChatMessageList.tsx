@@ -24,6 +24,9 @@ interface Props {
   onStop: (item: ChatMessage) => void
   onMention?: (member: ChatMember) => void
   onReadingLatestChange?: (reading: boolean) => void
+  /** 私聊与群聊的空态说明不同，默认按群聊写。 */
+  emptyTitle?: string
+  emptyDescription?: string
 }
 
 interface Entry {
@@ -177,18 +180,18 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
           <div className="chatlog__history">正在加载消息…</div>
         ) : !messages.length ? (
           <div className="chatlog__empty">
-            <p className="chatlog__empty-title">还没有消息</p>
+            <p className="chatlog__empty-title">{props.emptyTitle ?? '还没有消息'}</p>
             <p className="chatlog__empty-desc">
-              在下面写下第一句，或者 @ 一个 Agent 让它开始干活。普通消息不会唤起 Agent，只有明确提到才触发。
+              {props.emptyDescription ??
+                '在下面写下第一句，或者 @ 一个 Agent 让它开始干活。普通消息不会唤起 Agent，只有明确提到才触发。'}
             </p>
-            {agents.length ? (
+            {agents.length && props.onMention ? (
               <div className="row row--tight">
                 {agents.map((agent) => (
                   <Button
                     key={agent.id}
                     variant="quiet"
                     size="sm"
-                    disabled={!props.onMention}
                     onClick={() => props.onMention?.(agent)}
                   >
                     @ {agent.displayName}

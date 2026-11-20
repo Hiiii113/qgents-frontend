@@ -18,6 +18,12 @@
   display: flex;
   gap: var(--s-2);
 }
+.chathead__peer {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
 .view--chat {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -697,6 +703,56 @@
   font-size: var(--t-xs);
   color: var(--ink-400);
   margin-bottom: var(--s-2);
+}
+
+/* 发起私聊：点名字直接开会话 */
+.picklist-groups {
+  display: grid;
+  gap: var(--s-3);
+}
+.picklist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin-inline: calc(var(--s-2) * -1);
+}
+.pickrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: 6px var(--s-2);
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.pickrow:hover {
+  background: var(--surface-sunken);
+}
+.pickrow:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.pickrow__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--t-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pickrow__meta {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .members-panel__body {
