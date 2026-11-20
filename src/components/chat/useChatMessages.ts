@@ -6,6 +6,7 @@ import {
   type InfiniteData,
 } from '@tanstack/react-query'
 import { chatApi } from '@/api/chat'
+import { directMessageApi } from '@/api/directMessage'
 import { subscribeRealtimeReconnect } from '@/realtime/realtimeClient'
 import type { Page } from '@/types/api'
 import type { ChatMessage, SendChatMessage } from '@/types/chat'
@@ -35,17 +36,34 @@ export function mergeChatMessages(
   }
 }
 
-export function useChatMessages(projectId: string, groupId: string, readingLatest = true) {
+/**
+ * 一个会话的消息来源：群聊和私聊只是路径不同，分页、增量补齐、已读与发送的处理一致。
+ * 缓存键必须带上会话归属，切换会话时旧数据留在旧键里，不会串到新会话。
+ */
+export interface ChatMessageSource {
+  key: readonly unknown[]
+  /** 会话列表缓存：发送与已读后失效，让列表上的预览与未读跟上。 */
+  listKey?: readonly unknown[]
+  enabled: boolean
+  fetchPage(cursor: string | undefined, signal?: AbortSignal): Promise<Page<ChatMessage>>
+  fetchIncremental(afterSequence: number, signal?: AbortSignal): Promise<Page<ChatMessage>>
+  send(body: SendChatMessage): Promise<ChatMessage>
+  markRead(): Promise<unknown>
+  /** 实时事件是否属于当前会话。 */
+  matches(detail: Record<string, unknown>): boolean
+}
+
+function useConversationMessages(source: ChatMessageSource, readingLatest = true) {
   const client = useQueryClient()
   const [syncError, setSyncError] = useState<Error | null>(null)
-  const key = useMemo(() => chatKeys.messages(projectId, groupId), [projectId, groupId])
+  const { key } = source
   const query = useInfiniteQuery({
     queryKey: key,
-    queryFn: ({ pageParam, signal }) => chatApi.messages(projectId, groupId, pageParam, signal),
+    queryFn: ({ pageParam, signal }) => source.fetchPage(pageParam, signal),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) =>
       page.page.hasMore ? (page.page.nextCursor ?? undefined) : undefined,
-    enabled: Boolean(projectId && groupId),
+    enabled: source.enabled,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: 30_000,
@@ -70,7 +88,7 @@ export function useChatMessages(projectId: string, groupId: string, readingLates
   }, [key, latestSequence, query.isSuccess])
 
   useEffect(() => {
-    if (!groupId || !projectId || !query.isSuccess) return
+    if (!source.enabled || !query.isSuccess) return
     const controller = new AbortController()
     let syncing = false
     let repeat = false
@@ -87,7 +105,7 @@ export function useChatMessages(projectId: string, groupId: string, readingLates
           let cursor = sequenceRef.current ?? 0
           let hasMore = true
           while (hasMore && !controller.signal.aborted) {
-            const page = await chatApi.incremental(projectId, groupId, cursor, controller.signal)
+            const page = await source.fetchIncremental(cursor, controller.signal)
             if (controller.signal.aborted) return
             client.setQueryData<MessagePages>(key, (previous) =>
               mergeChatMessages(previous, page.data),
@@ -108,12 +126,7 @@ export function useChatMessages(projectId: string, groupId: string, readingLates
     }
     function event(event: Event) {
       const detail: unknown = (event as CustomEvent<unknown>).detail
-      if (
-        typeof detail === 'object' &&
-        detail !== null &&
-        Reflect.get(detail, 'projectId') === projectId &&
-        Reflect.get(detail, 'groupId') === groupId
-      )
+      if (typeof detail === 'object' && detail !== null && source.matches(detail as Record<string, unknown>))
         void sync()
     }
     function resume() {
@@ -131,19 +144,21 @@ export function useChatMessages(projectId: string, groupId: string, readingLates
       window.removeEventListener('qgents:message-event', event)
       document.removeEventListener('visibilitychange', resume)
     }
-  }, [client, projectId, groupId, key, query.isSuccess])
+  }, [client, key, source, query.isSuccess])
 
   const send = useMutation({
-    mutationFn: (body: SendChatMessage) => chatApi.send(projectId, groupId, body),
+    mutationFn: (body: SendChatMessage) => source.send(body),
     onSuccess: (result) => {
       client.setQueryData<MessagePages>(key, (data) => mergeChatMessages(data, [result]))
-      void client.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
+      if (source.listKey)
+        void client.invalidateQueries({ queryKey: source.listKey, exact: true })
     },
   })
   const markRead = useCallback(async () => {
-    await chatApi.read(projectId, groupId)
-    void client.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
-  }, [client, projectId, groupId])
+    await source.markRead()
+    if (source.listKey)
+      void client.invalidateQueries({ queryKey: source.listKey, exact: true })
+  }, [client, source])
   useEffect(() => {
     if (!latestSequence || !readingLatest || !query.isSuccess) return
     let timer: number
@@ -162,4 +177,47 @@ export function useChatMessages(projectId: string, groupId: string, readingLates
     }
   }, [latestSequence, markRead, readingLatest, query.isSuccess])
   return { query, messages, send, syncError, markRead }
+}
+
+/** 群聊会话：事件按 groupId 归属。 */
+export function useChatMessages(projectId: string, groupId: string, readingLatest = true) {
+  const source = useMemo<ChatMessageSource>(
+    () => ({
+      key: chatKeys.messages(projectId, groupId),
+      listKey: chatKeys.groups(projectId),
+      enabled: Boolean(projectId && groupId),
+      fetchPage: (cursor, signal) => chatApi.messages(projectId, groupId, cursor, signal),
+      fetchIncremental: (after, signal) => chatApi.incremental(projectId, groupId, after, signal),
+      send: (body) => chatApi.send(projectId, groupId, body),
+      markRead: () => chatApi.read(projectId, groupId),
+      matches: (detail) => detail.projectId === projectId && detail.groupId === groupId,
+    }),
+    [projectId, groupId],
+  )
+  return useConversationMessages(source, readingLatest)
+}
+
+/** 私聊会话：后端把会话 id 放在消息的 groupId 里，实时帧也用 groupId 归属。 */
+export function useDirectMessages(
+  projectId: string,
+  conversationId: string,
+  readingLatest = true,
+) {
+  const source = useMemo<ChatMessageSource>(
+    () => ({
+      key: chatKeys.conversationMessages(projectId, conversationId),
+      listKey: chatKeys.conversations(projectId),
+      enabled: Boolean(projectId && conversationId),
+      fetchPage: (cursor, signal) =>
+        directMessageApi.messages(projectId, conversationId, cursor, signal),
+      fetchIncremental: (after, signal) =>
+        directMessageApi.incremental(projectId, conversationId, after, signal),
+      send: (body) => directMessageApi.send(projectId, conversationId, body),
+      markRead: () => directMessageApi.read(projectId, conversationId),
+      matches: (detail) =>
+        detail.projectId === projectId && (detail.chatId ?? detail.groupId) === conversationId,
+    }),
+    [projectId, conversationId],
+  )
+  return useConversationMessages(source, readingLatest)
 }

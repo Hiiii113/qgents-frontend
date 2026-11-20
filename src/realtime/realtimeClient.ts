@@ -112,6 +112,8 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
     const groupId =
       frame.groupId || (typeof frame.payload.groupId === 'string' ? frame.payload.groupId : null)
     void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
+    // 私聊会话也用 groupId 归属：收到任意消息帧都刷新会话列表，预览与未读才不会停在前一状态。
+    void queryClient.invalidateQueries({ queryKey: chatKeys.conversations(projectId), exact: true })
     if (groupId && typeof window !== 'undefined')
       window.dispatchEvent(
         new CustomEvent('qgents:message-event', {

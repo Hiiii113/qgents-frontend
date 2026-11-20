@@ -70,6 +70,9 @@ interface Props {
   disabled?: boolean
   disabledHint?: string
   draftKey?: string
+  /** 私聊里没有可 @ 的对象，关掉提及浮层。 */
+  allowMentions?: boolean
+  placeholder?: string
 }
 
 /** 输入器：草稿、提及、附件都在这里自持，打字不重渲染历史消息。 */
@@ -83,6 +86,8 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
     disabled = false,
     disabledHint,
     draftKey,
+    allowMentions = true,
+    placeholder,
   }: Props,
   ref,
 ) {
@@ -166,7 +171,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
       suppressed.current = false
       setMention(null)
     } else {
-      setMention(findMention(value, at))
+      setMention(allowMentions ? findMention(value, at) : null)
     }
     caret.current = at
     setError(null)
@@ -350,7 +355,9 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
           value={draft}
           disabled={locked}
           placeholder={
-            disabled ? '暂时不能发送消息' : '写下想法，输入 @ 选择 Agent 或成员…'
+            disabled
+              ? '暂时不能发送消息'
+              : (placeholder ?? '写下想法，输入 @ 选择 Agent 或成员…')
           }
           onChange={(event) => {
             const node = event.currentTarget
