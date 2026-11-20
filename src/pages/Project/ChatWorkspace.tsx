@@ -229,11 +229,12 @@ export default function ChatWorkspace() {
             conversations={sortedConversations}
             selectedId={conversation?.id ?? null}
             keyword={keyword}
+            pending={conversations.isPending}
             onSelect={(item) => selectConversation(item.id)}
           />
           <div className="context__foot">
             <span className="meta">
-              {conversations.data?.length ?? 0} 个私聊
+              {conversations.isPending ? '正在加载…' : `${conversations.data?.length ?? 0} 个私聊`}
               {directTotalUnread ? ` · ${directTotalUnread} 条未读` : ''}
             </span>
           </div>

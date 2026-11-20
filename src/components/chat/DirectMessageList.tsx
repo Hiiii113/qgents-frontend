@@ -8,11 +8,13 @@ export function DirectMessageList({
   conversations,
   selectedId,
   keyword,
+  pending = false,
   onSelect,
 }: {
   conversations: DirectConversation[]
   selectedId: string | null
   keyword: string
+  pending?: boolean
   onSelect: (conversation: DirectConversation) => void
 }) {
   const visible = conversations
@@ -24,6 +26,8 @@ export function DirectMessageList({
       )
     })
     .sort((a, b) => directActivityAt(b) - directActivityAt(a))
+
+  if (!visible.length && pending) return <p className="context__empty">正在加载私聊…</p>
 
   if (!visible.length)
     return (
