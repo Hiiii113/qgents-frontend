@@ -242,145 +242,13 @@ export default function ChatWorkspace() {
     </aside>
   )
 
-  const loading = tab === 'groups' ? groups.isPending : conversations.isPending
-  if (loading) {
-    return (
-      <div className="body">
-        {context}
-        <main className="canvas">
-          <Skeleton rows={5} />
-        </main>
-      </div>
-    )
-  }
-
-  const failure = tab === 'groups' ? groups.error : conversations.error
-  if (failure) {
-    return (
-      <div className="body">
-        {context}
-        <main className="canvas">
-          <div className="canvas-status">
-            <div className="block">
-              <p className="h3">{tab === 'groups' ? '群聊加载失败' : '私聊加载失败'}</p>
-              <p className="sub">{formatApiError(failure)}</p>
-              <Button
-                variant="quiet"
-                onClick={() =>
-                  void (tab === 'groups' ? groups.refetch() : conversations.refetch())
-                }
-                icon={<Icon name="refresh" size={15} />}
-              >
-                重试
-              </Button>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  if (tab === 'direct') {
-    if (!conversation) {
-      return (
-        <div className="body">
-          {context}
-          <main className="canvas">
-            <div className="canvas-status">
-              <EmptyState
-                icon="chat"
-                title={conversationParam ? '这条私聊不存在或你不在其中' : '选择一条私聊'}
-                description={
-                  conversationParam
-                    ? '私聊记录只有会话双方能看；如果对方已不在项目里，这条会话也不会再出现。'
-                    : '给对方发第一条消息就会建立会话，不需要邀请。'
-                }
-                action={
-                  <Button
-                    variant={conversationParam ? 'quiet' : 'primary'}
-                    onClick={() =>
-                      conversationParam ? void conversations.refetch() : setStartDirectOpen(true)
-                    }
-                    icon={
-                      <Icon name={conversationParam ? 'refresh' : 'plus'} size={15} />
-                    }
-                  >
-                    {conversationParam ? '刷新' : '发起私聊'}
-                  </Button>
-                }
-                stacked
-              />
-            </div>
-          </main>
-        </div>
-      )
-    }
-    return (
-      <>
-        <DirectMessagePanel
-          key={conversation.id}
-          projectId={projectId}
-          projectName={project.data?.name ?? projectId}
-          conversation={conversation}
-          archived={Boolean(archived)}
-          contextPanel={context}
-        />
-        {contextOpen ? (
-          <button
-            type="button"
-            className="scrim"
-            aria-label="关闭会话列表"
-            onClick={() => setContextOpen(false)}
-          />
-        ) : null}
-        <StartDirectMessageDialog
-          projectId={projectId}
-          teamId={project.data?.teamId ?? ''}
-          open={startDirectOpen}
-          onClose={() => setStartDirectOpen(false)}
-          onOpened={(opened) => {
-            setTab('direct')
-            selectConversation(opened.id)
-          }}
-        />
-      </>
-    )
-  }
-
-  if (!selected) {
-    return (
-      <div className="body">
-        {context}
-        <main className="canvas">
-          <div className="canvas-status">
-            <EmptyState
-              title={groupParam ? '你未加入该群聊，或群聊不存在' : '项目群聊尚未就绪'}
-              description="项目创建时会自动生成默认群。"
-              action={
-                <Button
-                  variant="quiet"
-                  onClick={() => void groups.refetch()}
-                  icon={<Icon name="refresh" size={15} />}
-                >
-                  刷新
-                </Button>
-              }
-              stacked
-            />
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  return (
+  const overlays = (
     <>
-      <ChatPanel key={selected.id} projectId={projectId} group={selected} contextPanel={context} />
       {contextOpen ? (
         <button
           type="button"
           className="scrim"
-          aria-label="关闭群聊列表"
+          aria-label="关闭会话列表"
           onClick={() => setContextOpen(false)}
         />
       ) : null}
@@ -401,6 +269,107 @@ export default function ChatWorkspace() {
           selectConversation(opened.id)
         }}
       />
+    </>
+  )
+
+  /** 左侧列常驻：加载与空态也不把列表收起来。 */
+  const frame = (content: React.ReactNode) => (
+    <>
+      <div className="body">
+        {context}
+        <main className="canvas">{content}</main>
+      </div>
+      {overlays}
+    </>
+  )
+
+  const loading = tab === 'groups' ? groups.isPending : conversations.isPending
+  if (loading) return frame(<Skeleton rows={5} />)
+
+  const failure = tab === 'groups' ? groups.error : conversations.error
+  if (failure)
+    return frame(
+      <div className="canvas-status">
+        <div className="block">
+          <p className="h3">{tab === 'groups' ? '群聊加载失败' : '私聊加载失败'}</p>
+          <p className="sub">{formatApiError(failure)}</p>
+          <Button
+            variant="quiet"
+            onClick={() => void (tab === 'groups' ? groups.refetch() : conversations.refetch())}
+            icon={<Icon name="refresh" size={15} />}
+          >
+            重试
+          </Button>
+        </div>
+      </div>,
+    )
+
+  if (tab === 'direct') {
+    if (!conversation)
+      return frame(
+        <div className="canvas-status">
+          <EmptyState
+            icon="chat"
+            title={conversationParam ? '这条私聊不存在或你不在其中' : '选择一条私聊'}
+            description={
+              conversationParam
+                ? '私聊记录只有会话双方能看；如果对方已不在项目里，这条会话也不会再出现。'
+                : '给对方发第一条消息就会建立会话，不需要邀请。'
+            }
+            action={
+              <Button
+                variant={conversationParam ? 'quiet' : 'primary'}
+                onClick={() =>
+                  conversationParam ? void conversations.refetch() : setStartDirectOpen(true)
+                }
+                icon={<Icon name={conversationParam ? 'refresh' : 'plus'} size={15} />}
+              >
+                {conversationParam ? '刷新' : '发起私聊'}
+              </Button>
+            }
+            stacked
+          />
+        </div>,
+      )
+    return (
+      <>
+        <DirectMessagePanel
+          key={conversation.id}
+          projectId={projectId}
+          projectName={project.data?.name ?? projectId}
+          conversation={conversation}
+          archived={Boolean(archived)}
+          contextPanel={context}
+        />
+        {overlays}
+      </>
+    )
+  }
+
+  if (!selected)
+    return frame(
+      <div className="canvas-status">
+        <EmptyState
+          title={groupParam ? '你未加入该群聊，或群聊不存在' : '项目群聊尚未就绪'}
+          description="项目创建时会自动生成默认群。"
+          action={
+            <Button
+              variant="quiet"
+              onClick={() => void groups.refetch()}
+              icon={<Icon name="refresh" size={15} />}
+            >
+              刷新
+            </Button>
+          }
+          stacked
+        />
+      </div>,
+    )
+
+  return (
+    <>
+      <ChatPanel key={selected.id} projectId={projectId} group={selected} contextPanel={context} />
+      {overlays}
     </>
   )
 }

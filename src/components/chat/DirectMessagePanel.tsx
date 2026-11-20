@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import { App } from 'antd'
-import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import { chatApi } from '@/api/chat'
 import { directMessageApi } from '@/api/directMessage'
 import { useAuth } from '@/context/AuthContext'
 import { useAgentRuns } from '@/features/agent-runs'
@@ -22,7 +23,7 @@ const AttachmentPreviewLazy = lazy(async () => ({
 const NO_RUNS = new Map<string, AgentRun[]>()
 
 /**
- * 一对一私聊画布：和群聊共用消息列表、输入器与运行卡，去掉成员、邀请、置顶与停止执行。
+ * 一对一私聊画布：和群聊共用消息列表、输入器、运行卡与停止执行，去掉成员、邀请与置顶。
  * 会话按 id 单独缓存，切换会话或切换项目时不会把上一个会话的消息带过来。
  */
 export function DirectMessagePanel({
@@ -87,6 +88,14 @@ export function DirectMessagePanel({
     [client, projectId, conversation.id, message],
   )
 
+  // 停止执行复用群聊的取消接口：私聊把会话 id 当 groupId 传，按会话参与者鉴权。
+  const stop = useMutation({
+    mutationFn: (item: ChatMessage) => chatApi.cancel(projectId, conversation.id, item.id),
+    onSuccess: (result) =>
+      void message.success(result.cancelledRuns ? '已请求停止执行' : '这条消息的执行已结束'),
+    onError: (error) => void message.error(formatApiError(error)),
+  })
+  const canStop = useCallback((item: ChatMessage) => item.senderId === user?.id, [user?.id])
   const send = useCallback((body: SendChatMessage) => chat.send.mutateAsync(body), [chat.send])
 
   if (chat.query.isPending) {
@@ -173,12 +182,16 @@ export function DirectMessagePanel({
             hasMore={Boolean(chat.query.hasNextPage)}
             loadingOlder={chat.query.isFetchingNextPage}
             targetId={targetId}
+            stoppingMessageId={stop.isPending ? stop.variables?.id : undefined}
+            canStop={canStop}
             onLoadOlder={chat.query.fetchNextPage}
             onReadingLatestChange={setReadingLatest}
             onReply={setReply}
             onPreview={setPreview}
             onLocate={(id) => void locate(id)}
-            onStop={() => undefined}
+            onStop={(item) => {
+              if (canStop(item)) stop.mutate(item)
+            }}
             emptyTitle="还没有消息"
             emptyDescription={
               peer.type === 'AGENT'
