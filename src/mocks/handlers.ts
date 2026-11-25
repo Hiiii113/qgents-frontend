@@ -5,6 +5,7 @@ import { projectChatHandlers } from './projectChat'
 import { directMessageHandlers } from './directMessage'
 import { memoryHandlers } from './memory'
 import { capabilityHandlers } from './capabilities'
+import { mcpHandlers } from './mcp'
 
 export const handlers = [
   ...identityHandlers,
@@ -14,4 +15,5 @@ export const handlers = [
   ...projectChatHandlers,
   ...memoryHandlers,
   ...capabilityHandlers,
+  ...mcpHandlers,
 ]

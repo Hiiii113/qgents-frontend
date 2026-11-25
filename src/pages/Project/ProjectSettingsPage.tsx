@@ -27,11 +27,13 @@ import {
   TextAreaField,
   TextField,
 } from '@/components/ui'
+import { McpSettings } from './McpSettings'
 import './project-settings.css'
 
 const TABS = [
   { key: 'basic', label: '基本信息' },
   { key: 'members', label: '成员' },
+  { key: 'mcp', label: 'MCP' },
   { key: 'archive', label: '归档' },
 ] as const
 
@@ -62,7 +64,7 @@ export default function ProjectSettingsPage() {
           description={
             project.data?.status === 'ARCHIVED'
               ? '项目已归档，群聊只读；恢复后可继续协作。'
-              : '项目资料与成员在这里维护，Agent、记忆、Skill 与仓库在项目导航里。'
+              : '项目资料、成员与 MCP 服务在这里维护，Agent、记忆、Skill 与仓库在项目导航里。'
           }
         />
 
@@ -95,6 +97,7 @@ export default function ProjectSettingsPage() {
             />
             {tab === 'basic' ? <BasicInfo project={project.data} /> : null}
             {tab === 'members' ? <Members project={project.data} /> : null}
+            {tab === 'mcp' ? <McpSettings key={project.data.id} project={project.data} /> : null}
             {tab === 'archive' ? <Archive project={project.data} /> : null}
           </>
         )}
