@@ -355,8 +355,8 @@ function seedChatShowcase() {
 seedChatShowcase()
 
 /**
- * 与 agent-runs mock 约定的固定演示群：SSE 只在这个群播放执行过程，
- * 群与触发消息 ID 固定为 901 / 9011，方便快照与流事件对齐。
+ * 与 agent-runs mock 约定的固定演示群：只在这个群播放执行过程，
+ * 群与触发消息 ID 固定为 901 / 9011，方便快照与演示状态对齐。
  */
 function seedAgentRunDemo() {
   const project = findProject('2')
@@ -406,7 +406,7 @@ const DEMO_GROUP_ID = '901'
 const DEMO_TRIGGER_ID = '9011'
 
 /**
- * 仅供 agent-runs 模拟 SSE 在终态调用：给演示群 901 补一条正式 Agent 回复。
+ * 仅供 agent-runs 演示在终态调用：给演示群 901 补一条正式 Agent 回复。
  * 正式消息带 clientMessageId=qgent-reply:<rootRunId>，hook 据此精确替换临时进度行。
  * 其它群/触发消息不存在时返回 null，不伪造真实发送。
  */

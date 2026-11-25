@@ -5,7 +5,6 @@ import { projectApi } from '@/api/project'
 import { teamApi } from '@/api/team'
 import { PATHS } from '@/routes/paths'
 import { useRememberTeam } from '@/hooks/useRememberTeam'
-import { useTeamEvents } from '@/realtime/useTeamEvents'
 import { formatApiError } from '@/utils/formatApiError'
 import { CreateProjectModal } from '@/components/CreateProjectModal'
 import './team-home.css'
@@ -29,7 +28,6 @@ export default function TeamHomePage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
-  useTeamEvents(teamId || undefined)
   useRememberTeam(teamId || undefined)
 
   const team = useQuery({

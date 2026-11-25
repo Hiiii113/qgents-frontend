@@ -8,8 +8,6 @@ import { useAppUiStore } from '@/store/appUiStore'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
 import { formatRelativeTime } from '@/utils/formatRelativeTime'
-import { useNotificationEvents } from '@/realtime/useNotificationEvents'
-import { useRealtimeConnectionStatus } from '@/realtime/realtimeClient'
 import type { Notification, Project, Team } from '@/types'
 import { Avatar, Button, Icon, IconButton, Popover } from '@/components/ui'
 
@@ -270,8 +268,6 @@ function NotificationBell({
 }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const realtimeStatus = useRealtimeConnectionStatus()
-  useNotificationEvents(realtimeStatus !== 'connected')
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => notificationApi.list(),

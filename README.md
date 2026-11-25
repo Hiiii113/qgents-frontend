@@ -68,7 +68,7 @@ src/features/    按业务切片的功能代码，比如 agent 运行
 src/layouts/     AppShell：64px 竖轨 + 56px 顶栏
 src/mocks/       MSW 处理器与假数据
 src/pages/       页面：Auth / Home / Project / Settings / Team / Welcome
-src/realtime/    SSE 与 WebSocket 客户端
+src/realtime/    WebSocket 实时客户端
 src/routes/      路由表与守卫（登录、团队）
 src/store/       全局 UI 状态
 src/styles/      基础样式、UI 样式、antd 覆写
@@ -102,7 +102,7 @@ npm run build     # tsc -b && vite build
 
 镜像由后端仓库的 Compose `production` profile 构建（`FRONTEND_DIRECTORY` 指到这个仓库），构建期把 `VITE_API_BASE_URL`、`VITE_RSA_KEY_ID`、`VITE_RSA_PUBLIC_KEY` 写进静态资源，改完要重建镜像。
 
-`nginx.conf` 里 `/api/` 反代到 `http://api:8080/api/v1/`，WebSocket 走同一个入口，SSE 关掉了缓冲；`index.html` 不缓存。
+`nginx.conf` 里 `/api/` 反代到 `http://api:8080/api/v1/`，WebSocket 走同一个入口（`/api/v1/ws/realtime`），关闭缓冲；`index.html` 不缓存。
 
 ## 边界
 

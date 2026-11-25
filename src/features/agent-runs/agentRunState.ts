@@ -7,7 +7,7 @@ import {
   type AgentRunToolState,
 } from './types'
 
-/** 契约里的 REST 快照 / agent-run.snapshot.run 原样字段。 */
+/** REST 快照 / agent-run.snapshot 帧里 run 的原样字段。 */
 export interface AgentRunSnapshot {
   runId: string
   parentRunId: string | null
@@ -227,52 +227,55 @@ export function parseAgentRunSnapshots(value: unknown): AgentRunSnapshot[] {
   return value.map(readSnapshot).filter((item): item is AgentRunSnapshot => item !== null)
 }
 
-/** SSE 事件入口：返回 null 表示这条事件无法使用，调用方忽略即可。 */
-export function parseAgentRunEvent(eventName: string, data: string): AgentRunStreamEvent | null {
-  let value: unknown
-  try {
-    value = JSON.parse(data)
-  } catch {
-    return null
-  }
-  if (eventName === 'agent-run.snapshot') {
-    const run = readSnapshot(asRecord(value)?.run)
+/**
+ * WS 帧入口：type 为帧类型，payload 为已解析的 JSON 对象。
+ * 返回 null 表示这条帧无法使用，调用方忽略即可。
+ */
+export function parseAgentRunFrame(type: string, payload: unknown): AgentRunStreamEvent | null {
+  const record = asRecord(payload)
+  if (!record) return null
+  // 可选：服务端在连接建立后补推完整快照。
+  if (type === 'agent-run.snapshot') {
+    const run = readSnapshot(asRecord(record.run))
     return run ? { kind: 'snapshot', run } : null
   }
-  const run = readEventBase(value)
+  const run = readEventBase(record)
   if (!run) return null
-  const record = value as Json
-  if (eventName === 'agent-run.updated') {
+  if (type === 'agent-run.updated') {
     const revision = readInteger(record, 'revision')
     return revision === null ? null : { kind: 'updated', run, revision }
   }
-  if (eventName === 'agent-run.delta') {
+  if (type === 'agent-run.delta') {
     const deltaText = optionalText(record, 'text')
     const seq = readInteger(record, 'seq')
     const revision = readInteger(record, 'revision')
     if (deltaText === null || seq === null || revision === null) return null
     return { kind: 'delta', run, revision, seq, text: deltaText }
   }
-  if (eventName === 'agent-run.tool') {
-    const phase = record.phase === 'started' || record.phase === 'finished' ? record.phase : null
-    const toolCallId = text(record, 'toolCallId')
-    const tool = text(record, 'tool')
-    const revision = readInteger(record, 'revision')
-    const ok = typeof record.ok === 'boolean' ? record.ok : null
-    if (!phase || !toolCallId || !tool || revision === null) return null
-    return {
-      kind: 'tool',
-      run,
-      phase,
-      toolCallId,
-      tool,
-      ok,
-      input: optionalText(record, 'input'),
-      output: optionalText(record, 'output'),
-      revision,
-    }
+  // 工具阶段由帧类型区分，payload 里不再需要 phase。
+  const phase =
+    type === 'agent-run.tool-started'
+      ? 'started'
+      : type === 'agent-run.tool-finished'
+        ? 'finished'
+        : null
+  if (!phase) return null
+  const toolCallId = text(record, 'toolCallId')
+  const tool = text(record, 'tool')
+  const revision = readInteger(record, 'revision')
+  const ok = typeof record.ok === 'boolean' ? record.ok : null
+  if (!toolCallId || !tool || revision === null) return null
+  return {
+    kind: 'tool',
+    run,
+    phase,
+    toolCallId,
+    tool,
+    ok,
+    input: optionalText(record, 'input'),
+    output: optionalText(record, 'output'),
+    revision,
   }
-  return null
 }
 
 function fromSnapshot(snapshot: AgentRunSnapshot, overrides: Partial<AgentRun> = {}): AgentRun {

@@ -7,7 +7,7 @@ import type { RealtimeFrame } from '@/types'
 /**
  * WebSocket 实时通道（/api/v1/ws/realtime）—— 单连接 + 用户级聚合流。
  *
- * - 每个账号只开一条连接；断线时由 SSE 接管。
+ * - 每个账号只开一条连接，业务实时事件全部走它（无 SSE 降级）。
  * - 鉴权：握手 ?token=<accessToken>（浏览器 WS 升级无法带 Authorization 头）。
  * - 连接可用判定：收到 hello 帧（{"type":"hello","userId":...}）。
  * - 断线自动重连（指数退避）；握手阶段失败（token 过期）先 refresh token 再重连。
@@ -18,11 +18,26 @@ import type { RealtimeFrame } from '@/types'
 export const REALTIME_RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 16000, 30000] as const
 export type RealtimeConnectionStatus = 'idle' | 'connecting' | 'connected' | 'disconnected'
 
+/** Agent 运行帧的归属：一个群 = projectId + groupId。 */
+export interface AgentRunFrameTarget {
+  projectId: string
+  groupId: string
+}
+
+export type AgentRunFrameListener = (frame: RealtimeFrame, target: AgentRunFrameTarget) => void
+
 /**
- * 群级 Agent SSE 断开时，项目 WS 的 agent-run.updated/tool 作为“立刻拉一次快照”的信号。
- * SSE 已连接时忽略（它自己带全部事件），避免每个工具事件多一次 REST。
+ * agent-run.* 帧订阅者（useAgentRuns 挂载时登记，切群/卸载时退订）。
+ * 帧已按群归一化 projectId/groupId，订阅者只需比对当前群。
  */
-export const AGENT_RUN_REFRESH_EVENT = 'qgents:agent-run-refresh'
+const agentRunFrameListeners = new Set<AgentRunFrameListener>()
+
+export function subscribeAgentRunFrames(listener: AgentRunFrameListener): () => void {
+  agentRunFrameListeners.add(listener)
+  return () => {
+    agentRunFrameListeners.delete(listener)
+  }
+}
 
 let connectionStatus: RealtimeConnectionStatus = 'idle'
 const connectionStatusListeners = new Set<() => void>()
@@ -39,8 +54,8 @@ function subscribeConnectionStatus(listener: () => void): () => void {
 }
 
 /**
- * 全局实时通道状态。WebSocket 已收到 hello 后，页面可关闭重复的 SSE；
- * 断线时再由 SSE 接管，避免长期连接挤占普通 API 请求的浏览器连接槽。
+ * 全局实时通道状态。收到 hello 后为 connected；断线期间为 disconnected，
+ * 依赖实时性的视图（如 Agent 运行）据此启用快照轮询兜底。
  */
 export function useRealtimeConnectionStatus(): RealtimeConnectionStatus {
   return useSyncExternalStore(
@@ -72,7 +87,7 @@ function isRealtimeFrame(value: unknown): value is RealtimeFrame {
 
 /**
  * 帧 → 查询失效（当前业务接口）。
- * - scope=project：消息事件驱动增量补齐，其他事件刷新对应资源
+ * - scope=project：agent-run.* 分发给当前群订阅者，消息事件驱动增量补齐，其他事件刷新对应资源
  * - scope=team：刷新团队相关列表
  * - scope=notification：刷新通知中心 + 铃铛
  */
@@ -103,14 +118,14 @@ export function dispatchRealtimeFrame(frame: RealtimeFrame): void {
   // scope === 'project'
   const projectId = typeof frame.projectId === 'string' && frame.projectId ? frame.projectId : null
   if (!projectId) return
-  if (type === 'agent-run.updated' || type === 'agent-run.tool') {
-    if (typeof window !== 'undefined')
-      window.dispatchEvent(new CustomEvent(AGENT_RUN_REFRESH_EVENT))
+  const groupId =
+    frame.groupId || (typeof frame.payload.groupId === 'string' ? frame.payload.groupId : null)
+  if (type.startsWith('agent-run.')) {
+    // Agent 运行帧按群分发：只有同一 projectId + groupId 的订阅者收得到。
+    if (groupId) for (const listener of agentRunFrameListeners) listener(frame, { projectId, groupId })
     return
   }
   if (type === 'message.created' || type === 'message.updated') {
-    const groupId =
-      frame.groupId || (typeof frame.payload.groupId === 'string' ? frame.payload.groupId : null)
     void queryClient.invalidateQueries({ queryKey: chatKeys.groups(projectId), exact: true })
     // 私聊会话也用 groupId 归属：收到任意消息帧都刷新会话列表，预览与未读才不会停在前一状态。
     void queryClient.invalidateQueries({ queryKey: chatKeys.conversations(projectId), exact: true })

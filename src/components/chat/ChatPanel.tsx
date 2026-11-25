@@ -209,7 +209,7 @@ export function ChatPanel({
               消息同步暂时中断，恢复连接后会自动补齐。
             </p>
           ) : null}
-          {agentRuns.connectionStatus === 'error' && agentRuns.error ? (
+          {agentRuns.error ? (
             <p className="chat-notice" role="status">
               {agentRuns.error}
               <Button

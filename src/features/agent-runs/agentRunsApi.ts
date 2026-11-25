@@ -1,11 +1,7 @@
 import { request } from '@/api/client'
 import { parseAgentRunSnapshots, type AgentRunSnapshot } from './agentRunState'
 
-/** 契约路径（前端 base 已含 /api，后端代理再补 /v1）。 */
-export function agentEventsPath(projectId: string, groupId: string): string {
-  return `/projects/${encodeURIComponent(projectId)}/groups/${encodeURIComponent(groupId)}/agent-events`
-}
-
+/** REST 快照入口（挂载与 WS 重连时重查），WS 只负责增量帧。 */
 export async function fetchAgentRunSnapshots(
   projectId: string,
   groupId: string,

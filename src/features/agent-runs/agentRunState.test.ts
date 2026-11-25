@@ -3,7 +3,7 @@ import {
   agentRunsReducer,
   initialAgentRunsState,
   listAgentRuns,
-  parseAgentRunEvent,
+  parseAgentRunFrame,
   parseAgentRunSnapshots,
   type AgentRunsState,
 } from './agentRunState'
@@ -42,9 +42,9 @@ function delta(runId: string, revision: number, seq: number, text: string, extra
   return { ...root(runId), revision, seq, text, ...extra }
 }
 
-function stream(state: AgentRunsState, eventName: string, data: unknown): AgentRunsState {
-  const event = parseAgentRunEvent(eventName, JSON.stringify(data))
-  if (!event) throw new Error(`event did not parse: ${eventName}`)
+function stream(state: AgentRunsState, frameType: string, payload: unknown): AgentRunsState {
+  const event = parseAgentRunFrame(frameType, payload)
+  if (!event) throw new Error(`frame did not parse: ${frameType}`)
   return agentRunsReducer(state, { type: 'stream', event })
 }
 
@@ -158,10 +158,9 @@ describe('revision 防旧状态 / 终态恢复', () => {
     let state = withVisibleTriggers('8801')
     state = snapshots(state, [snapshot('101')])
     state = stream(state, 'agent-run.delta', delta('101', 2, 1, '断线前正文'))
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-started', {
       ...root('101'),
       revision: 3,
-      phase: 'started',
       toolCallId: 'call_a',
       tool: 'run_command',
       ok: null,
@@ -303,27 +302,24 @@ describe('工具阶段', () => {
   it('同名并行工具按 toolCallId 区分，完成状态各自独立', () => {
     let state = withVisibleTriggers('8801')
     state = snapshots(state, [snapshot('101')])
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-started', {
       ...root('101'),
       revision: 2,
-      phase: 'started',
       toolCallId: 'call_a',
       tool: 'run_command',
       ok: null,
     })
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-started', {
       ...root('101'),
       revision: 3,
-      phase: 'started',
       toolCallId: 'call_b',
       tool: 'run_command',
       ok: null,
     })
     // 同一 toolCallId 的重复 started 不新增行
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-started', {
       ...root('101'),
       revision: 4,
-      phase: 'started',
       toolCallId: 'call_a',
       tool: 'run_command',
       ok: null,
@@ -334,10 +330,9 @@ describe('工具阶段', () => {
       { toolCallId: 'call_b', tool: 'run_command', round: 1, state: 'running', input: null, output: null },
     ])
 
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-finished', {
       ...root('101'),
       revision: 5,
-      phase: 'finished',
       toolCallId: 'call_b',
       tool: 'run_command',
       ok: false,
@@ -351,20 +346,18 @@ describe('工具阶段', () => {
   it('工具结束但结果未知（ok=null）显示中性结束，不标成功', () => {
     let state = withVisibleTriggers('8801')
     state = snapshots(state, [snapshot('101')])
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-started', {
       ...root('101'),
       revision: 2,
-      phase: 'started',
       toolCallId: 'call_a',
       tool: 'run_command',
       ok: null,
     })
     expect(state.runs['101'].tools[0].state).toBe('running')
 
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-finished', {
       ...root('101'),
       revision: 3,
-      phase: 'finished',
       toolCallId: 'call_a',
       tool: 'run_command',
       ok: null,
@@ -375,18 +368,16 @@ describe('工具阶段', () => {
   it('工具完成后迟到的同 seq 旧快照（revision 更小）不把工具重置为执行中', () => {
     let state = withVisibleTriggers('8801')
     state = snapshots(state, [snapshot('101')])
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-started', {
       ...root('101'),
       revision: 2,
-      phase: 'started',
       toolCallId: 'call_a',
       tool: 'run_command',
       ok: null,
     })
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-finished', {
       ...root('101'),
       revision: 3,
-      phase: 'finished',
       toolCallId: 'call_a',
       tool: 'run_command',
       ok: true,
@@ -411,10 +402,9 @@ describe('工具阶段', () => {
   it('快照 tools 整体替换，终态把未结束的工具收成中性结束', () => {
     let state = withVisibleTriggers('8801')
     state = snapshots(state, [snapshot('101')])
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-started', {
       ...root('101'),
       revision: 2,
-      phase: 'started',
       toolCallId: 'call_a',
       tool: 'read_attachment',
       ok: null,
@@ -443,19 +433,17 @@ describe('工具阶段', () => {
   it('工具事件带出入参与结果，结束后快照仍能恢复完整历史', () => {
     let state = withVisibleTriggers('8801')
     state = snapshots(state, [snapshot('101')])
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-started', {
       ...root('101'),
       revision: 2,
-      phase: 'started',
       toolCallId: 'call_a',
       tool: 'read_file',
       ok: null,
       input: '{"path":"src/app.ts"}',
     })
-    state = stream(state, 'agent-run.tool', {
+    state = stream(state, 'agent-run.tool-finished', {
       ...root('101'),
       revision: 3,
-      phase: 'finished',
       toolCallId: 'call_a',
       tool: 'read_file',
       ok: true,
@@ -572,42 +560,26 @@ describe('终态、最终消息与刷新中断', () => {
 
 describe('入口校验', () => {
   it('拒绝缺字段、非整数 round/seq/revision 的事件，不默认成 0', () => {
-    expect(parseAgentRunEvent('agent-run.delta', '{')).toBeNull()
-    expect(parseAgentRunEvent('agent-run.delta', JSON.stringify({ runId: '1' }))).toBeNull()
-    expect(parseAgentRunEvent('unknown.event', JSON.stringify(root('1')))).toBeNull()
-    expect(parseAgentRunEvent('agent-run.updated', JSON.stringify(root('1')))).toBeNull()
+    expect(parseAgentRunFrame('agent-run.delta', null)).toBeNull()
+    expect(parseAgentRunFrame('agent-run.delta', 'not-an-object')).toBeNull()
+    expect(parseAgentRunFrame('agent-run.delta', { runId: '1' })).toBeNull()
+    expect(parseAgentRunFrame('unknown.event', root('1'))).toBeNull()
+    expect(parseAgentRunFrame('agent-run.updated', root('1'))).toBeNull()
     expect(
-      parseAgentRunEvent(
-        'agent-run.updated',
-        JSON.stringify(root('1', { round: 1.5, revision: 1 })),
-      ),
+      parseAgentRunFrame('agent-run.updated', root('1', { round: 1.5, revision: 1 })),
+    ).toBeNull()
+    expect(parseAgentRunFrame('agent-run.updated', root('1', { round: -1, revision: 1 }))).toBeNull()
+    expect(
+      parseAgentRunFrame('agent-run.delta', { ...root('1'), seq: 1, text: 'x', revision: 1.5 }),
     ).toBeNull()
     expect(
-      parseAgentRunEvent(
-        'agent-run.updated',
-        JSON.stringify(root('1', { round: -1, revision: 1 })),
-      ),
+      parseAgentRunFrame('agent-run.delta', { ...root('1'), seq: 1, text: 'x' }),
     ).toBeNull()
     expect(
-      parseAgentRunEvent(
-        'agent-run.delta',
-        JSON.stringify({ ...root('1'), seq: 1, text: 'x', revision: 1.5 }),
-      ),
+      parseAgentRunFrame('agent-run.tool-started', { ...root('1'), tool: 'run_command' }),
     ).toBeNull()
     expect(
-      parseAgentRunEvent('agent-run.delta', JSON.stringify({ ...root('1'), seq: 1, text: 'x' })),
-    ).toBeNull()
-    expect(
-      parseAgentRunEvent(
-        'agent-run.tool',
-        JSON.stringify({ ...root('1'), phase: 'started', tool: 'run_command' }),
-      ),
-    ).toBeNull()
-    expect(
-      parseAgentRunEvent(
-        'agent-run.snapshot',
-        JSON.stringify({ run: snapshot('1', { seq: undefined }) }),
-      ),
+      parseAgentRunFrame('agent-run.snapshot', { run: snapshot('1', { seq: undefined }) }),
     ).toBeNull()
   })
 

@@ -49,7 +49,7 @@ export function getStoredToken(): string | null {
   return localStorage.getItem(ACCESS_TOKEN_KEY)
 }
 
-/** 返回 API 基础地址（用于拼接 SSE 等完整 URL） */
+/** 返回 API 基础地址（用于拼接 WebSocket 等完整 URL） */
 export function getApiBaseUrl(): string {
   return BASE_URL
 }
@@ -83,7 +83,7 @@ export function getLogoutRefreshToken(): string | null {
   return logoutRefreshToken ?? getStoredRefreshToken()
 }
 
-/** 刷新 access token（供 SSE 等不走 rawRequest 的路径复用）。成功返回新 access token，失败返回 null。 */
+/** 刷新 access token（供 WebSocket 握手等不走 rawRequest 的路径复用）。成功返回新 access token，失败返回 null。 */
 export async function refreshAccessToken(): Promise<string | null> {
   // 已有刷新在途时等待它：登出也需要它轮换后的 refresh token
   if (refreshPromise) return refreshPromise
