@@ -3,8 +3,9 @@ import { projectAgents } from './agents'
 import type { AgentRunSegment, AgentRunStatus, AgentRunTool } from '@/features/agent-runs'
 
 /**
- * Mock 演示用的真实 Agent 运行流：固定群 901（project '2'）。
- * 与聊天 mock 的 seedAgentRunDemo() 共用群/触发消息 ID；其它群只建连、不播事件。
+ * Mock 演示用的 Agent 运行：固定群 901（project '2'）。
+ * 与聊天 mock 的 seedAgentRunDemo() 共用群/触发消息 ID。
+ * mock 没有 WS 端点：演示由 REST 快照请求启动，前端在 WS 未连接时按 1s 轮询快照推进。
  */
 export const AGENT_RUN_DEMO = {
   projectId: '2',
@@ -14,7 +15,6 @@ export const AGENT_RUN_DEMO = {
 
 const ROOT_RUN_ID = '9001'
 const CHILD_RUN_ID = '9002'
-const HEARTBEAT_MS = 15_000
 const STEP_MS = 300
 
 type RunEvent = Record<string, unknown>
@@ -43,7 +43,7 @@ function createLive(): DemoLive {
   }
 }
 
-/** 演示运行的当前真状态：REST 快照与 SSE 建连都读它，断线/重新进入不会回到假的 RUNNING。 */
+/** 演示运行的当前真状态：每次 REST 快照都读它，重新进入不会回到假的 RUNNING。 */
 const demo = {
   started: false,
   cancelled: false,
@@ -51,7 +51,6 @@ const demo = {
   root: createLive(),
   child: createLive(),
 }
-const listeners = new Set<(event: string, data: unknown) => void>()
 
 /** 运行结束时未收到 finished 的工具按中性结束收尾，与真实后端一致。 */
 function settleTools(tools: AgentRunTool[]): AgentRunTool[] {
@@ -65,7 +64,6 @@ export function resetAgentRunDemo(): void {
   demo.cancelled = false
   Object.assign(demo.root, createLive())
   Object.assign(demo.child, createLive())
-  listeners.clear()
 }
 
 function liveOf(runId: string): DemoLive {
@@ -109,10 +107,6 @@ function snapshotOf(runId: string): RunEvent {
   }
 }
 
-function broadcast(event: string, data: unknown): void {
-  for (const listener of listeners) listener(event, data)
-}
-
 function appendDelta(runId: string, text: string): RunEvent {
   const live = liveOf(runId)
   live.revision += 1
@@ -120,7 +114,6 @@ function appendDelta(runId: string, text: string): RunEvent {
   const segment = live.segments.find((item) => item.round === live.round)
   if (segment) segment.text += text
   else live.segments.push({ round: live.round, text })
-  broadcast('agent-run.delta', { ...liveEvent(runId), seq: live.seq, text })
   return liveEvent(runId)
 }
 
@@ -128,23 +121,9 @@ function startTool(runId: string, toolCallId: string, tool: string, input: strin
   const live = liveOf(runId)
   live.revision += 1
   live.tools.push({ toolCallId, tool, round: live.round, state: 'running', input, output: null })
-  broadcast('agent-run.tool', {
-    ...liveEvent(runId),
-    phase: 'started',
-    toolCallId,
-    tool,
-    ok: null,
-    input,
-  })
 }
 
-function finishTool(
-  runId: string,
-  toolCallId: string,
-  tool: string,
-  ok: boolean,
-  output: string,
-): void {
+function finishTool(runId: string, toolCallId: string, ok: boolean, output: string): void {
   const live = liveOf(runId)
   live.revision += 1
   const entry = live.tools.find((item) => item.toolCallId === toolCallId)
@@ -152,21 +131,12 @@ function finishTool(
     entry.state = ok ? 'ok' : 'failed'
     entry.output = output
   }
-  broadcast('agent-run.tool', {
-    ...liveEvent(runId),
-    phase: 'finished',
-    toolCallId,
-    tool,
-    ok,
-    output,
-  })
 }
 
 function startRound(runId: string, round: number): void {
   const live = liveOf(runId)
   live.round = round
   live.revision += 1
-  broadcast('agent-run.updated', liveEvent(runId))
 }
 
 function finishRun(runId: string, status: AgentRunStatus, result: string | null = null): void {
@@ -175,7 +145,6 @@ function finishRun(runId: string, status: AgentRunStatus, result: string | null 
   live.revision += 1
   if (result) live.result = result
   live.tools = settleTools(live.tools)
-  broadcast('agent-run.updated', liveEvent(runId))
 }
 
 const wait = (ms: number) =>
@@ -183,7 +152,7 @@ const wait = (ms: number) =>
     setTimeout(resolve, ms)
   })
 
-/** 只播一次；断线时状态继续推进，重连/重新进入拿当前快照而不是从头重放。 */
+/** 只播一次；轮询拿到的快照被动跟随推进，重新进入不会从头重放。 */
 async function playDemo(generation: number): Promise<void> {
   const alive = () => generation === demo.generation && !demo.cancelled
   await wait(STEP_MS)
@@ -197,13 +166,7 @@ async function playDemo(generation: number): Promise<void> {
   await wait(STEP_MS)
   if (!alive()) return
 
-  finishTool(
-    ROOT_RUN_ID,
-    'call_demo_1',
-    'run_command',
-    true,
-    'src/api\nsrc/components\nsrc/features/agent-runs',
-  )
+  finishTool(ROOT_RUN_ID, 'call_demo_1', true, 'src/api\nsrc/components\nsrc/features/agent-runs')
   startRound(ROOT_RUN_ID, 2)
   await wait(STEP_MS)
   if (!alive()) return
@@ -213,13 +176,7 @@ async function playDemo(generation: number): Promise<void> {
   await wait(STEP_MS)
   if (!alive()) return
 
-  finishTool(
-    CHILD_RUN_ID,
-    'call_demo_2',
-    'read_attachment',
-    true,
-    '虚拟列表按消息 ID 定位，新增长度不打断阅读位置。',
-  )
+  finishTool(CHILD_RUN_ID, 'call_demo_2', true, '虚拟列表按消息 ID 定位，新增长度不打断阅读位置。')
   appendDelta(CHILD_RUN_ID, '虚拟列表已按消息 ID 定位，新增长度不会打断阅读位置。')
   finishRun(CHILD_RUN_ID, 'SUCCEEDED')
   await wait(STEP_MS)
@@ -250,7 +207,6 @@ function cancelDemo(): number {
     live.status = 'CANCELLED'
     live.revision += 1
     live.tools = settleTools(live.tools)
-    broadcast('agent-run.updated', liveEvent(runId))
     return true
   }
   const rootCancelled = cancel(ROOT_RUN_ID)
@@ -281,67 +237,17 @@ async function appendFinalMessage(text: string): Promise<void> {
   })
 }
 
-function eventStreamResponse(request: Request): Response {
-  const encoder = new TextEncoder()
-  const groupId = new URL(request.url).pathname.split('/').at(-2)
-  const isDemo = groupId === AGENT_RUN_DEMO.groupId
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      let cancelled = request.signal.aborted
-      const onAbort = () => {
-        cancelled = true
-      }
-      request.signal.addEventListener('abort', onAbort)
-      const send = (event: string, data: unknown) => {
-        if (cancelled) return
-        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
-      }
-      const listener = (event: string, data: unknown) => send(event, data)
-      try {
-        controller.enqueue(encoder.encode(': connected\n\n'))
-        if (isDemo) {
-          // 建连先给当前真状态（可能已在执行中/已完成），再订阅后续事件。
-          send('agent-run.snapshot', { run: snapshotOf(ROOT_RUN_ID) })
-          send('agent-run.snapshot', { run: snapshotOf(CHILD_RUN_ID) })
-          listeners.add(listener)
-          if (!demo.started) {
-            demo.started = true
-            void playDemo(demo.generation)
-          }
-        }
-        while (!cancelled) {
-          await wait(HEARTBEAT_MS)
-          if (cancelled) break
-          controller.enqueue(encoder.encode(': ping\n\n'))
-        }
-      } catch {
-        // 客户端断开后不再推送
-      } finally {
-        listeners.delete(listener)
-        request.signal.removeEventListener('abort', onAbort)
-        try {
-          controller.close()
-        } catch {
-          // 已取消的流不能再 close
-        }
-      }
-    },
-  })
-  return new Response(stream, {
-    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store' },
-  })
-}
-
 export const agentRunHandlers = [
   http.get('/api/projects/:projectId/agent-runs', ({ request }) => {
     const groupId = new URL(request.url).searchParams.get('groupId')
-    const data =
-      groupId === AGENT_RUN_DEMO.groupId ? [snapshotOf(ROOT_RUN_ID), snapshotOf(CHILD_RUN_ID)] : []
-    return HttpResponse.json({ data })
+    if (groupId !== AGENT_RUN_DEMO.groupId) return HttpResponse.json({ data: [] })
+    // 第一次拉演示群快照时开始播放；后续轮询看到的就是被推进的状态。
+    if (!demo.started) {
+      demo.started = true
+      void playDemo(demo.generation)
+    }
+    return HttpResponse.json({ data: [snapshotOf(ROOT_RUN_ID), snapshotOf(CHILD_RUN_ID)] })
   }),
-  http.get('/api/projects/:projectId/groups/:groupId/agent-events', ({ request }) =>
-    eventStreamResponse(request),
-  ),
   // 字面量群 ID 只接管演示群，其它群的停止仍由聊天 mock 处理。
   http.post('/api/projects/:projectId/groups/901/messages/:messageId/cancel-agent', () =>
     HttpResponse.json({ data: { cancelledRuns: cancelDemo() } }),

@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { queryClient } from '@/query'
-import { AGENT_RUN_REFRESH_EVENT, dispatchRealtimeFrame, realtimeWsUrl } from './realtimeClient'
+import {
+  dispatchRealtimeFrame,
+  realtimeWsUrl,
+  subscribeAgentRunFrames,
+} from './realtimeClient'
 import type { RealtimeFrame } from '@/types'
 
 afterEach(() => vi.restoreAllMocks())
@@ -75,21 +79,53 @@ describe('dispatchRealtimeFrame', () => {
     })
   })
 
-  it('agent-run 事件只派发快照刷新信号，不 invalidate 查询', () => {
+  it('agent-run 帧分发给本群订阅者，不 invalidate 查询', () => {
     const spy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined)
     const listener = vi.fn()
-    window.addEventListener(AGENT_RUN_REFRESH_EVENT, listener)
-    dispatchRealtimeFrame({
-      type: 'agent-run.updated',
-      scope: 'project',
+    const unsubscribe = subscribeAgentRunFrames(listener)
+
+    const frame = {
+      type: 'agent-run.delta',
+      scope: 'project' as const,
       projectId: '1',
       groupId: '1',
       resourceId: '123',
       payload: { runId: '123' },
-    })
-    window.removeEventListener(AGENT_RUN_REFRESH_EVENT, listener)
+    }
+    dispatchRealtimeFrame(frame)
+    unsubscribe()
+    dispatchRealtimeFrame(frame)
+
     expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith(frame, { projectId: '1', groupId: '1' })
     expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('agent-run 帧的 groupId 可从 payload 归一化，两者都缺时不分发', () => {
+    const listener = vi.fn()
+    const unsubscribe = subscribeAgentRunFrames(listener)
+
+    dispatchRealtimeFrame({
+      type: 'agent-run.tool-started',
+      scope: 'project',
+      projectId: '1',
+      groupId: null,
+      payload: { groupId: '2' },
+    })
+    dispatchRealtimeFrame({
+      type: 'agent-run.tool-finished',
+      scope: 'project',
+      projectId: '1',
+      groupId: null,
+      payload: {},
+    })
+    unsubscribe()
+
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'agent-run.tool-started' }),
+      { projectId: '1', groupId: '2' },
+    )
   })
 
   it('ignores removed task event types', () => {
