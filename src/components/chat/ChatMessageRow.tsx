@@ -7,6 +7,7 @@ import { Avatar, Button, Icon, Tag } from '@/components/ui'
 import { ChatCodeBlock } from './ChatMarkdown'
 import { LazyChatMarkdown } from './LazyChatMarkdown'
 import { RunCard } from './RunCard'
+import { streamingText, type RunGroup } from './agentRunRows'
 
 interface Props {
   item: ChatMessage
@@ -15,6 +16,8 @@ interface Props {
   reply?: ChatMessage
   runs?: AgentRun[]
   agentNames?: Map<string, string>
+  /** 停止按钮只作用于触发消息；最终消息行靠它找到本轮运行。 */
+  trigger?: ChatMessage
   onReply: (item: ChatMessage) => void
   onPreview: (item: ChatMessage) => void
   onLocate: (id: string) => void
@@ -99,6 +102,46 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
+/**
+ * 运行卡列表：根运行带停止按钮，子运行跟着根一起被叫停。
+ * 运行卡上面是状态与工具时间线，正文由调用方在卡片下方单独渲染。
+ */
+function RunStack({
+  runs,
+  agentNames,
+  trigger,
+  canStop,
+  stopping,
+  replied,
+  onStop,
+}: {
+  runs: AgentRun[]
+  agentNames?: Map<string, string>
+  trigger?: ChatMessage
+  canStop?: boolean
+  stopping?: boolean
+  replied?: boolean
+  onStop: (item: ChatMessage) => void
+}) {
+  return (
+    <>
+      {runs.map((run) => (
+        <RunCard
+          key={run.runId}
+          run={run}
+          agentName={agentNames?.get(run.agentId)}
+          // 子 Agent 跟着根运行一起被叫停，不再多给一个重复的停止按钮。
+          onStop={
+            canStop && trigger && run.parentRunId === null ? () => onStop(trigger) : undefined
+          }
+          stopping={stopping}
+          replied={replied}
+        />
+      ))}
+    </>
+  )
+}
+
 export const ChatMessageRow = memo(function ChatMessageRow({
   item,
   projectId,
@@ -106,6 +149,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   reply,
   runs = [],
   agentNames,
+  trigger,
   onReply,
   onPreview,
   onLocate,
@@ -126,7 +170,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
 
   return (
     <article
-      className={`msg${located ? ' msg--located' : ''}`}
+      className={`msg${agent ? ' msg--agent' : ''}${located ? ' msg--located' : ''}`}
       aria-label={`${name}的消息`}
       id={`message-${item.id}`}
     >
@@ -153,17 +197,21 @@ export const ChatMessageRow = memo(function ChatMessageRow({
             <span>{reply ? chatMessageText(reply).slice(0, 160) : '点击查看原消息'}</span>
           </button>
         ) : null}
-        <MessageBody item={item} projectId={projectId} agent={agent} onPreview={onPreview} />
-        {runs.map((run) => (
-          <RunCard
-            key={run.runId}
-            run={run}
-            agentName={agentNames?.get(run.agentId)}
-            // 子 Agent 跟着根运行一起被叫停，不再多给一个重复的停止按钮。
-            onStop={canStop && run.parentRunId === null ? () => onStop(item) : undefined}
+        {/* 工具调用只属于 Agent 消息行：用户触发消息那一行永远不挂运行卡。 */}
+        {agent && runs.length ? (
+          <RunStack
+            runs={runs}
+            agentNames={agentNames}
+            trigger={trigger}
+            canStop={canStop}
             stopping={stopping}
+            replied
+            onStop={onStop}
           />
-        ))}
+        ) : null}
+        <div className="msg__content-row">
+          <MessageBody item={item} projectId={projectId} agent={agent} onPreview={onPreview} />
+        </div>
         <div className="msg__actions">
           <Button
             variant="link"
@@ -178,3 +226,63 @@ export const ChatMessageRow = memo(function ChatMessageRow({
     </article>
   )
 })
+
+/**
+ * 进行中的 Agent 行：最终消息还没入库时，工具调用与流式正文就落在这里。
+ * 结构和最终 Agent 消息一致（运行卡在上、正文在下），交接时正文原地变成最终文本。
+ */
+export function AgentRunRow({
+  group,
+  agentName,
+  agentNames,
+  trigger,
+  canStop,
+  stopping,
+  onStop,
+}: {
+  group: RunGroup
+  agentName?: string
+  agentNames?: Map<string, string>
+  trigger?: ChatMessage
+  canStop?: boolean
+  stopping?: boolean
+  onStop: (item: ChatMessage) => void
+}) {
+  const root = group.runs[0]
+  const name = agentName || 'Agent'
+  const text = streamingText(group)
+  // 行标题已经知道是谁：卡片上也补上，不需要每张卡都从成员表里查。
+  const names = new Map(agentNames ?? [])
+  if (root) names.set(root.agentId, names.get(root.agentId) ?? name)
+  const timestamp = root?.createdAt ? new Date(root.createdAt) : null
+  const validTime = timestamp !== null && !Number.isNaN(timestamp.getTime())
+  return (
+    <article className="msg msg--agent" aria-label={`${name}正在回复`}>
+      <Avatar name={name} type="agent" size="md" />
+      <div className="msg__body">
+        <p className="msg__head">
+          <span className="msg__name">{name}</span>
+          <Tag tone="agent">Agent</Tag>
+          {validTime ? (
+            <time className="msg__time" dateTime={root.createdAt ?? undefined}>
+              {timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+            </time>
+          ) : null}
+        </p>
+        <RunStack
+          runs={group.runs}
+          agentNames={names}
+          trigger={trigger}
+          canStop={canStop}
+          stopping={stopping}
+          onStop={onStop}
+        />
+        {text ? (
+          <div className="msg__content-row">
+            <LazyChatMarkdown text={text} />
+          </div>
+        ) : null}
+      </div>
+    </article>
+  )
+}

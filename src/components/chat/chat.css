@@ -103,6 +103,17 @@
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
+/* 正文容器：进行中的流式正文与最终消息共用，交接时只是换文本，不换盒子。 */
+.msg__content-row {
+  min-width: 0;
+  font-size: var(--t-body);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+/* Agent 消息行：工具调用在上、正文在下，两块之间留出呼吸。 */
+.msg--agent .msg__body {
+  gap: var(--s-2);
+}
 .msg__text a {
   overflow-wrap: anywhere;
 }
@@ -175,7 +186,7 @@
   animation: qg-fade-in var(--d-fast) var(--ease);
 }
 
-/* 运行卡：贴在触发消息下方，工具调用就地展开，不另开侧栏。 */
+/* 运行卡：Agent 消息行里的状态 + 工具时间线；流式正文在卡片下方单独渲染。 */
 .run {
   margin-top: var(--s-2);
   padding: 10px 12px;
@@ -216,17 +227,6 @@
   font-size: var(--t-xs);
   color: var(--ink-500);
   overflow-wrap: anywhere;
-}
-.run__live {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
-  font-size: var(--t-sm);
-}
-.run__live-label {
-  margin-bottom: 4px;
-  font-size: var(--t-xs);
-  color: var(--ink-400);
 }
 /* 工具调用：一行一个，展开看入参与结果。 */
 .run__tools {

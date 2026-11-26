@@ -5,7 +5,6 @@ import { chatApi } from '@/api/chat'
 import { directMessageApi } from '@/api/directMessage'
 import { useAuth } from '@/context/AuthContext'
 import { useAgentRuns } from '@/features/agent-runs'
-import type { AgentRun } from '@/features/agent-runs/types'
 import type { Page } from '@/types/api'
 import { messageField, type ChatMember, type ChatMessage, type SendChatMessage } from '@/types/chat'
 import type { DirectConversation } from '@/types/directMessage'
@@ -20,10 +19,9 @@ const AttachmentPreviewLazy = lazy(async () => ({
   default: (await import('./AttachmentPreview')).AttachmentPreview,
 }))
 
-const NO_RUNS = new Map<string, AgentRun[]>()
-
 /**
  * 一对一私聊画布：和群聊共用消息列表、输入器、运行卡与停止执行，去掉成员、邀请与置顶。
+ * 运行卡和流式回复都渲染在 Agent 消息行里，私聊没有触发消息以外的列可以挂。
  * 会话按 id 单独缓存，切换会话或切换项目时不会把上一个会话的消息带过来。
  */
 export function DirectMessagePanel({
@@ -61,15 +59,6 @@ export function DirectMessagePanel({
     ],
     [peer],
   )
-  const runsByMessage = useMemo(() => {
-    if (!agentRuns.runs.length) return NO_RUNS
-    const map = new Map<string, AgentRun[]>()
-    for (const run of agentRuns.runs) {
-      map.set(run.triggerMessageId, [...(map.get(run.triggerMessageId) ?? []), run])
-    }
-    return map
-  }, [agentRuns.runs])
-
   const locate = useCallback(
     async (id: string) => {
       if (!id) return
@@ -177,7 +166,7 @@ export function DirectMessagePanel({
             messages={chat.messages}
             projectId={projectId}
             participants={participants}
-            runsByMessage={runsByMessage}
+            runs={agentRuns.runs}
             loading={false}
             hasMore={Boolean(chat.query.hasNextPage)}
             loadingOlder={chat.query.isFetchingNextPage}

@@ -6,7 +6,6 @@ import { chatApi } from '@/api/chat'
 import { projectApi } from '@/api/project'
 import { useAuth } from '@/context/AuthContext'
 import { useAgentRuns } from '@/features/agent-runs'
-import type { AgentRun } from '@/features/agent-runs/types'
 import { formatApiError } from '@/utils/formatApiError'
 import type { Page } from '@/types/api'
 import { messageField, type ChatGroup, type ChatMessage, type SendChatMessage } from '@/types/chat'
@@ -25,7 +24,7 @@ const AttachmentPreviewLazy = lazy(async () => ({
 
 /**
  * 聊天工作区：群聊列（由页面传入）+ 消息画布 + 群成员侧栏。
- * Agent 的工具调用在触发消息下方的运行卡里展开，不再单独占一列。
+ * Agent 的工具调用与流式回复都落在 Agent 消息行里，不再挂在触发消息下方。
  * 输入、历史消息、运行状态各自独立，打字不会重渲染消息列表。
  */
 export function ChatPanel({
@@ -100,14 +99,6 @@ export function ChatPanel({
       void message.success(result.cancelledRuns ? '已请求停止执行' : '这条消息的执行已结束'),
     onError: (error) => void message.error(formatApiError(error)),
   })
-
-  const runsByMessage = useMemo(() => {
-    const map = new Map<string, AgentRun[]>()
-    for (const run of agentRuns.runs) {
-      map.set(run.triggerMessageId, [...(map.get(run.triggerMessageId) ?? []), run])
-    }
-    return map
-  }, [agentRuns.runs])
 
   const locate = useCallback(
     async (id: string) => {
@@ -230,7 +221,7 @@ export function ChatPanel({
             messages={chat.messages}
             projectId={projectId}
             participants={members.data}
-            runsByMessage={runsByMessage}
+            runs={agentRuns.runs}
             agentNames={agentNames}
             loading={false}
             hasMore={Boolean(chat.query.hasNextPage)}
