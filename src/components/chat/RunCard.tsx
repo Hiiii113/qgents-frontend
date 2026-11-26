@@ -5,7 +5,6 @@ import {
   type AgentRunTool,
   type AgentRunToolState,
 } from '@/features/agent-runs/types'
-import { LazyChatMarkdown } from './LazyChatMarkdown'
 
 const STATUS_LABEL = {
   RUNNING: '运行中',
@@ -39,24 +38,26 @@ const TOOL_LABEL: Record<AgentRunToolState, string> = {
 }
 
 /**
- * 触发消息下方的一张运行卡：状态、工具调用列表，以及每次调用的入参与结果。
- * 运行中默认展开工具列表，结束后收起，历史不会在对话里铺开。
+ * Agent 消息行里的一张运行卡：状态、停止按钮与可展开的工具时间线。
+ * 流式正文不放进这个框——它在卡片下方用和最终消息相同的正文容器渲染，
+ * 最终消息到达时正文原地换文本，不会从盒子里跳出来。
  */
 export function RunCard({
   run,
   agentName,
   onStop,
   stopping,
+  replied,
 }: {
   run: AgentRun
   agentName?: string
   onStop?: () => void
   stopping?: boolean
+  /** 这一轮的最终消息已经入库：失败提示交给正文，不在卡片上重复。 */
+  replied?: boolean
 }) {
   const running = !isTerminalStatus(run.status)
   const steps = run.tools.length
-  // 最终消息到达后服务端会清空正文分段，这里只在运行中展示本轮流式回复。
-  const liveText = running ? run.segments.map((segment) => segment.text).join('') : ''
   return (
     <section
       className={`run run--${TONE[run.status]}`}
@@ -95,13 +96,10 @@ export function RunCard({
           </ol>
         </details>
       ) : null}
-      {liveText ? (
-        <div className="run__live">
-          <p className="run__live-label">本轮回复</p>
-          <LazyChatMarkdown text={liveText} />
-        </div>
+      {/* 没有最终消息时，失败原因只能留在这里说明白。 */}
+      {!replied && run.status === 'FAILED' && run.result ? (
+        <p className="run__note">{run.result}</p>
       ) : null}
-      {run.status === 'FAILED' && run.result ? <p className="run__note">{run.result}</p> : null}
     </section>
   )
 }

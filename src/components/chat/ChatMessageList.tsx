@@ -1,20 +1,23 @@
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import type { ChatMember, ChatMessage } from '@/types/chat'
-import type { AgentRun } from '@/features/agent-runs/types'
+import { rootRunIdFromReply, type AgentRun } from '@/features/agent-runs'
 import { Button, Icon } from '@/components/ui'
-import { ChatMessageRow } from './ChatMessageRow'
+import { AgentRunRow, ChatMessageRow } from './ChatMessageRow'
+import { buildChatEntries, groupRunsByRoot } from './agentRunRows'
 
 interface Props {
   messages: ChatMessage[]
   projectId?: string
   participants?: ChatMember[]
-  runsByMessage: Map<string, AgentRun[]>
+  /** 该群 root + child 运行；按 rootRunId 归组后交给 Agent 消息行。 */
+  runs: AgentRun[]
   agentNames?: Map<string, string>
   loading: boolean
   hasMore: boolean
   loadingOlder: boolean
   targetId: string | null
+  /** 正在停止的触发消息 ID：运行卡与进行中行都按触发消息判定。 */
   stoppingMessageId?: string
   canStop?: (item: ChatMessage) => boolean
   onLoadOlder: () => Promise<unknown>
@@ -29,15 +32,12 @@ interface Props {
   emptyDescription?: string
 }
 
-interface Entry {
-  key: string
-  message: ChatMessage
-  showDate: boolean
-}
-
-/** 虚拟列表：消息与挂在它下面的运行卡一起参与动态高度。 */
+/**
+ * 虚拟列表：消息、进行中的 Agent 行与运行卡一起参与动态高度。
+ * 运行卡属于 Agent 消息行；没有最终消息的根运行紧跟在自己的触发消息后面。
+ */
 export const ChatMessageList = memo(function ChatMessageList(props: Props) {
-  const { messages, targetId, runsByMessage, onReadingLatestChange } = props
+  const { messages, targetId, onReadingLatestChange } = props
   const scrollRef = useRef<HTMLDivElement>(null)
   const stickToBottom = useRef(true)
   const anchor = useRef<{ id: string; offset: number } | null>(null)
@@ -53,22 +53,20 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
       ),
     [props.participants],
   )
+  // 成员列表给了名字就用它，私聊里只有对端 Agent，也靠这里补上名字。
+  const agentNames = useMemo(() => {
+    const names = new Map<string, string>()
+    for (const member of props.participants ?? [])
+      if (member.memberType === 'AGENT') names.set(member.id, member.displayName)
+    for (const [id, name] of props.agentNames ?? []) names.set(id, name)
+    return names
+  }, [props.participants, props.agentNames])
   const agents = useMemo(
     () => (props.participants ?? []).filter((member) => member.memberType === 'AGENT').slice(0, 3),
     [props.participants],
   )
-  const entries = useMemo<Entry[]>(() => {
-    return messages.map((message, index) => {
-      const previous = index > 0 ? new Date(messages[index - 1].createdAt) : null
-      const date = new Date(message.createdAt)
-      return {
-        key: message.id,
-        message,
-        showDate:
-          !Number.isNaN(date.getTime()) && date.toDateString() !== previous?.toDateString(),
-      }
-    })
-  }, [messages])
+  const groups = useMemo(() => groupRunsByRoot(props.runs), [props.runs])
+  const entries = useMemo(() => buildChatEntries(messages, groups), [messages, groups])
   const virtualizer = useVirtualizer({
     count: entries.length,
     getScrollElement: () => scrollRef.current,
@@ -84,6 +82,11 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
   const newMessages = awayFromBottom
     ? messages.filter((item) => (item.sequence ?? 0) > seenSequence).length
     : 0
+
+  const stopOf = (trigger: ChatMessage | undefined) =>
+    trigger ? (props.canStop?.(trigger) ?? false) : false
+  const stoppingOf = (triggerId: string | undefined) =>
+    Boolean(triggerId) && props.stoppingMessageId === triggerId
 
   useLayoutEffect(() => {
     if (anchor.current) {
@@ -105,7 +108,9 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
       return
     }
     if (locatedId.current === targetId) return
-    const index = entries.findIndex((entry) => entry.message.id === targetId)
+    const index = entries.findIndex(
+      (entry) => entry.kind === 'message' && entry.message.id === targetId,
+    )
     if (index >= 0) {
       stickToBottom.current = false
       setAwayFromBottom(true)
@@ -204,8 +209,13 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
           <div style={{ height: totalSize, position: 'relative' }}>
             {virtualizer.getVirtualItems().map((row) => {
               const entry = entries[row.index]
-              const item = entry.message
-              const date = new Date(item.createdAt)
+              const date = entry.kind === 'message' ? new Date(entry.message.createdAt) : null
+              // 最终消息只认自己的根运行：运行卡挂在它上方，停止按钮仍指向触发消息。
+              const group =
+                entry.kind === 'message'
+                  ? groups.get(rootRunIdFromReply(entry.message.clientMessageId) ?? '')
+                  : undefined
+              const trigger = group ? byId.get(group.triggerMessageId) : undefined
               return (
                 <div
                   key={row.key}
@@ -220,7 +230,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     transform: `translateY(${row.start}px)`,
                   }}
                 >
-                  {entry.showDate ? (
+                  {entry.showDate && date ? (
                     <p className="daybreak">
                       <span>
                         {date.toLocaleDateString('zh-CN', {
@@ -232,21 +242,38 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                       </span>
                     </p>
                   ) : null}
-                  <ChatMessageRow
-                    item={item}
-                    projectId={props.projectId}
-                    reply={item.replyToId ? byId.get(item.replyToId) : undefined}
-                    sender={senders.get(`${item.senderType}:${item.senderId}`)}
-                    runs={runsByMessage.get(item.id)}
-                    agentNames={props.agentNames}
-                    onReply={props.onReply}
-                    onPreview={props.onPreview}
-                    onLocate={props.onLocate}
-                    onStop={props.onStop}
-                    canStop={props.canStop?.(item) ?? false}
-                    stopping={props.stoppingMessageId === item.id}
-                    located={props.targetId === item.id}
-                  />
+                  {entry.kind === 'run' ? (
+                    <AgentRunRow
+                      group={entry.group}
+                      agentName={agentNames.get(entry.group.runs[0]?.agentId ?? '')}
+                      agentNames={agentNames}
+                      trigger={byId.get(entry.group.triggerMessageId)}
+                      canStop={stopOf(byId.get(entry.group.triggerMessageId))}
+                      stopping={stoppingOf(entry.group.triggerMessageId)}
+                      onStop={props.onStop}
+                    />
+                  ) : (
+                    <ChatMessageRow
+                      item={entry.message}
+                      projectId={props.projectId}
+                      reply={
+                        entry.message.replyToId ? byId.get(entry.message.replyToId) : undefined
+                      }
+                      sender={senders.get(
+                        `${entry.message.senderType}:${entry.message.senderId}`,
+                      )}
+                      runs={group?.runs}
+                      agentNames={agentNames}
+                      trigger={trigger}
+                      onReply={props.onReply}
+                      onPreview={props.onPreview}
+                      onLocate={props.onLocate}
+                      onStop={props.onStop}
+                      canStop={stopOf(trigger)}
+                      stopping={stoppingOf(group?.triggerMessageId)}
+                      located={props.targetId === entry.message.id}
+                    />
+                  )}
                 </div>
               )
             })}
