@@ -1,0 +1,104 @@
+/* MCP 页签：服务卡片、凭证状态与工具结果的排版。 */
+.mcp-list {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.mcp-card {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.mcp-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.mcp-card__identity {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.mcp-card__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.mcp-card__title .h3 {
+  margin: 0;
+}
+
+.mcp-card__url {
+  font-size: var(--t-sm);
+  color: var(--ink-500);
+  overflow-wrap: anywhere;
+}
+
+.mcp-card__admin {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.mcp-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+.mcp-tools {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  background: var(--surface-soft);
+  border-radius: var(--r-sm);
+}
+
+.mcp-tools__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.mcp-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  font-size: var(--t-sm);
+}
+
+.mcp-notice--ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.mcp-notice--wait {
+  background: var(--wait-soft);
+  color: var(--wait);
+}
+
+.mcp-notice--stop {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+@media (max-width: 760px) {
+  .mcp-card__head {
+    flex-direction: column;
+  }
+}
