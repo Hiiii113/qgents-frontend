@@ -48,6 +48,7 @@ export function DirectMessageList({
               type="button"
               className="dmrow"
               aria-current={item.id === selectedId}
+              data-unread={unread ? 'true' : undefined}
               onClick={() => onSelect(item)}
             >
               <Avatar

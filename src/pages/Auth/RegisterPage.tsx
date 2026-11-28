@@ -71,7 +71,6 @@ export function RegisterPage() {
       <GateAside />
       <GateForm>
         <h1 className="gate__title">创建账号</h1>
-        <p className="sub">注册后可以创建团队，或凭邀请加入团队。</p>
         <Form
           form={form}
           layout="vertical"

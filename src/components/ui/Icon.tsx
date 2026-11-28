@@ -160,6 +160,37 @@ const PATHS = {
       <circle cx="12" cy="13" r="3.2" />
     </>
   ),
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </>
+  ),
+  moon: <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />,
+  at: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M16 12v1.2a2.8 2.8 0 0 0 5.6 0V12a9.6 9.6 0 1 0-3.4 7.3" />
+    </>
+  ),
+  sparkles: (
+    <>
+      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+      <path d="M19 3v3M20.5 4.5h-3M5 17v2.5M6.2 18.2H3.8" />
+    </>
+  ),
+  external: (
+    <>
+      <path d="M14 5h5v5" />
+      <path d="M10 14L19 5" />
+      <path d="M19 14v4a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 18V6.5A1.5 1.5 0 0 1 6.5 5H10" />
+    </>
+  ),
+  pin: (
+    <>
+      <path d="M15 4.5l4.5 4.5-2.5 2.5-1.5-.5-3.5 3.5.5 2.5-1.5 1.5-3.5-3.5-3.5 3.5 3.5-3.5-3.5-3.5 1.5-1.5 2.5.5 3.5-3.5-.5-1.5z" />
+    </>
+  ),
 } as const
 
 export type IconName = keyof typeof PATHS
@@ -170,10 +201,10 @@ interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
 }
 
 /** 用内联 symbol 引用，图标定义只出现一次。 */
-export function Icon({ name, size = 16, ...rest }: IconProps) {
+export function Icon({ name, size = 16, className, ...rest }: IconProps) {
   return (
     <svg
-      className="od-icon"
+      className={className ? `od-icon ${className}` : 'od-icon'}
       style={{ '--od-icon-size': `${size}px` } as never}
       aria-hidden
       focusable="false"
@@ -197,7 +228,7 @@ export function IconSprite() {
   )
 }
 
-/** 品牌标记：墨环 + 朱砂点。 */
+/** 品牌标记：精密几何 Q 环与钴蓝节点。 */
 export function Mark({ large = false }: { large?: boolean }) {
   return (
     <span className={`mark${large ? ' mark--lg' : ''}`} aria-hidden>
@@ -208,9 +239,18 @@ export function Mark({ large = false }: { large?: boolean }) {
           r="8.5"
           fill="none"
           stroke="currentColor"
-          strokeWidth={large ? 2.6 : 3}
+          strokeWidth={large ? 2.5 : 2.8}
         />
-        <circle cx="26" cy="26" r={large ? 3.4 : 3.6} fill="var(--mark)" />
+        <line
+          x1="19.5"
+          y1="19.5"
+          x2="24"
+          y2="24"
+          stroke="currentColor"
+          strokeWidth={large ? 2.5 : 2.8}
+          strokeLinecap="round"
+        />
+        <circle cx="25.5" cy="25.5" r={large ? 2.8 : 3} fill="var(--mark)" />
       </svg>
     </span>
   )

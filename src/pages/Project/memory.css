@@ -1,37 +1,145 @@
-/* 项目记忆：memory.md 的文档排版；TOC 与分栏来自设计系统。 */
+/* 项目记忆：memory.md 的只读阅读卡与文档目录。 */
 
-/* 目录按内容收窄，目录与正文整体居中：固定的 260px 列会把正文推远，整页偏左。 */
-.split--doc {
-  grid-template-columns: fit-content(200px) minmax(0, 72ch);
-  column-gap: var(--s-4);
-  justify-content: center;
+.memory-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
 }
 
-@media (max-width: 900px) {
-  .split--doc {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.memory-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  color: var(--ink-700);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+}
+
+.memory-head__go {
+  text-decoration: none;
+}
+
+.memory-head__go:hover {
+  text-decoration: none;
+}
+
+/* 目录收窄成阅读卡左侧的一条索引，正文保持 72ch 的舒适行宽。 */
+.split--doc {
+  grid-template-columns: 210px minmax(0, 72ch);
+  column-gap: var(--s-8);
+  justify-content: start;
+  align-items: start;
+  margin-top: var(--s-5);
+}
+
+.memory-toc {
+  top: var(--s-5);
+  gap: var(--s-3);
+  padding: var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.memory-toc .toc__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-left: 2px;
+}
+
+.memory-toc .toc__label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--mark);
+}
+
+.memory-toc ul {
+  display: grid;
+  gap: 2px;
+}
+
+.memory-toc__link {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  line-height: 1.45;
+}
+
+.memory-toc__link:hover {
+  color: var(--ink-900);
+  background: var(--mark-soft);
+  border-left-color: var(--mark);
+  text-decoration: none;
 }
 
 .memory-doc {
+  max-width: none;
   max-height: none;
+  padding: var(--s-8);
   overflow-wrap: anywhere;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
 }
 
-.memory-doc ol {
-  padding-left: 24px;
-  margin: var(--s-2) 0;
+.memory-doc > :first-child {
+  margin-top: 0;
+}
+
+.memory-doc p {
   font-size: var(--t-body);
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--ink-700);
 }
 
+.memory-doc p + p {
+  margin-top: var(--s-3);
+}
+
+.memory-doc ul,
+.memory-doc ol {
+  padding-left: 22px;
+  margin: var(--s-3) 0;
+  font-size: var(--t-body);
+  line-height: 1.8;
+  color: var(--ink-700);
+}
+
+.memory-doc ul {
+  list-style: disc;
+}
+
+.memory-doc ol {
+  list-style: decimal;
+}
+
+.memory-doc li {
+  margin: 3px 0;
+}
+
+.memory-doc li::marker {
+  color: var(--ink-400);
+}
+
 .memory-doc h1,
+.memory-doc h2,
 .memory-doc h3,
 .memory-doc h4 {
   margin: var(--s-6) 0 var(--s-2);
   color: var(--ink-900);
   font-weight: 600;
+  letter-spacing: -0.01em;
   scroll-margin-top: var(--s-6);
 }
 
@@ -39,64 +147,105 @@
   font-size: var(--t-h2);
 }
 
+.memory-doc h2 {
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--line);
+}
+
 .memory-doc h3,
 .memory-doc h4 {
   font-size: var(--t-ui);
 }
 
+.memory-doc a {
+  text-underline-offset: 3px;
+  text-decoration-color: var(--mark-line);
+}
+
+.memory-doc a:hover {
+  text-decoration-color: var(--mark);
+}
+
+.memory-doc :not(pre) > code {
+  padding: 0.12em 0.42em;
+  font-size: 0.87em;
+  color: var(--mark-strong);
+  background: var(--mark-soft);
+  border-color: var(--mark-line);
+}
+
 .memory-doc blockquote {
-  margin: var(--s-3) 0;
-  padding-left: var(--s-4);
-  border-left: 2px solid var(--line-strong);
-  color: var(--ink-500);
+  margin: var(--s-4) 0;
+  padding: var(--s-3) var(--s-4);
+  color: var(--ink-700);
+  background: var(--mark-soft);
+  border: 1px solid var(--mark-line);
+  border-radius: var(--r-sm);
+}
+
+.memory-doc blockquote p {
+  color: inherit;
 }
 
 .memory-doc pre {
-  margin: var(--s-3) 0;
-  padding: var(--s-3);
+  margin: var(--s-4) 0;
+  padding: var(--s-4);
   overflow-x: auto;
   background: var(--surface-sunken);
-  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
   font-size: var(--t-sm);
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .memory-doc pre code {
   padding: 0;
   background: none;
+  border: 0;
+  color: var(--ink-700);
 }
 
 .memory-doc table {
   width: 100%;
-  margin: var(--s-3) 0;
-  border-collapse: collapse;
+  margin: var(--s-4) 0;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--t-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  overflow: hidden;
 }
 
 .memory-doc th,
 .memory-doc td {
   padding: var(--s-2) var(--s-3);
-  border-bottom: 1px solid var(--line);
   text-align: left;
+  border-bottom: 1px solid var(--line);
 }
 
 .memory-doc th {
   color: var(--ink-400);
   font-weight: 500;
+  background: var(--surface-sunken);
   border-bottom-color: var(--line-strong);
 }
 
+.memory-doc tr:last-child td {
+  border-bottom: 0;
+}
+
 .memory-doc hr {
-  margin: var(--s-5) 0;
+  margin: var(--s-6) 0;
   border: 0;
   border-top: 1px solid var(--line);
 }
 
 .memory-doc img {
   max-width: 100%;
+  border-radius: var(--r-md);
 }
 
-/* 字符数与最后修改：文档末尾的元信息，与正文用行界分开。 */
+/* 字符数与最后修改：等宽元信息，和正文用行界分开。 */
 .memory-doc__foot {
   display: flex;
   flex-wrap: wrap;
@@ -105,4 +254,32 @@
   margin-top: var(--s-6);
   padding-top: var(--s-3);
   border-top: 1px solid var(--line);
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+}
+
+@media (max-width: 900px) {
+  .split--doc {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-4);
+  }
+
+  .memory-toc {
+    position: static;
+  }
+
+  .memory-toc ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1);
+  }
+
+  .memory-toc__link {
+    border-left: 0;
+    border-radius: var(--r-sm);
+  }
+
+  .memory-doc {
+    padding: var(--s-5);
+  }
 }

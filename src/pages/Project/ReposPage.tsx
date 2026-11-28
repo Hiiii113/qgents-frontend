@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { App } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { projectApi } from '@/api/project'
@@ -19,17 +19,30 @@ import {
   Skeleton,
   TableCell,
   TableRow,
+  Tabs,
+  Tag,
 } from '@/components/ui'
+import { GithubItems } from './GithubItems'
 import './repos.css'
 
 const repoKey = (repo: AvailableRepository) => `${repo.installationId}:${repo.repositoryId}`
 
+const TABS = [
+  { key: 'repos', label: '仓库' },
+  { key: 'pulls', label: 'Pull Request' },
+  { key: 'issues', label: 'Issue' },
+] as const
+
+type TabKey = (typeof TABS)[number]['key']
+
 /**
- * 项目仓库：列出来自团队 GitHub App 授权并已导入本项目的仓库。
+ * 项目代码：仓库导入与移除，以及只读的 Pull Request / Issue 页签。
  * 连接断开时整块替换为阻断说明；移除只取消本项目引用。
  */
 export default function ReposPage() {
   const { projectId = '' } = useParams<{ projectId: string }>()
+  const [params, setParams] = useSearchParams()
+  const tab: TabKey = TABS.find((item) => item.key === params.get('tab'))?.key ?? 'repos'
   const navigate = useNavigate()
   const { message } = App.useApp()
   const client = useQueryClient()
@@ -120,10 +133,13 @@ export default function ReposPage() {
     <main className="canvas">
       <Page>
         <PageHead
-          title="仓库"
-          description="团队 GitHub App 已授权的仓库。Qgent 始终可以使用已导入到本项目的仓库。"
+          title="代码"
           actions={
-            canManage && connections.isSuccess && !disconnected && imported.data?.length ? (
+            tab === 'repos' &&
+            canManage &&
+            connections.isSuccess &&
+            !disconnected &&
+            imported.data?.length ? (
               <Button
                 variant="primary"
                 icon={<Icon name="plus" size={16} aria-hidden />}
@@ -168,14 +184,15 @@ export default function ReposPage() {
             stacked
           />
         ) : disconnected ? (
-          <div className="block">
-            <p className="kicker">GitHub 未连接</p>
+          <div className="block repo-block">
+            <span className="repo-block__icon" aria-hidden>
+              <Icon name="unlink" size={20} />
+            </span>
             <p className="h3">这个项目的仓库暂时无法访问</p>
-            <p className="sub">
+            <p className="repo-block__reason">
               {connections.data.length === 0
-                ? '团队还没有连接 GitHub App。'
-                : '团队 GitHub App 的连接已失效。'}
-              重新连接后已导入的仓库会回来，Qgent 才能继续读写代码。
+                ? '团队还没有连接 GitHub App'
+                : '团队 GitHub App 的连接已失效'}
             </p>
             <Button
               variant="primary"
@@ -186,23 +203,148 @@ export default function ReposPage() {
             </Button>
           </div>
         ) : (
-          <Section
-            title="已导入仓库"
-            aside={
-              <label className="inline-search">
-                <span className="sr">搜索仓库</span>
-                <Icon name="search" size={15} />
-                <input
-                  type="search"
-                  placeholder="搜索仓库"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </label>
-            }
-          >
-            {imported.isPending ? (
-              <Skeleton rows={3} />
+          <>
+            <Tabs
+              label="代码分区"
+              items={TABS.map((item) => ({ key: item.key, label: item.label }))}
+              value={tab}
+              onChange={(key) => {
+                const next = new URLSearchParams(params)
+                if (key === 'repos') next.delete('tab')
+                else next.set('tab', key)
+                setParams(next, { replace: true })
+              }}
+            />
+            {tab === 'repos' ? (
+              <Section
+                title={
+                  <span className="repo-section-title">
+                    已导入仓库
+                    <span className="repo-count">{rows.length}</span>
+                  </span>
+                }
+                aside={
+                  <label className="inline-search">
+                    <span className="sr">搜索仓库</span>
+                    <Icon name="search" size={15} />
+                    <input
+                      type="search"
+                      placeholder="搜索仓库"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                    />
+                  </label>
+                }
+              >
+                {imported.isPending ? (
+                  <Skeleton rows={3} />
+                ) : imported.isError ? (
+                  <EmptyState
+                    title="仓库加载失败"
+                    description={formatApiError(imported.error)}
+                    action={
+                      <Button
+                        variant="link"
+                        onClick={() => void imported.refetch()}
+                        icon={<Icon name="refresh" size={15} />}
+                      >
+                        重试
+                      </Button>
+                    }
+                    stacked
+                  />
+                ) : rows.length === 0 ? (
+                  search.trim() ? (
+                    <EmptyState
+                      icon="search"
+                      title="没有匹配的仓库"
+                      action={
+                        <Button
+                          variant="link"
+                          onClick={() => setSearch('')}
+                          icon={<Icon name="close" size={15} />}
+                        >
+                          清空筛选
+                        </Button>
+                      }
+                      stacked
+                    />
+                  ) : (
+                    <EmptyState
+                      icon="repo"
+                      title="还没有导入仓库"
+                      action={
+                        canManage ? (
+                          <Button
+                            variant="primary"
+                            icon={<Icon name="plus" size={16} aria-hidden />}
+                            onClick={() => setImportOpen(true)}
+                          >
+                            导入仓库
+                          </Button>
+                        ) : undefined
+                      }
+                      stacked
+                    />
+                  )
+                ) : (
+                  <DataTable layout="repos" columns={['仓库', '默认分支', '类型', '']}>
+                    {rows.map((repo) => (
+                      <TableRow key={repo.id}>
+                        <TableCell className="repo-name">
+                          <span className="repo-cell">
+                            <span className="repo-cell__icon" aria-hidden>
+                              <Icon name="repo" size={16} />
+                            </span>
+                            <span className="repo-cell__body">
+                              <a
+                                className="name repo-cell__name"
+                                href={repo.htmlUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <span className="repo-cell__label">{repo.fullName}</span>
+                                <Icon name="external" size={12} className="repo-cell__ext" />
+                              </a>
+                              <span className="meta repo-url">{repo.htmlUrl}</span>
+                            </span>
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="branch-pill">
+                            <Icon name="branch" size={13} />
+                            <span className="branch-pill__name">
+                              {repo.defaultBranch || '—'}
+                            </span>
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {repo.privateRepository ? (
+                            <Tag tone="readonly" icon="lock">
+                              私有
+                            </Tag>
+                          ) : (
+                            <Tag icon="eye">公开</Tag>
+                          )}
+                        </TableCell>
+                        <TableCell end>
+                          {canManage ? (
+                            <Button
+                              variant="ghost-danger"
+                              size="sm"
+                              onClick={() => setRemoval(repo)}
+                            >
+                              移除
+                            </Button>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </DataTable>
+                )}
+              </Section>
+            ) : imported.isPending ? (
+              <Skeleton rows={4} />
             ) : imported.isError ? (
               <EmptyState
                 title="仓库加载失败"
@@ -218,101 +360,24 @@ export default function ReposPage() {
                 }
                 stacked
               />
-            ) : rows.length === 0 ? (
-              search.trim() ? (
-                <EmptyState
-                  icon="search"
-                  title="没有匹配的仓库"
-                  description="清空筛选可以看全部已导入仓库。"
-                  action={
-                    <Button
-                      variant="link"
-                      onClick={() => setSearch('')}
-                      icon={<Icon name="close" size={15} />}
-                    >
-                      清空筛选
-                    </Button>
-                  }
-                  stacked
-                />
-              ) : (
-                <EmptyState
-                  icon="repo"
-                  title="还没有导入仓库"
-                  description="Qgent 只能读写已导入本项目的仓库；先导入一个，才能在群里派活。"
-                  action={
-                    canManage ? (
-                      <Button
-                        variant="primary"
-                        icon={<Icon name="plus" size={16} aria-hidden />}
-                        onClick={() => setImportOpen(true)}
-                      >
-                        导入仓库
-                      </Button>
-                    ) : undefined
-                  }
-                  stacked
-                />
-              )
             ) : (
-              <DataTable layout="repos" columns={['仓库', '默认分支', '类型', '']}>
-                {rows.map((repo) => (
-                  <TableRow key={repo.id}>
-                    <TableCell className="repo-name">
-                      <span className="repo-cell">
-                        <span className="repo-cell__icon" aria-hidden>
-                          <Icon name="repo" size={16} />
-                        </span>
-                        <span className="repo-cell__body">
-                          <span className="name">{repo.fullName}</span>
-                          <a
-                            className="meta repo-url"
-                            href={repo.htmlUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            {repo.htmlUrl}
-                          </a>
-                        </span>
-                      </span>
-                    </TableCell>
-                    <TableCell className="mono">{repo.defaultBranch || '—'}</TableCell>
-                    <TableCell className="meta">
-                      {repo.privateRepository ? '私有' : '公开'}
-                    </TableCell>
-                    <TableCell end>
-                      {canManage ? (
-                        <Button
-                          variant="link"
-                          size="sm"
-                          onClick={() => setRemoval(repo)}
-                          icon={<Icon name="trash" size={15} />}
-                        >
-                          移除
-                        </Button>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </DataTable>
+              <GithubItems
+                key={tab}
+                kind={tab}
+                projectId={projectId}
+                repositories={imported.data}
+              />
             )}
-            {imported.data?.length ? (
-              <p className="note">
-                移除只取消本项目引用，不会删除 GitHub 上的仓库，也不影响团队其他项目。
-              </p>
-            ) : null}
-          </Section>
+          </>
         )}
       </Page>
 
-      <Dialog
-        open={importOpen}
-        onClose={closeImport}
-        title="导入仓库"
-        description="只列出团队 GitHub App 授权、且尚未导入本项目的仓库。"
-      >
+      <Dialog open={importOpen} onClose={closeImport} title="导入仓库">
         {available.isError ? (
-          <div className="field">
+          <div className="repo-dialog-state">
+            <span className="repo-dialog-state__icon" aria-hidden>
+              <Icon name="alert" size={18} />
+            </span>
             <p className="sub">{formatApiError(available.error)}</p>
             <Button
               variant="quiet"
@@ -325,8 +390,11 @@ export default function ReposPage() {
         ) : available.isPending ? (
           <Skeleton rows={3} />
         ) : options.length === 0 ? (
-          <div className="field">
-            <p className="sub">没有可导入的仓库。请确认团队 GitHub App 已授权这些仓库。</p>
+          <div className="repo-dialog-state">
+            <span className="repo-dialog-state__icon" aria-hidden>
+              <Icon name="repo" size={18} />
+            </span>
+            <p className="row-empty__title">没有可导入的仓库</p>
             <Button
               variant="quiet"
               onClick={() => navigate(PATHS.githubIntegration(teamId))}
@@ -347,19 +415,34 @@ export default function ReposPage() {
                 onChange={(event) => setRepoSearch(event.target.value)}
               />
             </label>
-            <div className="checks repo-list">
-              {visibleOptions.map((repo) => (
-                <label className="check" key={repoKey(repo)}>
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(repoKey(repo))}
-                    onChange={() => toggle(repoKey(repo))}
-                  />
-                  <span>{repo.fullName}</span>
-                </label>
-              ))}
+            <div className="repo-options" role="group" aria-label="可导入的仓库">
+              {visibleOptions.map((repo) => {
+                const key = repoKey(repo)
+                const checked = selected.includes(key)
+                return (
+                  <label
+                    className={`repo-option${checked ? ' repo-option--on' : ''}`}
+                    key={key}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggle(key)}
+                    />
+                    <span className="repo-option__icon" aria-hidden>
+                      <Icon name="repo" size={15} />
+                    </span>
+                    <span className="repo-option__name">{repo.fullName}</span>
+                    <span className="repo-option__tick" aria-hidden>
+                      <Icon name="check" size={13} />
+                    </span>
+                  </label>
+                )
+              })}
             </div>
-            {visibleOptions.length === 0 ? <p className="note">没有匹配的仓库。</p> : null}
+            {visibleOptions.length === 0 ? (
+              <p className="repo-option-empty">没有匹配的仓库</p>
+            ) : null}
           </>
         )}
         <div className="dlg__foot">
@@ -374,7 +457,11 @@ export default function ReposPage() {
               importRepos.mutate(options.filter((repo) => selected.includes(repoKey(repo))))
             }
           >
-            {importRepos.isPending ? '导入中…' : '导入所选仓库'}
+            {importRepos.isPending
+              ? '导入中…'
+              : selected.length
+                ? `导入所选仓库（${selected.length}）`
+                : '导入所选仓库'}
           </Button>
         </div>
       </Dialog>
@@ -383,12 +470,20 @@ export default function ReposPage() {
         open={Boolean(removal)}
         onClose={() => (remove.isPending ? undefined : setRemoval(null))}
         title="从项目移除仓库"
-        description={removal?.fullName}
         danger
       >
-        <p className="sub">
-          移除只取消本项目引用，不会删除 GitHub 上的仓库，也不影响团队其他项目。
-        </p>
+        {removal ? (
+          <div className="repo-removal">
+            <span className="repo-removal__name">
+              <Icon name="repo" size={15} />
+              {removal.fullName}
+            </span>
+            <span className="repo-removal__fact">
+              <Icon name="unlink" size={14} />
+              只取消本项目引用，GitHub 仓库保留
+            </span>
+          </div>
+        ) : null}
         <div className="dlg__foot">
           <Button
             variant="quiet"

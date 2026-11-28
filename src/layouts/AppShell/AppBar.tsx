@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { App } from 'antd'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -23,7 +23,7 @@ interface AppBarProps {
   chatEnabled: boolean
 }
 
-/** 56px 顶栏：项目切换器（带搜索）、通知、群聊开关。团队切换只在产品设置里。 */
+/** 50px 顶栏：项目切换器、原地项目搜索框、通知、群聊开关。团队切换只在产品设置里。 */
 export function AppBar({
   mode,
   team,
@@ -34,16 +34,18 @@ export function AppBar({
   chatEnabled,
 }: AppBarProps) {
   const [panel, setPanel] = useState<Panel | null>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const close = () => setPanel(null)
   const chatOpen = useAppUiStore((state) => state.chatContextOpen)
   const setChatOpen = useAppUiStore((state) => state.setChatContextOpen)
 
-  // ⌘K / Ctrl+K 在任何页面都打开项目搜索，不依赖浮层先挂载。
+  // ⌘K / Ctrl+K 在任何页面都直接聚焦顶栏原地搜索框。
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setPanel('search')
+        searchInputRef.current?.focus()
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -97,33 +99,15 @@ export function AppBar({
       )}
 
       <div className="appbar__right">
-        <div className="anchored">
-          <button
-            type="button"
-            className="searchbtn"
-            aria-haspopup="dialog"
-            aria-expanded={panel === 'search'}
-            onClick={() => setPanel(panel === 'search' ? null : 'search')}
-          >
-            <Icon name="search" size={16} />
-            <span>搜索项目</span>
-            <kbd>⌘K</kbd>
-          </button>
-          <Popover
-            open={panel === 'search'}
-            onClose={close}
-            label="搜索项目"
-            align="end"
-            className="popover--search"
-          >
-            <ProjectSearch
-              projects={projects}
-              pending={projectsPending}
-              onNavigate={close}
-              onClose={close}
-            />
-          </Popover>
-        </div>
+        <ProjectSearchCombobox
+          inputRef={searchInputRef}
+          open={panel === 'search'}
+          onOpen={() => setPanel('search')}
+          onClose={close}
+          projects={projects}
+          pending={projectsPending}
+          currentId={projectId}
+        />
 
         <div className="anchored">
           <NotificationBell
@@ -191,19 +175,26 @@ function ProjectMenu({
   )
 }
 
-function ProjectSearch({
+function ProjectSearchCombobox({
+  inputRef,
+  open,
+  onOpen,
+  onClose,
   projects,
   pending,
-  onNavigate,
-  onClose,
+  currentId,
 }: {
+  inputRef: React.RefObject<HTMLInputElement | null>
+  open: boolean
+  onOpen: () => void
+  onClose: () => void
   projects: Project[] | undefined
   pending: boolean
-  onNavigate: () => void
-  onClose: () => void
+  currentId: string | null
 }) {
   const navigate = useNavigate()
   const [term, setTerm] = useState('')
+  const [activeIndex, setActiveIndex] = useState(0)
   const matches = useMemo(() => {
     const keyword = term.trim().toLowerCase()
     if (!keyword) return projects ?? []
@@ -214,46 +205,104 @@ function ProjectSearch({
     )
   }, [projects, term])
 
-  // 输入即筛，回车进第一项；Esc 由 Popover 统一处理。
-  const open = (project: Project) => {
-    onNavigate()
+  const safeIndex = matches.length > 0 ? Math.min(activeIndex, matches.length - 1) : 0
+
+  const select = (project: Project) => {
+    setTerm('')
+    onClose()
+    inputRef.current?.blur()
     navigate(PATHS.projectChat(project.id))
   }
 
   return (
-    <>
-      <label className="sr" htmlFor="project-search">
-        搜索项目
-      </label>
-      <input
-        id="project-search"
-        type="search"
-        autoFocus
-        placeholder="输入项目名或仓库名"
-        value={term}
-        onChange={(event) => setTerm(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && matches[0]) open(matches[0])
-          if (event.key === 'Escape') onClose()
-        }}
-      />
-      {pending ? (
-        <p className="popover__empty">正在加载项目…</p>
-      ) : matches.length === 0 ? (
-        <p className="popover__empty">没有匹配的项目。</p>
-      ) : (
-        <ul className="menu">
-          {matches.map((item) => (
-            <li key={item.id}>
-              <button type="button" className="menu__item" onClick={() => open(item)}>
-                <span>{item.name}</span>
-                {item.status === 'ARCHIVED' ? <span className="meta">已归档</span> : null}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
+    <div className="anchored">
+      <div className={`searchbox${open ? ' is-open' : ''}`}>
+        <Icon name="search" size={14} className="searchbox__icon" aria-hidden />
+        <input
+          ref={inputRef}
+          type="text"
+          role="combobox"
+          aria-label="搜索项目"
+          aria-expanded={open}
+          aria-autocomplete="list"
+          placeholder="搜索项目"
+          value={term}
+          onFocus={onOpen}
+          onClick={onOpen}
+          onChange={(event) => {
+            setTerm(event.target.value)
+            setActiveIndex(0)
+            if (!open) onOpen()
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowDown' && matches.length > 0) {
+              event.preventDefault()
+              onOpen()
+              setActiveIndex((index) => (index + 1) % matches.length)
+            } else if (event.key === 'ArrowUp' && matches.length > 0) {
+              event.preventDefault()
+              onOpen()
+              setActiveIndex((index) => (index - 1 + matches.length) % matches.length)
+            } else if (event.key === 'Enter' && matches[safeIndex]) {
+              event.preventDefault()
+              select(matches[safeIndex])
+            } else if (event.key === 'Escape') {
+              event.preventDefault()
+              onClose()
+              inputRef.current?.blur()
+            }
+          }}
+        />
+        {term ? (
+          <button
+            type="button"
+            className="searchbox__clear"
+            aria-label="清空搜索"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              setTerm('')
+              setActiveIndex(0)
+              inputRef.current?.focus()
+            }}
+          >
+            <Icon name="close" size={12} />
+          </button>
+        ) : null}
+      </div>
+      <Popover
+        open={open}
+        onClose={onClose}
+        label="项目列表"
+        align="end"
+        className="popover--search"
+      >
+        {pending ? (
+          <p className="popover__empty">正在加载项目…</p>
+        ) : matches.length === 0 ? (
+          <p className="popover__empty">没有匹配的项目</p>
+        ) : (
+          <ul className="menu" role="listbox" aria-label="项目列表">
+            {matches.map((item, index) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={index === safeIndex}
+                  aria-current={item.id === currentId ? 'page' : undefined}
+                  className={`menu__item${index === safeIndex ? ' is-active' : ''}`}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => select(item)}
+                >
+                  <span>{item.name}</span>
+                  {item.status === 'ARCHIVED' ? <span className="meta">已归档</span> : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Popover>
+    </div>
   )
 }
 
@@ -303,24 +352,30 @@ function NotificationBell({
         {unread > 0 ? <span className="dot dot--mark bellbtn__dot" aria-hidden /> : null}
       </IconButton>
       <Popover open={open} onClose={onClose} label="通知" align="end" className="popover--bell">
-        <div className="row" style={{ justifyContent: 'space-between', padding: '0 4px 6px' }}>
+        <div className="bell__head">
           <p className="popover__label">通知</p>
           {notifications.length > 0 ? (
             <Button
-              variant="link"
+              variant="ghost"
               size="sm"
               disabled={unread === 0 || markAll.isPending}
               onClick={() => markAll.mutate()}
-              icon={<Icon name="check" size={15} />}
+              icon={<Icon name="check" size={14} />}
             >
               全部已读
             </Button>
           ) : null}
         </div>
         {notifications.length === 0 ? (
-          <p className="popover__empty">还没有通知。有人提到你或邀请你时会出现在这里。</p>
+          <div className="bell__empty">
+            <span className="bell__empty-icon" aria-hidden>
+              <Icon name="bell" size={20} />
+            </span>
+            <p className="bell__empty-title">暂无通知</p>
+            <p className="bell__empty-desc">有人提到你或邀请你时会出现在这里</p>
+          </div>
         ) : (
-          <ul className="menu">
+          <ul className="menu bell__list">
             {notifications.map((item) => (
               <li key={item.id}>
                 <button type="button" className="menu__item" onClick={() => openNotification(item)}>

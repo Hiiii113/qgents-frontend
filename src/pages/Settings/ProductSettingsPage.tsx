@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { App, Form } from 'antd'
+import { App } from 'antd'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { authApi, teamApi, uploadAvatar } from '@/api'
 import { useAuth } from '@/context/AuthContext'
@@ -63,19 +63,20 @@ function Account() {
   const { user, updateUser } = useAuth()
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
-  const [form] = Form.useForm<{ displayName: string }>()
+  const [editingName, setEditingName] = useState(false)
+  const [draftName, setDraftName] = useState('')
+  const [nameError, setNameError] = useState<string | null>(null)
+
   const save = useMutation({
     mutationFn: (displayName: string) => authApi.updateMe({ displayName }),
     onSuccess: (updated) => {
       updateUser(updated)
+      setEditingName(false)
+      setNameError(null)
       void message.success('昵称已保存')
     },
+    onError: (error) => setNameError(formatApiError(error)),
   })
-
-  // 头像菜单等处改了昵称后，表单跟着同步。
-  useEffect(() => {
-    form.setFieldsValue({ displayName: user?.displayName ?? '' })
-  }, [form, user?.displayName])
 
   async function handleAvatar(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -101,62 +102,133 @@ function Account() {
     }
   }
 
+  function startEditName() {
+    setDraftName(user?.displayName ?? '')
+    setNameError(null)
+    setEditingName(true)
+  }
+
+  function cancelEditName() {
+    setEditingName(false)
+    setNameError(null)
+  }
+
+  function submitName() {
+    const trimmed = draftName.trim()
+    if (!trimmed) {
+      setNameError('请输入昵称')
+      return
+    }
+    if (trimmed.length > 120) {
+      setNameError('昵称最多 120 个字符')
+      return
+    }
+    if (trimmed === (user?.displayName ?? '').trim()) {
+      setEditingName(false)
+      return
+    }
+    save.mutate(trimmed)
+  }
+
+  const nameDirty = draftName.trim() !== (user?.displayName ?? '').trim()
+
   return (
-    <Section title="账户">
-      <Form
-        form={form}
-        layout="vertical"
-        className="form form--narrow"
-        initialValues={{ displayName: user?.displayName ?? '' }}
-        onFinish={(values) => save.mutate(values.displayName.trim())}
-        disabled={save.isPending}
-        requiredMark={false}
-      >
-        {save.isError ? <p className="err">{formatApiError(save.error)}</p> : null}
-        <Form.Item label="头像" extra="JPG 或 PNG，不超过 5MB。">
-          <div className="row">
-            <Avatar name={user?.displayName ?? '我'} src={user?.avatarUrl} size="lg" />
-            <Button
-              variant="quiet"
-              icon={<Icon name="camera" size={15} />}
-              disabled={uploading}
-              onClick={() => fileRef.current?.click()}
-            >
-              {uploading ? '上传中…' : '更换头像'}
-            </Button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(event) => void handleAvatar(event)}
-            />
+    <Section title="账户资料">
+      <div className="setting-group">
+        <div className="setting-row">
+          <div className="setting-row__info">
+            <span className="setting-row__label">头像</span>
           </div>
-        </Form.Item>
-        <Form.Item
-          name="displayName"
-          label="昵称"
-          rules={[
-            { required: true, whitespace: true, message: '请输入昵称' },
-            { max: 120, message: '昵称最多 120 个字符' },
-          ]}
-        >
-          <TextField maxLength={120} />
-        </Form.Item>
-        <Form.Item label="邮箱" extra="邮箱就是登录账号，暂不支持自助修改。">
-          <TextField value={user?.email ?? ''} readOnly />
-        </Form.Item>
-        <div className="form__foot form__foot--start">
-          <Button
-            variant="primary"
-            type="submit"
-            icon={<Icon name="check" size={15} />}
-            disabled={save.isPending}
-          >
-            {save.isPending ? '保存中…' : '保存'}
-          </Button>
+          <div className="setting-row__control">
+            <div className="account-avatar">
+              <Avatar name={user?.displayName ?? '我'} src={user?.avatarUrl} size="lg" />
+              <Button
+                variant="quiet"
+                size="sm"
+                icon={<Icon name="camera" size={14} />}
+                disabled={uploading}
+                onClick={() => fileRef.current?.click()}
+              >
+                {uploading ? '上传中…' : '更换头像'}
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(event) => void handleAvatar(event)}
+              />
+            </div>
+          </div>
         </div>
-      </Form>
+        <div className="setting-row">
+          <div className="setting-row__info">
+            <span className="setting-row__label">昵称</span>
+          </div>
+          <div className="setting-row__control">
+            {editingName ? (
+              <div className="setting-inline__edit">
+                <div className="setting-inline__edit-row">
+                  <TextField
+                    value={draftName}
+                    maxLength={120}
+                    aria-label="昵称"
+                    autoFocus
+                    disabled={save.isPending}
+                    onChange={(event) => {
+                      setDraftName(event.target.value)
+                      if (nameError) setNameError(null)
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault()
+                        submitName()
+                      } else if (event.key === 'Escape') {
+                        event.preventDefault()
+                        cancelEditName()
+                      }
+                    }}
+                  />
+                  <div className="setting-inline__actions">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={save.isPending}
+                      onClick={cancelEditName}
+                    >
+                      取消
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      disabled={!nameDirty || save.isPending}
+                      onClick={submitName}
+                    >
+                      {save.isPending ? '保存中…' : '保存'}
+                    </Button>
+                  </div>
+                </div>
+                {nameError ? <p className="err">{nameError}</p> : null}
+              </div>
+            ) : (
+              <div className="setting-inline">
+                <span className="setting-inline__text">{user?.displayName || '未设置'}</span>
+                <Button variant="ghost" size="sm" onClick={startEditName}>
+                  编辑
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="setting-row">
+          <div className="setting-row__info">
+            <span className="setting-row__label">邮箱</span>
+          </div>
+          <div className="setting-row__control">
+            <span className="setting-row__value mono">{user?.email || ''}</span>
+          </div>
+        </div>
+      </div>
     </Section>
   )
 }
@@ -216,19 +288,19 @@ function Teams() {
           stacked
         />
       ) : teams.data.length === 0 ? (
-        <EmptyState
-          icon="people"
-          title="还没有加入任何团队"
-          description="创建一个团队，或接受同事发来的邀请。"
-          stacked
-        />
+        <EmptyState icon="people" title="还没有加入任何团队" stacked />
       ) : (
         <ul className="teamlist">
           {teams.data.map((team) => {
             const current = team.id === currentTeamId
             return (
               <li key={team.id} className={`teamrow${current ? ' teamrow--current' : ''}`}>
-                <span className="teamrow__name">{team.name}</span>
+                <span className="teamrow__id">
+                  <span className="teamrow__mono" aria-hidden>
+                    {team.name.trim().slice(0, 1) || '·'}
+                  </span>
+                  <span className="teamrow__name">{team.name}</span>
+                </span>
                 <span className="meta">
                   {team.description ||
                     (team.memberCount ? `${team.memberCount} 名成员` : '团队成员')}

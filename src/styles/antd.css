@@ -1,4 +1,4 @@
-/** antd 能力（Form / message）与浏览器默认件的统一外观修正。 */
+/** antd 能力（Form / message）与滚动条的统一外观修正。 */
 
 .ant-form,
 .ant-checkbox-wrapper {
@@ -14,6 +14,7 @@
   color: var(--ink-700);
 }
 .ant-checkbox .ant-checkbox-inner {
+  background: var(--surface-sunken);
   border-color: var(--line-strong);
 }
 .ant-checkbox-checked .ant-checkbox-inner {
@@ -21,21 +22,21 @@
   border-color: var(--action);
 }
 
-/* 滚动条：细把手，不加装饰。 */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background-color: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background-color: var(--line-strong);
-  border: 3px solid var(--surface);
+  border: 2px solid transparent;
+  background-clip: content-box;
   border-radius: var(--r-pill);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--ink-300);
+  background-color: var(--ink-400);
 }
 ::-webkit-scrollbar-button {
   display: none;

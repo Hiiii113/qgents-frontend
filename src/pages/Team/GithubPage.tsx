@@ -71,24 +71,18 @@ export default function GithubPage() {
 
   return (
     <main className="canvas">
-      <Page>
+      <Page className="github-page">
         <PageHead
-          kicker={team.data ? `团队 ${team.data.name}` : '团队'}
           title="GitHub App"
-          description="团队连一次 App，项目管理员再把需要的仓库导入各自项目。"
           actions={
-            isOwner ? (
+            isOwner && !connected ? (
               <Button
                 variant="primary"
-                icon={<Icon name="branch" size={16} aria-hidden />}
+                icon={<Icon name="branch" size={15} aria-hidden />}
                 disabled={connect.isPending}
                 onClick={() => connect.mutate()}
               >
-                {connect.isPending
-                  ? '正在前往 GitHub…'
-                  : connected
-                    ? '重新连接'
-                    : '连接 GitHub App'}
+                {connect.isPending ? '正在前往 GitHub…' : '连接 GitHub App'}
               </Button>
             ) : undefined
           }
@@ -97,22 +91,23 @@ export default function GithubPage() {
         {!teamId ? (
           <div className="block">
             <p className="h3">还没有选定团队</p>
-            <p className="sub">从团队导航的 GitHub 入口进入，或在地址里带上 ?teamId=。</p>
+            <p className="sub">从团队导航的 GitHub 入口进入。</p>
           </div>
         ) : (
           <>
             <Section title="连接">
               {connections.isPending ? (
-                <Skeleton rows={3} />
+                <Skeleton rows={2} />
               ) : connections.isError ? (
                 <EmptyState
                   title="连接状态加载失败"
                   description={formatApiError(connections.error)}
                   action={
                     <Button
-                      variant="link"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => void connections.refetch()}
-                      icon={<Icon name="refresh" size={15} />}
+                      icon={<Icon name="refresh" size={14} />}
                     >
                       重试
                     </Button>
@@ -123,41 +118,35 @@ export default function GithubPage() {
                 <EmptyState
                   icon="branch"
                   title="尚未连接 GitHub App"
-                  description={
-                    isOwner
-                      ? '连接后，团队授权的仓库才能导入项目供 Qgent 使用。'
-                      : '联系团队所有者连接 GitHub App。'
-                  }
+                  description={isOwner ? undefined : '联系团队所有者连接。'}
                   stacked
                 />
               ) : (
-                <DataTable
-                  layout="plain"
-                  className="github-page__connections"
-                  columns={['账号', '类型', '状态', '']}
-                >
+                <div className="setting-group github-page__card">
                   {connections.data.map((connection) => (
-                    <TableRow key={connection.id}>
-                      <TableCell>
-                        <span className="name mono">{connection.accountLogin}</span>
-                      </TableCell>
-                      <TableCell>
+                    <div key={connection.id} className="gh-conn">
+                      <span className="gh-conn__icon" aria-hidden>
+                        <Icon name="branch" size={16} />
+                      </span>
+                      <div className="gh-conn__main">
+                        <div className="gh-conn__head">
+                          <span className="name mono">{connection.accountLogin}</span>
+                          {connection.suspended ? (
+                            <Tag tone="readonly">已暂停</Tag>
+                          ) : (
+                            <Tag tone="ok">已连接</Tag>
+                          )}
+                        </div>
                         <span className="meta">
-                          {/org/i.test(connection.accountType) ? '组织' : '个人'}账号
+                          {/org/i.test(connection.accountType) ? '组织账号' : '个人账号'}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        {connection.suspended ? (
-                          <Tag tone="readonly">已暂停</Tag>
-                        ) : (
-                          <Tag tone="ok">已连接</Tag>
-                        )}
-                      </TableCell>
-                      <TableCell end>
-                        {isOwner ? (
+                      </div>
+                      {isOwner ? (
+                        <div className="gh-conn__actions">
                           <Button
-                            variant="link"
-                            icon={<Icon name="refresh" size={15} />}
+                            variant="ghost"
+                            size="sm"
+                            icon={<Icon name="refresh" size={14} />}
                             disabled={sync.isPending}
                             onClick={() => sync.mutate(connection.id)}
                           >
@@ -165,20 +154,23 @@ export default function GithubPage() {
                               ? '刷新中…'
                               : '刷新授权'}
                           </Button>
-                        ) : (
-                          <span className="meta">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
+                          <Button
+                            variant="quiet"
+                            size="sm"
+                            disabled={connect.isPending}
+                            onClick={() => connect.mutate()}
+                          >
+                            {connect.isPending ? '正在前往 GitHub…' : '重新连接'}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
                   ))}
-                </DataTable>
+                </div>
               )}
             </Section>
 
-            <Section
-              title="可访问仓库"
-              aside={<span className="meta">来自当前 GitHub App 授权</span>}
-            >
+            <Section title="可访问仓库">
               {repositories.isPending ? (
                 <Skeleton rows={4} />
               ) : repositories.isError ? (
@@ -197,16 +189,7 @@ export default function GithubPage() {
                   stacked
                 />
               ) : !repositories.data.length ? (
-                <EmptyState
-                  icon="repo"
-                  title="没有可访问的仓库"
-                  description={
-                    isOwner
-                      ? '在 GitHub App 的安装设置里授权仓库，然后刷新授权。'
-                      : '让团队所有者在 GitHub App 安装里授权需要的仓库。'
-                  }
-                  stacked
-                />
+                <EmptyState icon="repo" title="没有可访问的仓库" stacked />
               ) : (
                 <DataTable
                   layout="plain"
@@ -237,12 +220,13 @@ export default function GithubPage() {
                       </TableCell>
                       <TableCell end>
                         <a
-                          className="meta"
+                          className="meta github-page__open"
                           href={repository.htmlUrl}
                           target="_blank"
                           rel="noreferrer"
                         >
                           在 GitHub 打开
+                          <Icon name="external" size={12} />
                         </a>
                       </TableCell>
                     </TableRow>

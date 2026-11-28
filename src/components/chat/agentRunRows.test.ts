@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { AgentRun } from '@/features/agent-runs'
+import type { AgentRun, AgentRunTool } from '@/features/agent-runs'
 import type { ChatMessage } from '@/types/chat'
 import { buildChatEntries, groupRunsByRoot, streamingText } from './agentRunRows'
 
@@ -20,6 +20,15 @@ function run(partial: Partial<AgentRun> & { runId: string; rootRunId: string }):
     createdAt: '2026-10-01T00:00:00Z',
     ...partial,
   }
+}
+
+function tool(round: number, state: AgentRunTool['state'] = 'ok'): AgentRunTool {
+  return { toolCallId: `tool-${round}`, tool: 'read_file', round, state, input: null, output: null }
+}
+
+function textFor(partial: Partial<AgentRun>): string {
+  const group = groupRunsByRoot([run({ runId: '9001', rootRunId: '9001', ...partial })]).get('9001')!
+  return streamingText(group)
 }
 
 function message(id: string, extra: Partial<ChatMessage> = {}): ChatMessage {
@@ -173,7 +182,75 @@ describe('流式正文', () => {
         ],
       }),
     ]).get('9001')
-    expect(group && streamingText(group)).toBe('第一段第二段')
+    expect(group && streamingText(group)).toBe('第二段')
+  })
+
+  it('多轮文本只保留最后一轮，旧轮汇报和旧轮工具不影响最终正文', () => {
+    expect(textFor({
+      round: 3,
+      segments: [
+        { round: 2, text: '继续验证' },
+        { round: 3, text: '最终' },
+        { round: 1, text: '先读取文件' },
+        { round: 3, text: '正文\n' },
+      ],
+      tools: [tool(2), tool(1)],
+    })).toBe('最终正文\n')
+  })
+
+  it.each(['running', 'ok', 'failed', 'done'] as const)(
+    '最后一轮已有 %s 工具调用时，不把该轮汇报当成最终正文',
+    (state) => {
+      expect(textFor({
+        round: 2,
+        segments: [{ round: 1, text: '先查资料' }, { round: 2, text: '再读文件' }],
+        tools: [tool(2, state)],
+      })).toBe('')
+    },
+  )
+
+  it('新一轮还没有文本或工具时，旧轮文本不再作为最终正文', () => {
+    expect(textFor({ round: 2, segments: [{ round: 1, text: '中间汇报' }] })).toBe('')
+  })
+
+  it('最后轮次也考虑文本与工具数据，不能只依赖 run.round', () => {
+    expect(textFor({
+      segments: [{ round: 1, text: '旧文本' }, { round: 3, text: '最新正文' }],
+    })).toBe('最新正文')
+    expect(textFor({
+      segments: [{ round: 1, text: '旧文本' }],
+      tools: [tool(3)],
+    })).toBe('')
+  })
+
+  it('无工具纯文本流式保留同轮片段的顺序和原始空白', () => {
+    expect(textFor({ segments: [
+      { round: 1, text: '  正在' },
+      { round: 1, text: '回答\n下一行' },
+    ] })).toBe('  正在回答\n下一行')
+  })
+
+  it.each(['', '  \n\t'])('最后一轮只有空白 %j 时返回空串，不回退到旧轮文本', (text) => {
+    expect(textFor({
+      round: 2,
+      segments: [{ round: 1, text: '中间汇报' }, { round: 2, text }],
+    })).toBe('')
+  })
+
+  it('当前运行只有中间汇报时，不回退到已结束运行的正文', () => {
+    const group = groupRunsByRoot([
+      run({ runId: '9001', rootRunId: '9001', status: 'SUCCEEDED', segments: [{ round: 1, text: '旧正文' }] }),
+      run({ runId: '9002', rootRunId: '9001', parentRunId: '9001', segments: [{ round: 1, text: '子运行汇报' }], tools: [tool(1)] }),
+    ]).get('9001')!
+    expect(streamingText(group)).toBe('')
+  })
+
+  it('全部结束后跳过只有工具汇报的运行，保留上一份可用最终正文', () => {
+    const group = groupRunsByRoot([
+      run({ runId: '9001', rootRunId: '9001', status: 'SUCCEEDED', segments: [{ round: 1, text: '最终正文' }] }),
+      run({ runId: '9002', rootRunId: '9001', parentRunId: '9001', status: 'SUCCEEDED', segments: [{ round: 1, text: '工具汇报' }], tools: [tool(1)] }),
+    ]).get('9001')!
+    expect(streamingText(group)).toBe('最终正文')
   })
 
   it('没有任何正文时返回空串', () => {

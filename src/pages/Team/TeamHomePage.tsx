@@ -10,19 +10,16 @@ import { CreateProjectModal } from '@/components/CreateProjectModal'
 import './team-home.css'
 import {
   Button,
-  DataTable,
   EmptyState,
   Icon,
   Page,
   PageHead,
   Section,
   Skeleton,
-  TableCell,
-  TableRow,
   Tag,
 } from '@/components/ui'
 
-/** 团队首页：以团队名称为标题，列出当前团队里用户可访问的项目。 */
+/** 团队首页：以团队名称为标题，项目以等宽卡片网格铺开，点卡片直接进项目群聊。 */
 export default function TeamHomePage() {
   const { teamId = '' } = useParams<{ teamId: string }>()
   const navigate = useNavigate()
@@ -53,9 +50,7 @@ export default function TeamHomePage() {
     <main className="canvas">
       <Page>
         <PageHead
-          kicker="团队"
           title={team.data?.name ?? (team.isError ? '团队不可用' : '…')}
-          description={team.data?.description}
           actions={
             <>
               {canManage ? (
@@ -103,7 +98,14 @@ export default function TeamHomePage() {
           </div>
         ) : (
           <Section
-            title="项目"
+            title={
+              <h2 className="h2 project-grid__title">
+                项目
+                {projects.isSuccess ? (
+                  <span className="project-grid__count">{visible.length}</span>
+                ) : null}
+              </h2>
+            }
             aside={
               <label className="inline-search">
                 <span className="sr">筛选项目</span>
@@ -138,9 +140,6 @@ export default function TeamHomePage() {
               <EmptyState
                 icon={keyword ? 'search' : 'repo'}
                 title={keyword ? '没有匹配的项目' : '还没有项目'}
-                description={
-                  keyword ? '清空筛选可以看全部项目。' : '建一个项目，就有了默认群与 Agent。'
-                }
                 action={
                   keyword ? (
                     <Button
@@ -163,36 +162,51 @@ export default function TeamHomePage() {
                 stacked
               />
             ) : (
-              <DataTable layout="projects" columns={['项目', '仓库', '成员', '创建']}>
-                {visible.map((project) => (
-                  <TableRow key={project.id}>
-                    <button
-                      type="button"
-                      className="table__cell table__name"
-                      onClick={() => navigate(PATHS.projectChat(project.id))}
-                    >
-                      <span className="project-cell">
-                        <span className="project-cell__mark" aria-hidden>
-                          {project.name.slice(0, 1)}
-                        </span>
-                        <span className="project-cell__body">
-                          <span className="name">{project.name}</span>
-                          <span className="meta">
-                            {project.status === 'ARCHIVED' ? (
-                              <Tag tone="readonly">已归档</Tag>
-                            ) : (
-                              (project.description ?? '—')
-                            )}
+              <ul className="project-grid">
+                {visible.map((project) => {
+                  const archived = project.status === 'ARCHIVED'
+                  const initial = project.name.trim().slice(0, 1) || '·'
+                  return (
+                    <li key={project.id} className="project-grid__item">
+                      <button
+                        type="button"
+                        className="project-card"
+                        onClick={() => navigate(PATHS.projectChat(project.id))}
+                      >
+                        <span className="project-card__top">
+                          <span className="project-card__mono" aria-hidden>
+                            {initial}
                           </span>
+                          {archived ? <Tag tone="readonly">已归档</Tag> : null}
                         </span>
-                      </span>
-                    </button>
-                    <TableCell className="mono">{project.repositoryCount ?? '—'}</TableCell>
-                    <TableCell className="mono">{project.memberCount ?? '—'}</TableCell>
-                    <TableCell className="meta">{formatDate(project.createdAt)}</TableCell>
-                  </TableRow>
-                ))}
-              </DataTable>
+                        <span className="project-card__name">{project.name}</span>
+                        {project.description ? (
+                          <span className="project-card__desc">{project.description}</span>
+                        ) : null}
+                        <span className="project-card__foot">
+                          {typeof project.repositoryCount === 'number' ? (
+                            <span className="project-card__pill">
+                              <Icon name="repo" size={12} />
+                              {project.repositoryCount} 仓库
+                            </span>
+                          ) : null}
+                          {typeof project.memberCount === 'number' ? (
+                            <span className="project-card__pill">
+                              <Icon name="people" size={12} />
+                              {project.memberCount} 成员
+                            </span>
+                          ) : null}
+                          {project.createdAt ? (
+                            <span className="project-card__date">
+                              {formatDate(project.createdAt)}
+                            </span>
+                          ) : null}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
             )}
           </Section>
         )}
@@ -203,10 +217,9 @@ export default function TeamHomePage() {
   )
 }
 
-function formatDate(iso?: string): string {
-  if (!iso) return '—'
+function formatDate(iso: string): string {
   const date = new Date(iso)
   return Number.isNaN(date.getTime())
     ? iso
-    : date.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })
+    : `${date.getMonth() + 1}月${date.getDate()}日`
 }

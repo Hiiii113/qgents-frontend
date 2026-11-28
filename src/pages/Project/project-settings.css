@@ -1,4 +1,130 @@
-/* 项目设置：成员表格的角色选择只占自身宽度，其余排版来自设计系统。 */
+/* 项目设置：成员角色选择、只读提示与归档分区的局部排版。 */
+
 .project-settings__role {
-  max-width: 160px;
+  max-width: 168px;
+}
+
+/* 无权限时只留一个锁定标签，不用整段解释文字。 */
+.settings-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 12px;
+  font-size: var(--t-sm);
+  color: var(--ink-500);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+}
+
+.settings-lock .od-icon {
+  flex: none;
+  color: var(--ink-400);
+}
+
+.settings-danger {
+  gap: var(--s-4);
+  padding: var(--s-5) var(--s-6);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.settings-danger__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.settings-danger__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.settings-danger__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+}
+
+.settings-danger__title .h3 {
+  color: var(--ink-900);
+}
+
+.settings-subject {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-3);
+  padding: 10px 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.settings-subject__body {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.settings-subject__name {
+  font-size: var(--t-ui);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-subject__mail {
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-confirm {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-3);
+  padding: 10px 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.settings-confirm__label {
+  font-size: var(--t-xs);
+  color: var(--ink-400);
+}
+
+.settings-confirm__name {
+  min-width: 0;
+  padding-left: var(--s-3);
+  font-weight: 500;
+  border-left: 1px solid var(--line-strong);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .settings-danger {
+    padding: var(--s-5);
+  }
+
+  .project-settings__role {
+    max-width: none;
+    width: 100%;
+  }
 }

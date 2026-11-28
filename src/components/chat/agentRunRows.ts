@@ -1,4 +1,4 @@
-import { isTerminalStatus, rootRunIdFromReply, type AgentRun } from '@/features/agent-runs'
+import { isTerminalStatus, rootRunIdFromReply, type AgentRun, type AgentRunTool } from '@/features/agent-runs'
 import type { ChatMessage } from '@/types/chat'
 
 /**
@@ -63,16 +63,41 @@ export function repliedRootRunIds(messages: ChatMessage[]): Set<string> {
   return ids
 }
 
+/** 汇总文本与工具涉及的轮次，保留同轮文本片段和工具各自的接收顺序。 */
+export function runRounds(run: AgentRun) {
+  const rounds = new Map<number, { round: number; text: string; tools: AgentRunTool[] }>()
+  function getRound(round: number) {
+    let entry = rounds.get(round)
+    if (!entry) {
+      entry = { round, text: '', tools: [] }
+      rounds.set(round, entry)
+    }
+    return entry
+  }
+  getRound(run.round)
+  for (const segment of run.segments) getRound(segment.round).text += segment.text
+  for (const tool of run.tools) getRound(tool.round).tools.push(tool)
+  return [...rounds.values()].sort((left, right) => left.round - right.round)
+}
+
+function finalRoundText(run: AgentRun): string {
+  const last = runRounds(run).at(-1)
+  return last && last.tools.length === 0 && last.text.trim() ? last.text : ''
+}
+
 /**
- * 流式正文：优先最后一个还在跑的运行；全都结束了就保留最后一段已收到的正文，
- * 避免最终消息到达前正文闪一下空白。正文不进运行卡的框，单独渲染在卡片下方。
+ * 流式正文只取最后一轮尚无工具调用的文本，其余文本归入运行卡的进度时间线。
+ * 优先还在跑的运行；全都结束时保留最后一份正文，等待最终消息交接。
  */
 export function streamingText(group: RunGroup): string {
   const reversed = [...group.runs].reverse()
-  const source =
-    reversed.find((run) => !isTerminalStatus(run.status)) ??
-    reversed.find((run) => run.segments.length > 0)
-  return source ? source.segments.map((segment) => segment.text).join('') : ''
+  const source = reversed.find((run) => !isTerminalStatus(run.status))
+  if (source) return finalRoundText(source)
+  for (const run of reversed) {
+    const text = finalRoundText(run)
+    if (text) return text
+  }
+  return ''
 }
 
 /**

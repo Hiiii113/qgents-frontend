@@ -1,9 +1,53 @@
-/* 团队列表不撑满整行，与同页账户表单的窄栏一致。 */
-.product-settings .teamlist {
-  max-width: 520px;
+/* 产品设置：账户资料卡、团队切换行与安全键值行。 */
+
+/* 头像行：圆形头像与更换按钮并排，不重复名字与邮箱。 */
+.account-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
 }
 
-/* 产品设置：安全页键值行窄屏改为上下两行。 */
+/* 个人设置三个页签统一工作区宽度，避免标题栏与列表宽度失配。 */
+.product-settings {
+  max-width: 780px;
+}
+.product-settings .setting-group {
+  max-width: none;
+}
+
+/* 团队列表：首字母字牌 + 名称，与项目卡保持同一套视觉语言。 */
+.product-settings .teamlist {
+  max-width: none;
+  gap: var(--s-2);
+}
+.teamrow__id {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.teamrow__mono {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-sunken);
+  font-family: var(--font);
+  font-size: var(--t-ui);
+  font-weight: 600;
+  color: var(--ink-700);
+}
+.teamrow__name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 安全页键值行窄屏改为上下两行。 */
 @media (max-width: 760px) {
   .product-settings .kv__row {
     flex-direction: column;

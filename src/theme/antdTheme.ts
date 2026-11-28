@@ -7,7 +7,7 @@ import { FONT_SANS, SHADOW, T } from './tokens'
  */
 export const antdTheme: ThemeConfig = {
   token: {
-    colorPrimary: T.mark,
+    colorPrimary: T.action,
     colorInfo: T.mark,
     colorSuccess: T.ok,
     colorWarning: T.wait,
@@ -25,9 +25,9 @@ export const antdTheme: ThemeConfig = {
     colorBgSpotlight: T.ink900,
     colorFillQuaternary: T.surfaceSunken,
     colorLink: T.mark,
-    borderRadius: 4,
-    borderRadiusLG: 8,
-    borderRadiusSM: 3,
+    borderRadius: 6,
+    borderRadiusLG: 10,
+    borderRadiusSM: 4,
     fontFamily: FONT_SANS,
     fontSize: 14,
     lineHeight: 1.55,
@@ -39,10 +39,10 @@ export const antdTheme: ThemeConfig = {
     boxShadowTertiary: 'none',
     motionDurationFast: '120ms',
     motionDurationMid: '180ms',
-    motionEaseOut: 'cubic-bezier(.2,.7,.2,1)',
+    motionEaseOut: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
   },
   components: {
-    Checkbox: { borderRadiusSM: 3 },
+    Checkbox: { borderRadiusSM: 4 },
     Form: {
       labelColor: T.ink700,
       labelFontSize: 13,

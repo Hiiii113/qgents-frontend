@@ -14,6 +14,7 @@ import {
   Dialog,
   EmptyState,
   Icon,
+  MenuSelect,
   Page,
   PageHead,
   Section,
@@ -42,8 +43,10 @@ const INVITATION_STATUS: Record<
   EXPIRED: { label: '已过期', tone: 'readonly' },
 }
 
-const isTeamRole = (value: string): value is TeamRole =>
-  value === 'TEAM_OWNER' || value === 'TEAM_ADMIN' || value === 'TEAM_MEMBER'
+const TEAM_ROLE_OPTIONS = [
+  { value: 'TEAM_ADMIN', label: '管理员', description: '可管理成员、邀请和项目设置' },
+  { value: 'TEAM_MEMBER', label: '成员', description: '参与已加入项目的日常协作' },
+] as const
 
 function formatDate(iso?: string): string {
   if (!iso) return '—'
@@ -67,11 +70,9 @@ export default function TeamSettingsPage() {
 
   return (
     <main className="canvas">
-      <Page>
+      <Page className="team-settings">
         <PageHead
-          kicker="团队"
           title={team.data ? `${team.data.name} · 成员` : team.isError ? '团队不可用' : '团队设置'}
-          description="团队管理员邀请成员、调整团队角色；项目成员在各自项目里单独管理。"
           actions={
             canManage ? (
               <Button
@@ -104,12 +105,6 @@ export default function TeamSettingsPage() {
         ) : (
           <>
             <Members teamId={teamId} isOwner={isOwner} />
-            <p className="note">
-              角色只分团队管理员与成员。项目内的管理员与成员在「项目设置 · 成员」里单独设置。
-            </p>
-            {isOwner ? null : (
-              <p className="note">团队管理员可以邀请和移除普通成员，不能调整管理员或所有者。</p>
-            )}
             <Invitations teamId={teamId} />
           </>
         )}
@@ -124,10 +119,11 @@ function Forbidden() {
   const navigate = useNavigate()
   return (
     <div className="block">
+      <span className="settings-lock" aria-hidden>
+        <Icon name="lock" size={18} />
+      </span>
       <p className="h3">需要团队管理员权限</p>
-      <p className="sub">
-        你在这个团队里的角色是「成员」。成员管理、邀请与角色调整只对团队管理员开放。
-      </p>
+      <p className="sub">你在团队里是「成员」角色。</p>
       <Button
         variant="quiet"
         onClick={() => navigate(PATHS.APP)}
@@ -199,7 +195,7 @@ function Members({ teamId, isOwner }: { teamId: string; isOwner: boolean }) {
           stacked
         />
       ) : members.data.length === 0 ? (
-        <EmptyState icon="people" title="还没有成员" description="邀请同事加入团队。" stacked />
+        <EmptyState icon="people" title="还没有成员" stacked />
       ) : (
         <DataTable layout="team" columns={['成员', '邮箱', '角色', '']}>
           {members.data.map((member) => (
@@ -209,27 +205,23 @@ function Members({ teamId, isOwner }: { teamId: string; isOwner: boolean }) {
                   <Avatar name={nameOf(member)} src={member.avatarUrl} size="sm" />
                   <span className="member-cell__body">
                     <span className="name">{nameOf(member)}</span>
-                    {member.userId === user?.id ? <span className="meta">你</span> : null}
+                    {member.userId === user?.id ? (
+                      <span className="member-cell__badge">你</span>
+                    ) : null}
                   </span>
                 </span>
               </TableCell>
               <TableCell className="mono">{member.email || '—'}</TableCell>
               <TableCell>
                 {canChangeRole(member) ? (
-                  <SelectField
-                    className="team-settings__role"
+                  <MenuSelect
+                    variant="ghost"
                     aria-label={`调整 ${nameOf(member)} 的团队角色`}
-                    value={member.role}
+                    value={member.role === 'TEAM_ADMIN' ? 'TEAM_ADMIN' : 'TEAM_MEMBER'}
+                    options={TEAM_ROLE_OPTIONS}
                     disabled={updateRole.isPending}
-                    onChange={(event) => {
-                      if (isTeamRole(event.target.value)) {
-                        updateRole.mutate({ userId: member.userId, role: event.target.value })
-                      }
-                    }}
-                  >
-                    <option value="TEAM_ADMIN">管理员</option>
-                    <option value="TEAM_MEMBER">成员</option>
-                  </SelectField>
+                    onChange={(role) => updateRole.mutate({ userId: member.userId, role })}
+                  />
                 ) : (
                   <span className="name">{ROLE_LABEL[member.role]}</span>
                 )}
@@ -237,15 +229,13 @@ function Members({ teamId, isOwner }: { teamId: string; isOwner: boolean }) {
               <TableCell end>
                 {canRemove(member) ? (
                   <Button
-                    variant="link"
+                    variant="ghost-danger"
+                    size="sm"
                     onClick={() => setRemoving(member)}
-                    icon={<Icon name="trash" size={15} />}
                   >
                     移除
                   </Button>
-                ) : (
-                  <span className="meta">—</span>
-                )}
+                ) : null}
               </TableCell>
             </TableRow>
           ))}
@@ -321,12 +311,7 @@ function Invitations({ teamId }: { teamId: string }) {
           stacked
         />
       ) : invitations.data.length === 0 ? (
-        <EmptyState
-          icon="inbox"
-          title="还没有发出邀请"
-          description="邀请 7 天内有效；接受、撤销与过期状态都显示在这里。"
-          stacked
-        />
+        <EmptyState icon="inbox" title="还没有发出邀请" description="邀请 7 天内有效" stacked />
       ) : (
         <DataTable layout="team" columns={['邮箱', '角色', '状态', '']}>
           {invitations.data.map((invitation) => (
@@ -346,16 +331,14 @@ function Invitations({ teamId }: { teamId: string }) {
               <TableCell end>
                 {invitation.status === 'PENDING' ? (
                   <Button
-                    variant="link"
+                    variant="ghost-danger"
+                    size="sm"
                     disabled={revoke.isPending}
                     onClick={() => revoke.mutate(invitation.id)}
-                    icon={<Icon name="undo" size={15} />}
                   >
                     撤销
                   </Button>
-                ) : (
-                  <span className="meta">—</span>
-                )}
+                ) : null}
               </TableCell>
             </TableRow>
           ))}
@@ -401,7 +384,7 @@ function InviteDialog({
         form.resetFields()
       }}
       title="邀请成员"
-      description="对方用邮箱里的链接加入团队；邀请 7 天内有效。"
+      description="邀请 7 天内有效。"
     >
       <Form
         form={form}

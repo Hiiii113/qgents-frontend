@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm'
 import { memoryApi } from '@/api'
 import { PATHS } from '@/routes/paths'
 import { formatApiError } from '@/utils/formatApiError'
-import { Button, EmptyState, Icon, Page, PageHead, Skeleton, Tag } from '@/components/ui'
+import { Button, EmptyState, Icon, Page, PageHead, Skeleton } from '@/components/ui'
 import './memory.css'
 
 /** 标题锚点用标题文本生成，目录与正文共用同一个 id。 */
@@ -70,15 +70,7 @@ export default function MemoryPage() {
   return (
     <main className="canvas">
       <Page>
-        <PageHead
-          title="项目记忆"
-          description={
-            <>
-              项目目录下的 <span className="mono">memory.md</span>，所有项目成员可读。
-            </>
-          }
-          actions={<Tag tone="readonly">只读</Tag>}
-        />
+        <PageHead title="项目记忆" />
 
         {memory.isPending ? (
           <Skeleton rows={6} />
@@ -101,7 +93,6 @@ export default function MemoryPage() {
           <EmptyState
             icon="book"
             title="还没有项目记忆"
-            description="在聊天里告诉 Qgent 需要长期保留的约定；项目管理员确认后由它写入 memory.md。"
             action={
               <Button
                 variant="link"
@@ -116,12 +107,12 @@ export default function MemoryPage() {
         ) : (
           <div className={outline.length ? 'split split--doc' : undefined}>
             {outline.length ? (
-              <nav className="toc" aria-label="文档目录">
+              <nav className="toc memory-toc" aria-label="文档目录">
                 <p className="toc__label">目录</p>
                 <ul>
                   {outline.map((item) => (
                     <li key={item.id}>
-                      <a className="toc__link" href={`#${item.id}`}>
+                      <a className="toc__link memory-toc__link" href={`#${item.id}`}>
                         {item.label}
                       </a>
                     </li>
@@ -134,9 +125,9 @@ export default function MemoryPage() {
                 {content}
               </Markdown>
               <footer className="memory-doc__foot">
-                <span className="meta">{content.length} 字符</span>
+                <span className="mono">{content.length} 字符</span>
                 {memory.data?.updatedAt ? (
-                  <span className="meta">
+                  <span className="mono">
                     最后修改 {new Date(memory.data.updatedAt).toLocaleString('zh-CN')}
                   </span>
                 ) : null}

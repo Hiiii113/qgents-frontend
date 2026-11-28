@@ -173,11 +173,19 @@ export default function ChatWorkspace() {
                 <li key={group.id} className="grouprow-wrap">
                   <button
                     type="button"
-                    className="grouprow"
+                    className={`grouprow${changed ? ' is-fresh' : ''}`}
                     aria-current={group.id === selectedId}
+                    data-unread={group.unreadCount ? 'true' : undefined}
                     onClick={() => selectGroup(group.id)}
                   >
-                    <span className="grouprow__name">{group.title}</span>
+                    <span className="grouprow__name">
+                      <span className="grouprow__title">{group.title}</span>
+                      {group.unreadCount ? (
+                        <span className="grouprow__unread mono">
+                          {group.unreadCount > 99 ? '99+' : group.unreadCount}
+                        </span>
+                      ) : null}
+                    </span>
                     <span className="grouprow__meta">
                       <span className="grouprow__preview">
                         {group.latestMessage?.text
@@ -200,7 +208,7 @@ export default function ChatWorkspace() {
                     aria-pressed={Boolean(group.pinned)}
                     onClick={() => pin.mutate(group)}
                   >
-                    <Icon name="skill" size={13} />
+                    <Icon name="pin" size={13} />
                   </button>
                 </li>
               )

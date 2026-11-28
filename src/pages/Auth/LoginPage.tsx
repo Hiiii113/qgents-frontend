@@ -13,7 +13,7 @@ interface Values {
   password: string
 }
 
-/** 登录：左侧品牌说明，右侧窄栏表单，未登录用户唯一的入口。 */
+/** 登录：左侧工作室陈列，右侧表单浮卡，未登录用户唯一的入口。 */
 export function LoginPage() {
   const navigate = useNavigate()
   const { login, completeAuth } = useAuth()
@@ -66,7 +66,7 @@ export function LoginPage() {
               { type: 'email', message: '请输入正确的邮箱地址' },
             ]}
           >
-            <TextField autoComplete="username" placeholder="name@company.com" />
+            <TextField autoComplete="username" placeholder="name@company.com" autoFocus />
           </Form.Item>
           <Form.Item
             name="password"

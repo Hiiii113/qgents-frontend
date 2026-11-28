@@ -7,10 +7,6 @@ import { queryClient } from '@/query'
 import { antdTheme } from '@/theme/antdTheme'
 import { PageLoader } from '@/components/PageLoader'
 
-/**
- * 启动加载门控。
- * AuthProvider 内部自动完成 token 恢复，这里只读 isBootstrapping 决定展示 loading 还是 children。
- */
 function BootstrapGate({ children }: { children: ReactNode }) {
   const { isBootstrapping } = useAuth()
 

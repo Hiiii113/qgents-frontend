@@ -87,13 +87,7 @@ export default function ForgotPasswordPage() {
         <h1 className="gate__title">
           {stage === 'request' ? '找回密码' : stage === 'reset' ? '设置新密码' : '密码已重置'}
         </h1>
-        <p className="sub">
-          {stage === 'request'
-            ? '填写账号邮箱，我们会发一封验证码邮件。'
-            : stage === 'reset'
-              ? `验证码已发送至 ${email}`
-              : '新密码已生效，现在可以用新密码登录了。'}
-        </p>
+        {stage === 'reset' ? <p className="gate__subject">{email}</p> : null}
         {error ? (
           <p className="err" role="alert">
             {error}
@@ -201,9 +195,11 @@ export default function ForgotPasswordPage() {
           </div>
         ) : null}
 
-        <p className="gate__alt">
-          <Link to={PATHS.LOGIN}>返回登录</Link>
-        </p>
+        {stage === 'done' ? null : (
+          <p className="gate__alt">
+            <Link to={PATHS.LOGIN}>返回登录</Link>
+          </p>
+        )}
       </GateForm>
     </Gate>
   )

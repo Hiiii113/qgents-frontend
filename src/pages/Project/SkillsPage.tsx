@@ -18,7 +18,6 @@ import {
   SelectField,
   Skeleton,
   Tag,
-  Tabs,
   TextAreaField,
   TextField,
 } from '@/components/ui'
@@ -97,6 +96,22 @@ export default function SkillsPage() {
   })
   const admin = project.data?.role === 'PROJECT_ADMIN'
 
+  const counts = useMemo(() => {
+    const next: Record<FilterKey, number> = {
+      ALL: 0,
+      DRAFT: 0,
+      PENDING_REVIEW: 0,
+      PUBLISHED: 0,
+      REJECTED: 0,
+      ARCHIVED: 0,
+    }
+    for (const skill of skills.data ?? []) {
+      next.ALL += 1
+      next[skill.status] += 1
+    }
+    return next
+  }, [skills.data])
+
   const filtered = useMemo(() => {
     const normalized = keyword.trim().toLowerCase()
     return (skills.data ?? []).filter((skill) => {
@@ -152,7 +167,6 @@ export default function SkillsPage() {
       <Page>
         <PageHead
           title="Skill"
-          description="可复用的能力片段。Agent 在执行中按需调用，项目共享的 Skill 需要管理员审核。"
           actions={
             <Button
               variant="primary"
@@ -183,27 +197,28 @@ export default function SkillsPage() {
           />
         ) : (
           <>
-            <Tabs
-              items={FILTERS}
-              value={filter}
-              onChange={(key) => setFilter(key as FilterKey)}
-              label="按状态筛选 Skill"
-            />
+            <div className="tabs skill-tabs" role="tablist" aria-label="按状态筛选 Skill">
+              {FILTERS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="tab"
+                  className="tab skill-tab"
+                  aria-selected={filter === item.key}
+                  onClick={() => setFilter(item.key)}
+                >
+                  {item.label}
+                  <span className="skill-tab__count">{counts[item.key]}</span>
+                </button>
+              ))}
+            </div>
 
             {filtered.length === 0 ? (
-              keyword.trim() || filter !== 'ALL' ? (
-                <EmptyState
-                  icon="search"
-                  title="没有匹配的 Skill"
-                  description="换个关键词，或切换上方的状态筛选。"
-                  stacked
-                />
-              ) : (
-                <EmptyState
-                  icon="skill"
-                  title="还没有 Skill"
-                  description="导入一个 SKILL.md；项目共享的 Skill 在管理员审核后才会被 Agent 调用。"
-                  action={
+              <EmptyState
+                icon={keyword.trim() ? 'search' : 'skill'}
+                title={keyword.trim() ? '没有匹配的 Skill' : '还没有 Skill'}
+                action={
+                  keyword.trim() ? undefined : (
                     <Button
                       variant="quiet"
                       icon={<Icon name="plus" size={16} />}
@@ -211,12 +226,12 @@ export default function SkillsPage() {
                     >
                       导入 Skill
                     </Button>
-                  }
-                  stacked
-                />
-              )
+                  )
+                }
+                stacked
+              />
             ) : (
-              <div className="split">
+              <div className="split skill-split">
                 <div className="skill-master">
                   <label className="inline-search skill-search">
                     <span className="sr">搜索 Skill</span>
@@ -228,7 +243,7 @@ export default function SkillsPage() {
                       onChange={(event) => setKeyword(event.target.value)}
                     />
                   </label>
-                  <ul className="masterlist">
+                  <ul className="masterlist skill-masterlist">
                     {filtered.map((skill) => (
                       <li key={skill.id}>
                         <button
@@ -237,9 +252,15 @@ export default function SkillsPage() {
                           aria-current={selected?.id === skill.id}
                           onClick={() => setSelectedId(skill.id)}
                         >
-                          <span className="name">{skill.name}</span>
-                          <span className="meta">{skill.description || '—'}</span>
-                          <Tag tone={STATUS[skill.status].tone}>{STATUS[skill.status].label}</Tag>
+                          <span className="skill-master__top">
+                            <span className="name">{skill.name}</span>
+                            <Tag tone={STATUS[skill.status].tone}>
+                              {STATUS[skill.status].label}
+                            </Tag>
+                          </span>
+                          {skill.description ? (
+                            <span className="meta skill-master__desc">{skill.description}</span>
+                          ) : null}
                         </button>
                       </li>
                     ))}
@@ -247,18 +268,20 @@ export default function SkillsPage() {
                 </div>
 
                 {selected ? (
-                  <article className="panel">
-                    <header className="panel__head">
-                      <div>
+                  <article className="panel skill-detail">
+                    <header className="panel__head skill-detail__head">
+                      <div className="skill-detail__title">
                         <h2 className="h2">{selected.name}</h2>
                         <p className="meta">
-                          由 {selected.creator.displayName} 提交 · {VISIBILITY[selected.visibility]}
+                          {selected.creator.displayName} · {VISIBILITY[selected.visibility]}
                         </p>
                       </div>
                       <Tag tone={STATUS[selected.status].tone}>{STATUS[selected.status].label}</Tag>
                     </header>
 
-                    <p className="panel__desc">{selected.description || '暂无描述。'}</p>
+                    {selected.description ? (
+                      <p className="panel__desc">{selected.description}</p>
+                    ) : null}
                     {selected.tags.length ? (
                       <div className="skill-tags">
                         {selected.tags.map((tag) => (
@@ -267,8 +290,8 @@ export default function SkillsPage() {
                       </div>
                     ) : null}
 
-                    <div className="panel__block">
-                      <h3 className="h3">触发与内容</h3>
+                    <div className="panel__block skill-body">
+                      <h3 className="h3">内容</h3>
                       <div className="skill-content">
                         <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                           {stripFrontmatter(selected.content)}
@@ -277,7 +300,8 @@ export default function SkillsPage() {
                     </div>
 
                     {selected.reviewer ? (
-                      <p className="meta">
+                      <p className="meta skill-reviewer">
+                        <Icon name="check" size={13} />
                         审核 {selected.reviewer.displayName}
                         {selected.reviewedAt
                           ? ` · ${new Date(selected.reviewedAt).toLocaleDateString('zh-CN')}`
@@ -361,9 +385,19 @@ export default function SkillsPage() {
         open={Boolean(confirm)}
         onClose={closeConfirm}
         title={confirm?.action === 'archive' ? '归档 Skill' : '退回 Skill'}
-        description={confirm ? `「${confirm.skill.name}」` : undefined}
         danger={confirm?.action === 'archive'}
       >
+        {confirm ? (
+          <div className="skill-subject">
+            <span className="skill-subject__icon" aria-hidden>
+              <Icon name={confirm.action === 'archive' ? 'archive' : 'undo'} size={16} />
+            </span>
+            <span className="skill-subject__name">{confirm.skill.name}</span>
+            <Tag tone={STATUS[confirm.skill.status].tone}>
+              {STATUS[confirm.skill.status].label}
+            </Tag>
+          </div>
+        ) : null}
         {confirm?.action === 'reject' ? (
           <div className="field">
             <label htmlFor="skill-reject-reason">退回原因</label>
@@ -371,13 +405,11 @@ export default function SkillsPage() {
               id="skill-reject-reason"
               rows={3}
               value={reason}
+              placeholder="说明需要修改的地方"
               onChange={(event) => setReason(event.target.value)}
             />
-            <p className="hint">退回后创建者可以修改并重新提交审核。</p>
           </div>
-        ) : (
-          <p className="sub">归档后 Agent 不再调用这条 Skill，需要重新提交审核才能恢复。</p>
-        )}
+        ) : null}
         <div className="dlg__foot">
           <Button variant="quiet" onClick={closeConfirm} icon={<Icon name="close" size={15} />}>
             取消
@@ -469,16 +501,7 @@ function SkillEditorDialog({
   }
 
   return (
-    <Dialog
-      open
-      onClose={close}
-      title={skill ? '编辑 Skill' : '导入 Skill'}
-      description={
-        skill
-          ? '编辑正文与标签；可见性由创建时决定。'
-          : '只导入单个 SKILL.md；可见性为项目共享时，管理员审核后才会被 Agent 调用。'
-      }
-    >
+    <Dialog open onClose={close} title={skill ? '编辑 Skill' : '导入 Skill'}>
       <Form
         className="form"
         form={form}
@@ -492,7 +515,11 @@ function SkillEditorDialog({
       >
         {skill ? (
           <>
-            <p className="hint">可见性：{VISIBILITY[skill.visibility]}</p>
+            <div className="skill-editor__meta">
+              <Tag tone="readonly" icon="lock">
+                {VISIBILITY[skill.visibility]}
+              </Tag>
+            </div>
             <Form.Item
               name="content"
               label="SKILL.md 完整内容"
@@ -505,14 +532,44 @@ function SkillEditorDialog({
           <>
             <div className="field">
               <label htmlFor="skill-file">SKILL.md 文件</label>
-              <input id="skill-file" type="file" accept=".md" onChange={pickFile} />
-              <p className="hint">{file ? file.name : '未选择文件，仅支持单个 .md'}</p>
+              <div
+                className={`skill-upload${file ? ' skill-upload--picked' : ''}`}
+                data-busy={previewFile.isPending ? 'true' : undefined}
+              >
+                <span className="skill-upload__icon" aria-hidden>
+                  <Icon name={file ? 'file' : 'plus'} size={18} />
+                </span>
+                <span className="skill-upload__body">
+                  <span className="skill-upload__title">
+                    {file ? file.name : '选择 SKILL.md'}
+                  </span>
+                  {previewFile.isPending ? (
+                    <span className="skill-upload__state" role="status">
+                      解析中…
+                    </span>
+                  ) : null}
+                </span>
+                <span className="skill-upload__ext" aria-hidden>
+                  MD
+                </span>
+                <input
+                  id="skill-file"
+                  className="skill-upload__input"
+                  type="file"
+                  accept=".md"
+                  onChange={pickFile}
+                />
+              </div>
             </div>
-            {previewFile.isPending ? <p className="hint">正在解析文件…</p> : null}
             {preview ? (
               <div className="skill-preview">
-                <p className="name">{preview.name}</p>
-                <p className="meta">{preview.description}</p>
+                <div className="skill-preview__head">
+                  <span className="name">{preview.name}</span>
+                  <span className="mono skill-preview__file">SKILL.md</span>
+                </div>
+                {preview.description ? (
+                  <p className="meta">{preview.description}</p>
+                ) : null}
                 <pre className="skill-preview__body">{preview.content}</pre>
               </div>
             ) : null}

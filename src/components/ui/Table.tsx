@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-type Layout = 'projects' | 'agents' | 'repos' | 'members' | 'team' | 'plain'
+type Layout = 'projects' | 'agents' | 'repos' | 'items' | 'members' | 'team' | 'plain'
 
 interface DataTableProps {
   layout?: Layout

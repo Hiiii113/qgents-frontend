@@ -1,6 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 
-type Variant = 'primary' | 'quiet' | 'danger' | 'link'
+type Variant = 'primary' | 'quiet' | 'danger' | 'danger-outline' | 'ghost' | 'ghost-danger' | 'link'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
@@ -9,7 +9,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode
 }
 
-/** 主按钮墨实心；次按钮白底细线；文字按钮只有朱砂色，没有框。 */
+/** 主按钮墨实心；次按钮白底细线；ghost 用于表格与工具栏轻操作；ghost-danger 用于行内危险操作。 */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant, size, block, icon, className = '', children, type = 'button', ...rest },
   ref,

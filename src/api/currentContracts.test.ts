@@ -35,6 +35,19 @@ describe('current backend contracts', () => {
       expect.objectContaining({ method: 'POST', body: JSON.stringify(application) }),
     )
   })
+  it('aggregates pull requests and issues with state and repository filters', async () => {
+    const spy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => response([]))
+    await repositoriesApi.pullRequests('p1', { state: 'open' })
+    expect(spy.mock.calls.at(-1)?.[0]).toBe(
+      '/api/projects/p1/github/pull-requests?state=open',
+    )
+    await repositoriesApi.issues('p1', { state: 'all', repositoryId: 11 })
+    expect(spy.mock.calls.at(-1)?.[0]).toBe(
+      '/api/projects/p1/github/issues?state=all&repositoryId=11',
+    )
+  })
   it('stops Agent execution by trigger message and imports by numeric provider ID', async () => {
     const spy = vi
       .spyOn(globalThis, 'fetch')

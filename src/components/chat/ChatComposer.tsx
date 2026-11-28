@@ -206,6 +206,22 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
     [insertMention],
   )
 
+  /** 快捷 @：在光标处插一个 @，顺手把提及面板打开。 */
+  function insertAt() {
+    if (locked) return
+    const node = textareaRef.current
+    const at = node?.selectionStart ?? draft.length
+    suppressed.current = false
+    setDraft(`${draft.slice(0, at)}@${draft.slice(at)}`)
+    setMention({ start: at, term: '', index: 0 })
+    setError(null)
+    caret.current = at + 1
+    requestAnimationFrame(() => {
+      node?.focus({ preventScroll: true })
+      node?.setSelectionRange(at + 1, at + 1)
+    })
+  }
+
   function addFiles(files: File[]) {
     if (!files.length || locked) return
     if (attachments.length + files.length > 10) {
@@ -355,9 +371,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
           value={draft}
           disabled={locked}
           placeholder={
-            disabled
-              ? '暂时不能发送消息'
-              : (placeholder ?? '写下想法，输入 @ 选择 Agent 或成员…')
+            disabled ? '暂时不能发送消息' : (placeholder ?? '写下消息，@ 提及 Agent 或成员')
           }
           onChange={(event) => {
             const node = event.currentTarget
@@ -378,6 +392,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
         <div className="composer__foot">
           <div className="composer__tools">
             <IconButton
+              className="composer__tool"
               label="添加附件"
               square
               disabled={locked}
@@ -385,18 +400,23 @@ export const ChatComposer = forwardRef<ChatComposerHandle, Props>(function ChatC
             >
               <Icon name="paperclip" size={15} />
             </IconButton>
-            <span className="meta">
-              {disabled && disabledHint ? (
-                disabledHint
-              ) : (
-                <>
-                  <span className="composer__hint">Enter 发送 · Shift + Enter 换行</span>
-                  <span className="composer__hint--touch">点按发送</span>
-                </>
-              )}
-            </span>
+            {allowMentions ? (
+              <IconButton
+                className="composer__tool"
+                label="提及成员"
+                square
+                disabled={locked}
+                onClick={insertAt}
+              >
+                <Icon name="at" size={15} />
+              </IconButton>
+            ) : null}
+            {disabled && disabledHint ? (
+              <span className="composer__hint">{disabledHint}</span>
+            ) : null}
           </div>
           <Button
+            className="composer__send"
             variant="primary"
             icon={<Icon name="send" size={15} aria-hidden />}
             disabled={locked || (!draft.trim() && !attachments.length)}
