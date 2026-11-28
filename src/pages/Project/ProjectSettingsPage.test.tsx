@@ -48,9 +48,11 @@ it('lets project admins edit basics and manage members', async () => {
     (client) => seed(client),
   )
 
-  expect(await screen.findByDisplayValue('qgents-web')).toBeInTheDocument()
-  expect(screen.getByDisplayValue('默认群')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: '保存' })).toBeInTheDocument()
+  expect(await screen.findByText('qgents-web', { selector: '.setting-inline__text' })).toBeInTheDocument()
+  expect(screen.getByText('默认群', { selector: '.setting-row__value' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '编辑项目名称' }))
+  expect(screen.getByDisplayValue('qgents-web')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '保存' })).toBeDisabled()
 
   fireEvent.click(screen.getByRole('tab', { name: '成员' }))
   expect(await screen.findByText('徐亦然')).toBeInTheDocument()

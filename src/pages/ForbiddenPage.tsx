@@ -23,8 +23,14 @@ export default function ForbiddenPage() {
           >
             回到团队首页
           </Button>
+          <Button
+            variant="quiet"
+            onClick={() => navigate('/app/settings?tab=teams')}
+            icon={<Icon name="people" size={15} />}
+          >
+            切换团队
+          </Button>
         </div>
-        <p className="meta">要换到其他团队，去产品设置的「团队」页签。角色由团队管理员调整。</p>
       </div>
     </main>
   )

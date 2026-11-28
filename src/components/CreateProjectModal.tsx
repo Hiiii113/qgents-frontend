@@ -56,12 +56,7 @@ export function CreateProjectModal({
   })
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="新建项目"
-      description="创建后会自动生成该项目的默认 Agent 与一个默认群。"
-    >
+    <Dialog open={open} onClose={onClose} title="新建项目">
       <Form
         form={form}
         layout="vertical"

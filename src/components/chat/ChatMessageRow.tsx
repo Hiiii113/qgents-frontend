@@ -3,7 +3,7 @@ import { attachmentApi } from '@/api/attachment'
 import { AuthedImage } from '@/components/AuthedImage'
 import { chatMessageText, messageField, type ChatMember, type ChatMessage } from '@/types/chat'
 import type { AgentRun } from '@/features/agent-runs/types'
-import { Avatar, Button, Icon, Tag } from '@/components/ui'
+import { Avatar, Icon, Tag } from '@/components/ui'
 import { ChatCodeBlock } from './ChatMarkdown'
 import { LazyChatMarkdown } from './LazyChatMarkdown'
 import { RunCard } from './RunCard'
@@ -12,6 +12,7 @@ import { streamingText, type RunGroup } from './agentRunRows'
 interface Props {
   item: ChatMessage
   projectId?: string
+  currentUserId?: string
   sender?: ChatMember
   reply?: ChatMessage
   runs?: AgentRun[]
@@ -65,35 +66,71 @@ function MessageBody({
     )
   if (item.type === 'IMAGE')
     return (
-      <button className="msg__image" aria-label="预览图片" onClick={() => onPreview(item)}>
+      <button
+        type="button"
+        className="msg__image"
+        aria-label="预览图片"
+        onClick={() => onPreview(item)}
+      >
         <AuthedImage src={imageUrl} alt={messageField(item, 'name') || '聊天图片'} />
+        <span className="msg__image-zoom" aria-hidden>
+          <Icon name="search" size={13} />
+          查看大图
+        </span>
       </button>
     )
-  if (item.type === 'FILE')
+  if (item.type === 'FILE') {
+    const fileName = messageField(item, 'name') || '附件'
+    const badge = fileBadge(fileName, messageField(item, 'mediaType'))
+    const rawSize =
+      typeof item.content === 'object' && item.content !== null
+        ? Reflect.get(item.content, 'size')
+        : undefined
     return (
-      <div className="attaches">
-        <button
-          type="button"
-          className="attach"
-          onClick={() => onPreview(item)}
-          disabled={!attachmentId}
-        >
-          <Icon name="file" size={15} />
-          <span className="attach__name">{messageField(item, 'name') || '附件'}</span>
-          {typeof Reflect.get(item.content as object, 'size') === 'number' ? (
-            <span className="attach__meta mono">
-              {formatSize(Number(Reflect.get(item.content as object, 'size')))}
-            </span>
-          ) : null}
-        </button>
-      </div>
+      <button
+        type="button"
+        className="attach-card"
+        onClick={() => onPreview(item)}
+        disabled={!attachmentId}
+      >
+        <span className="attach-card__info">
+          <span className="attach-card__name" title={fileName}>
+            {fileName}
+          </span>
+          <span className="attach-card__meta">
+            {typeof rawSize === 'number' ? formatSize(rawSize) : '点击预览'}
+          </span>
+        </span>
+        <span className={`attach-card__badge attach-card__badge--${badge.tone}`} aria-hidden>
+          {badge.label}
+        </span>
+      </button>
     )
+  }
   if (agent) return <LazyChatMarkdown text={chatMessageText(item)} />
   return (
     <div className="msg__text">
       <LinkedText text={chatMessageText(item)} />
     </div>
   )
+}
+
+function fileBadge(name: string, mediaType?: string): { label: string; tone: 'md' | 'pdf' | 'code' | 'doc' } {
+  const ext = name.includes('.') ? name.split('.').pop()?.toLowerCase() ?? '' : ''
+  if (ext === 'md' || ext === 'markdown' || mediaType?.includes('markdown')) {
+    return { label: 'MD', tone: 'md' }
+  }
+  if (ext === 'pdf' || mediaType === 'application/pdf') {
+    return { label: 'PDF', tone: 'pdf' }
+  }
+  if (
+    ['ts', 'tsx', 'js', 'jsx', 'py', 'go', 'rs', 'java', 'json', 'yml', 'yaml', 'css', 'html', 'sh'].includes(
+      ext,
+    )
+  ) {
+    return { label: ext.toUpperCase().slice(0, 4), tone: 'code' }
+  }
+  return { label: ext ? ext.toUpperCase().slice(0, 4) : 'FILE', tone: 'doc' }
 }
 
 function formatSize(bytes: number) {
@@ -145,6 +182,7 @@ function RunStack({
 export const ChatMessageRow = memo(function ChatMessageRow({
   item,
   projectId,
+  currentUserId,
   sender,
   reply,
   runs = [],
@@ -161,6 +199,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
   if (item.senderType === 'SYSTEM')
     return <div className="msg msg--system">{chatMessageText(item)}</div>
   const agent = item.senderType === 'AGENT'
+  const isSelf = Boolean(currentUserId && item.senderType === 'USER' && item.senderId === currentUserId)
   const name = sender?.displayName || item.senderName || (agent ? 'Agent' : '成员')
   const timestamp = new Date(item.createdAt)
   const validTime = !Number.isNaN(timestamp.getTime())
@@ -170,13 +209,15 @@ export const ChatMessageRow = memo(function ChatMessageRow({
 
   return (
     <article
-      className={`msg${agent ? ' msg--agent' : ''}${located ? ' msg--located' : ''}`}
+      className={`msg msg--${agent ? 'agent' : 'human'}${isSelf ? ' msg--self' : ''}${located ? ' msg--located' : ''}`}
       aria-label={`${name}的消息`}
       id={`message-${item.id}`}
     >
-      <Avatar name={name} src={sender?.avatarUrl} type={agent ? 'agent' : 'user'} size="md" />
+      <div className="msg__avatar">
+        <Avatar name={name} src={sender?.avatarUrl} type={agent ? 'agent' : 'user'} size="md" />
+      </div>
       <div className="msg__body">
-        <p className="msg__head">
+        <div className="msg__head">
           <span className="msg__name">{name}</span>
           {agent ? <Tag tone="agent">Agent</Tag> : null}
           <time
@@ -186,17 +227,7 @@ export const ChatMessageRow = memo(function ChatMessageRow({
           >
             {time}
           </time>
-        </p>
-        {item.replyToId ? (
-          <button
-            type="button"
-            className="msg__quote"
-            onClick={() => onLocate(item.replyToId ?? '')}
-          >
-            <strong>{reply?.senderName || '回复消息'}</strong>
-            <span>{reply ? chatMessageText(reply).slice(0, 160) : '点击查看原消息'}</span>
-          </button>
-        ) : null}
+        </div>
         {/* 工具调用只属于 Agent 消息行：用户触发消息那一行永远不挂运行卡。 */}
         {agent && runs.length ? (
           <RunStack
@@ -211,17 +242,23 @@ export const ChatMessageRow = memo(function ChatMessageRow({
         ) : null}
         <div className="msg__content-row">
           <MessageBody item={item} projectId={projectId} agent={agent} onPreview={onPreview} />
+          <div className="msg__actions">
+            <button type="button" className="msg__reply" onClick={() => onReply(item)}>
+              <Icon name="chat" size={12} aria-hidden />
+              <span>回复</span>
+            </button>
+          </div>
         </div>
-        <div className="msg__actions">
-          <Button
-            variant="link"
-            size="sm"
-            onClick={() => onReply(item)}
-            icon={<Icon name="chat" size={15} />}
+        {item.replyToId ? (
+          <button
+            type="button"
+            className="msg__quote"
+            onClick={() => onLocate(item.replyToId ?? '')}
           >
-            回复
-          </Button>
-        </div>
+            <strong>{reply?.senderName ? `${reply.senderName}:` : '引用:'}</strong>
+            <span>{reply ? chatMessageText(reply) : '点击查看原消息'}</span>
+          </button>
+        ) : null}
       </div>
     </article>
   )
@@ -258,9 +295,11 @@ export function AgentRunRow({
   const validTime = timestamp !== null && !Number.isNaN(timestamp.getTime())
   return (
     <article className="msg msg--agent" aria-label={`${name}正在回复`}>
-      <Avatar name={name} type="agent" size="md" />
+      <div className="msg__avatar">
+        <Avatar name={name} type="agent" size="md" />
+      </div>
       <div className="msg__body">
-        <p className="msg__head">
+        <div className="msg__head">
           <span className="msg__name">{name}</span>
           <Tag tone="agent">Agent</Tag>
           {validTime ? (
@@ -268,7 +307,7 @@ export function AgentRunRow({
               {timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
             </time>
           ) : null}
-        </p>
+        </div>
         <RunStack
           runs={group.runs}
           agentNames={names}

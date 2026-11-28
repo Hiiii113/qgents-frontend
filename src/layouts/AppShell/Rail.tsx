@@ -24,7 +24,7 @@ interface RailItem {
 }
 
 /**
- * 64px 竖轨：项目视图（聊天/Agent/记忆/Skill/仓库）与团队视图（项目/成员/GitHub）
+ * 64px 竖轨：项目视图（聊天/Agent/记忆/Skill/代码）与团队视图（项目/成员/GitHub）
  * 换组显示；设置永远在底部；当前项用 2px 朱砂竖条标记。
  */
 export function Rail({ mode, teamId, projectId, meOpen, onOpenMe, onCloseMe }: RailProps) {
@@ -38,7 +38,7 @@ export function Rail({ mode, teamId, projectId, meOpen, onOpenMe, onCloseMe }: R
         { key: 'agents', label: 'Agent', icon: 'agent', to: PATHS.projectAgents(projectId) },
         { key: 'memory', label: '记忆', icon: 'book', to: PATHS.projectMemory(projectId) },
         { key: 'skills', label: 'Skill', icon: 'skill', to: PATHS.projectSkills(projectId) },
-        { key: 'repos', label: '仓库', icon: 'repo', to: PATHS.projectCode(projectId) },
+        { key: 'repos', label: '代码', icon: 'repo', to: PATHS.projectCode(projectId) },
       ]
     : []
 
@@ -62,6 +62,7 @@ export function Rail({ mode, teamId, projectId, meOpen, onOpenMe, onCloseMe }: R
           type="button"
           className="rail__brand"
           aria-label="回到团队首页"
+          title="回到团队首页"
           onClick={() => navigate(home)}
         >
           <Mark />

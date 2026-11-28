@@ -42,12 +42,7 @@ export default function CreateTeamPage() {
 
   return (
     <Gate>
-      <GateAside
-        kicker="新建团队"
-        title="团队是这一层的容器"
-        description="项目、成员和 GitHub App 授权都挂在团队下。创建后你会成为团队管理员。"
-        rows={false}
-      />
+      <GateAside kicker="新建团队" title="先建团队，再建项目" />
       <GateForm>
         <h1 className="gate__title">创建团队</h1>
         <Form
@@ -65,7 +60,6 @@ export default function CreateTeamPage() {
           <Form.Item
             name="name"
             label="团队名称"
-            extra="会显示在顶栏与团队首页标题。"
             rules={[
               { required: true, whitespace: true, message: '请输入团队名称' },
               { max: 255, message: '团队名称最多 255 个字符' },

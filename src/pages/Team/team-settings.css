@@ -1,4 +1,40 @@
-/* 团队设置：成员表的角色选择只占自身宽度，其余排版来自设计系统。 */
+/* 团队设置：成员与邀请两张表，角色选择只占自身宽度。 */
+
+.team-settings .section__head {
+  align-items: center;
+  padding-bottom: var(--s-3);
+}
+.team-settings .section + .section {
+  margin-top: var(--s-8);
+}
+
 .team-settings__role {
-  max-width: 160px;
+  max-width: 132px;
+}
+.team-settings .member-cell .avatar {
+  border-radius: var(--r-md);
+}
+.team-settings .table__row:not(.table__row--head) {
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+
+/* 403：锁形字牌先说明性质，再给一句原因与出口。 */
+.settings-lock {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: var(--s-1);
+  border: 1px solid var(--mark-line);
+  border-radius: var(--r-md);
+  background: var(--mark-soft);
+  color: var(--mark);
+}
+
+@media (max-width: 760px) {
+  .team-settings__role {
+    max-width: none;
+    width: 100%;
+  }
 }

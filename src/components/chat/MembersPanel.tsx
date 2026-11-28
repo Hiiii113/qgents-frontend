@@ -41,14 +41,13 @@ export function MembersPanel({
 
   return (
     <aside id="group-members-panel" className="sidepanel members-panel is-open" aria-label="群成员">
-      <header className="sidepanel__head">
-        <div>
-          <p className="sidepanel__kicker">群成员</p>
+      <header className="sidepanel__head members-panel__head">
+        <div className="members-panel__head-main">
           <p className="sidepanel__title od-truncate">{groupTitle}</p>
-          <p className="meta">
+          <p className="members-panel__stats">
             {pending
-              ? '正在加载成员…'
-              : `${members?.length ?? 0} 名成员 · ${agents.length} 个 Agent`}
+              ? '正在加载'
+              : `成员 ${members?.length ?? 0} · Agent ${agents.length}`}
           </p>
         </div>
         <IconButton label="收起成员列表" square onClick={onClose}>
@@ -126,9 +125,9 @@ function MemberGroup({
             />
             <span className="od-fill member-row__body">
               <span className="member-row__name">{member.displayName}</span>
-              <span className="meta od-truncate">
-                {agent ? '项目 Agent' : member.email || '成员'}
-              </span>
+              {!agent && member.email ? (
+                <span className="meta od-truncate">{member.email}</span>
+              ) : null}
             </span>
             {agent ? (
               <Tag tone="agent">Agent</Tag>

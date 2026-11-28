@@ -26,7 +26,7 @@ const AttachmentPreviewLazy = lazy(async () => ({
  */
 export function DirectMessagePanel({
   projectId,
-  projectName,
+  projectName: _projectName,
   conversation,
   archived,
   contextPanel,
@@ -127,16 +127,10 @@ export function DirectMessagePanel({
         <section className="view view--chat">
           <header className="chathead">
             <div className="chathead__main">
-              <h1 className="h2">{peer.displayName}</h1>
-              <p className="meta chathead__peer">
-                <span className="mono">{projectName}</span>
-                <span>·</span>
-                <Tag tone={peer.type === 'AGENT' ? 'agent' : 'neutral'}>
-                  {peer.type === 'AGENT' ? 'Agent' : '项目成员'}
-                </Tag>
-                <span>·</span>
-                <span>仅你与对方可见</span>
-              </p>
+              <div className="chathead__peer">
+                <h1 className="h2 chathead__title">{peer.displayName}</h1>
+                {peer.type === 'AGENT' ? <Tag tone="agent">Agent</Tag> : null}
+              </div>
             </div>
           </header>
 
@@ -165,6 +159,7 @@ export function DirectMessagePanel({
           <ChatMessageList
             messages={chat.messages}
             projectId={projectId}
+            currentUserId={user?.id}
             participants={participants}
             runs={agentRuns.runs}
             loading={false}
@@ -216,6 +211,7 @@ export function DirectMessagePanel({
             projectId={projectId}
             attachmentId={messageField(preview, 'attachmentId')}
             fileName={messageField(preview, 'name') || undefined}
+            isImage={preview.type === 'IMAGE'}
             onClose={() => setPreview(null)}
           />
         </Suspense>

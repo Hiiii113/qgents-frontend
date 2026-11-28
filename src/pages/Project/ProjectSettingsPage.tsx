@@ -16,14 +16,15 @@ import {
   Dialog,
   EmptyState,
   Icon,
+  MenuSelect,
   Page,
   PageHead,
   Section,
-  SelectField,
   Skeleton,
   TableCell,
   TableRow,
   Tabs,
+  Tag,
   TextAreaField,
   TextField,
 } from '@/components/ui'
@@ -37,10 +38,12 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]['key']
 
-const isProjectRole = (value: string): value is ProjectRole =>
-  value === 'PROJECT_ADMIN' || value === 'PROJECT_MEMBER'
-
 const roleLabel = (role: ProjectRole) => (role === 'PROJECT_ADMIN' ? '项目管理员' : '成员')
+
+const PROJECT_ROLE_OPTIONS = [
+  { value: 'PROJECT_ADMIN', label: '项目管理员', description: '管理项目资料、成员、仓库与审批' },
+  { value: 'PROJECT_MEMBER', label: '成员', description: '参与群聊与 Agent 协作' },
+] as const
 
 /** 项目设置：资料、成员与归档。页签放进 ?tab=，管理员才有写操作。 */
 export default function ProjectSettingsPage() {
@@ -57,13 +60,7 @@ export default function ProjectSettingsPage() {
     <main className="canvas">
       <Page>
         <PageHead
-          kicker={project.data ? `项目 ${project.data.name}` : '项目'}
-          title="项目设置"
-          description={
-            project.data?.status === 'ARCHIVED'
-              ? '项目已归档，群聊只读；恢复后可继续协作。'
-              : '项目资料与成员在这里维护，Agent、记忆、Skill 与仓库在项目导航里。'
-          }
+          title={project.data ? `${project.data.name} · 设置` : '项目设置'}
         />
 
         {project.isPending ? (
@@ -106,8 +103,11 @@ export default function ProjectSettingsPage() {
 function BasicInfo({ project }: { project: Project }) {
   const { message } = App.useApp()
   const client = useQueryClient()
-  const [form] = Form.useForm<{ name: string; description?: string }>()
   const editable = project.role === 'PROJECT_ADMIN'
+  const [editing, setEditing] = useState<'name' | 'description' | null>(null)
+  const [draft, setDraft] = useState('')
+  const [fieldError, setFieldError] = useState<string | null>(null)
+
   const groups = useQuery({
     queryKey: chatKeys.groups(project.id),
     queryFn: () => chatApi.groups(project.id),
@@ -122,52 +122,204 @@ function BasicInfo({ project }: { project: Project }) {
     onSuccess: (updated) => {
       client.setQueryData(['projects', project.id], updated)
       void client.invalidateQueries({ queryKey: ['teams', project.teamId, 'projects'] })
+      setEditing(null)
+      setFieldError(null)
       void message.success('项目资料已更新')
     },
+    onError: (error) => setFieldError(formatApiError(error)),
   })
 
+  function startEdit(field: 'name' | 'description') {
+    setDraft(field === 'name' ? project.name : (project.description ?? ''))
+    setFieldError(null)
+    setEditing(field)
+  }
+
+  function cancelEdit() {
+    setEditing(null)
+    setFieldError(null)
+  }
+
+  function submitField() {
+    if (editing === 'name') {
+      const trimmed = draft.trim()
+      if (!trimmed) {
+        setFieldError('请输入项目名称')
+        return
+      }
+      if (trimmed.length > 255) {
+        setFieldError('项目名称最多 255 个字符')
+        return
+      }
+      if (trimmed === project.name.trim()) {
+        setEditing(null)
+        return
+      }
+      update.mutate({ name: trimmed, description: project.description ?? '' })
+      return
+    }
+    if (editing === 'description') {
+      const trimmed = draft.trim()
+      if (trimmed.length > 16000) {
+        setFieldError('项目说明过长')
+        return
+      }
+      if (trimmed === (project.description ?? '').trim()) {
+        setEditing(null)
+        return
+      }
+      update.mutate({ name: project.name, description: trimmed })
+    }
+  }
+
+  const isDirty =
+    editing === 'name'
+      ? draft.trim() !== project.name.trim()
+      : editing === 'description'
+        ? draft.trim() !== (project.description ?? '').trim()
+        : false
+
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      className="form form--narrow"
-      initialValues={{ name: project.name, description: project.description ?? '' }}
-      onFinish={(values) => update.mutate(values)}
-      disabled={!editable || update.isPending}
-      requiredMark={false}
-    >
-      {update.isError ? <p className="err">{formatApiError(update.error)}</p> : null}
-      <Form.Item
-        name="name"
-        label="项目名称"
-        rules={[
-          { required: true, whitespace: true, message: '请输入项目名称' },
-          { max: 255, message: '项目名称最多 255 个字符' },
-        ]}
-      >
-        <TextField maxLength={255} />
-      </Form.Item>
-      <Form.Item name="description" label="项目说明">
-        <TextAreaField rows={3} maxLength={16000} />
-      </Form.Item>
-      <Form.Item label="默认群" extra="创建项目时自动生成，Qgent 已加入；群名可在聊天页修改。">
-        <TextField value={defaultGroup?.title ?? '默认群'} readOnly />
-      </Form.Item>
-      {editable ? (
-        <div className="form__foot form__foot--start">
-          <Button
-            variant="primary"
-            type="submit"
-            icon={<Icon name="check" size={15} />}
-            disabled={update.isPending}
-          >
-            {update.isPending ? '保存中…' : '保存'}
-          </Button>
+    <div className="setting-group">
+      <div className="setting-row">
+        <div className="setting-row__info">
+          <span className="setting-row__label">项目名称</span>
         </div>
-      ) : (
-        <p className="meta">只有项目管理员可以修改项目资料。</p>
-      )}
-    </Form>
+        <div className="setting-row__control">
+          {editing === 'name' ? (
+            <div className="setting-inline__edit">
+              <div className="setting-inline__edit-row">
+                <TextField
+                  value={draft}
+                  maxLength={255}
+                  aria-label="项目名称"
+                  autoFocus
+                  disabled={update.isPending}
+                  onChange={(event) => {
+                    setDraft(event.target.value)
+                    if (fieldError) setFieldError(null)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      submitField()
+                    } else if (event.key === 'Escape') {
+                      event.preventDefault()
+                      cancelEdit()
+                    }
+                  }}
+                />
+                <div className="setting-inline__actions">
+                  <Button variant="ghost" size="sm" disabled={update.isPending} onClick={cancelEdit}>
+                    取消
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    disabled={!isDirty || update.isPending}
+                    onClick={submitField}
+                  >
+                    {update.isPending ? '保存中…' : '保存'}
+                  </Button>
+                </div>
+              </div>
+              {fieldError ? <p className="err">{fieldError}</p> : null}
+            </div>
+          ) : (
+            <div className="setting-inline">
+              <span className="setting-inline__text">{project.name}</span>
+              {editable ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="编辑项目名称"
+                  onClick={() => startEdit('name')}
+                >
+                  编辑
+                </Button>
+              ) : null}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="setting-row setting-row--top">
+        <div className="setting-row__info">
+          <span className="setting-row__label">项目说明</span>
+        </div>
+        <div className="setting-row__control">
+          {editing === 'description' ? (
+            <div className="setting-inline__edit">
+              <TextAreaField
+                rows={3}
+                value={draft}
+                maxLength={16000}
+                aria-label="项目说明"
+                autoFocus
+                disabled={update.isPending}
+                onChange={(event) => {
+                  setDraft(event.target.value)
+                  if (fieldError) setFieldError(null)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') {
+                    event.preventDefault()
+                    cancelEdit()
+                  }
+                }}
+              />
+              {fieldError ? <p className="err">{fieldError}</p> : null}
+              <div className="setting-inline__actions">
+                <Button variant="ghost" size="sm" disabled={update.isPending} onClick={cancelEdit}>
+                  取消
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!isDirty || update.isPending}
+                  onClick={submitField}
+                >
+                  {update.isPending ? '保存中…' : '保存'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="setting-inline setting-inline--top">
+              {project.description ? (
+                <span className="setting-inline__text">{project.description}</span>
+              ) : (
+                <span className="setting-inline__text setting-inline__placeholder">未填写</span>
+              )}
+              {editable ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="编辑项目说明"
+                  onClick={() => startEdit('description')}
+                >
+                  编辑
+                </Button>
+              ) : null}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="setting-row">
+        <div className="setting-row__info">
+          <span className="setting-row__label">默认群</span>
+        </div>
+        <div className="setting-row__control">
+          <span className="setting-row__value">{defaultGroup?.title ?? '默认群'}</span>
+        </div>
+      </div>
+
+      {!editable ? (
+        <div className="setting-group__foot">
+          <span className="meta setting-group__foot-start">只有项目管理员可以修改项目资料。</span>
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -251,7 +403,9 @@ function Members({ project }: { project: Project }) {
               添加成员
             </Button>
           ) : (
-            <span className="meta">只有项目管理员可以调整成员。</span>
+            <Tag tone="readonly" icon="lock">
+              只读
+            </Tag>
           )
         }
       >
@@ -276,7 +430,6 @@ function Members({ project }: { project: Project }) {
           <EmptyState
             icon="people"
             title="还没有项目成员"
-            description="从团队成员里添加需要参与这个项目的人。"
             action={
               isAdmin ? (
                 <Button
@@ -300,9 +453,9 @@ function Members({ project }: { project: Project }) {
                     <span className="member-cell__body">
                       <span className="name">{nameOf(member)}</span>
                       {member.userId === user?.id ? (
-                        <span className="meta">你</span>
+                        <span className="member-cell__badge">你</span>
                       ) : member.userId === teamOwnerId ? (
-                        <span className="meta">团队所有者</span>
+                        <span className="member-cell__badge">团队所有者</span>
                       ) : null}
                     </span>
                   </span>
@@ -310,20 +463,14 @@ function Members({ project }: { project: Project }) {
                 <TableCell className="mono">{emailOf(member)}</TableCell>
                 <TableCell>
                   {isAdmin && member.userId !== teamOwnerId ? (
-                    <SelectField
-                      className="project-settings__role"
+                    <MenuSelect
+                      variant="ghost"
                       aria-label={`调整 ${nameOf(member)} 的项目角色`}
                       value={member.role}
+                      options={PROJECT_ROLE_OPTIONS}
                       disabled={updateRole.isPending}
-                      onChange={(event) => {
-                        if (isProjectRole(event.target.value)) {
-                          updateRole.mutate({ userId: member.userId, role: event.target.value })
-                        }
-                      }}
-                    >
-                      <option value="PROJECT_ADMIN">项目管理员</option>
-                      <option value="PROJECT_MEMBER">成员</option>
-                    </SelectField>
+                      onChange={(role) => updateRole.mutate({ userId: member.userId, role })}
+                    />
                   ) : (
                     <span className="name">
                       {member.userId === teamOwnerId ? '项目管理员' : roleLabel(member.role)}
@@ -333,15 +480,13 @@ function Members({ project }: { project: Project }) {
                 <TableCell end>
                   {canRemove(member) ? (
                     <Button
-                      variant="link"
+                      variant="ghost-danger"
+                      size="sm"
                       onClick={() => setRemoving(member)}
-                      icon={<Icon name="trash" size={15} />}
                     >
                       移出
                     </Button>
-                  ) : (
-                    <span className="meta">—</span>
-                  )}
+                  ) : null}
                 </TableCell>
               </TableRow>
             ))}
@@ -353,7 +498,6 @@ function Members({ project }: { project: Project }) {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         title="添加成员"
-        description="从团队成员中选择；团队所有者已继承项目管理员权限。"
       >
         <Form
           form={addForm}
@@ -406,12 +550,16 @@ function Members({ project }: { project: Project }) {
         onClose={() => setRemoving(null)}
         title="移出成员"
         danger
-        description={
-          removing
-            ? `确定要把「${nameOf(removing)}」移出项目吗？该成员将失去这个项目的访问权限。`
-            : ''
-        }
       >
+        {removing ? (
+          <div className="settings-subject">
+            <Avatar name={nameOf(removing)} src={removing.avatarUrl} size="sm" />
+            <span className="settings-subject__body">
+              <span className="settings-subject__name">{nameOf(removing)}</span>
+              <span className="settings-subject__mail mono">{emailOf(removing)}</span>
+            </span>
+          </div>
+        ) : null}
         <div className="dlg__foot">
           <Button
             variant="quiet"
@@ -453,24 +601,29 @@ function Archive({ project }: { project: Project }) {
   })
 
   return (
-    <div className="danger">
-      <h2 className="h3">{archived ? '恢复项目' : '归档项目'}</h2>
-      <p className="sub">
-        {archived
-          ? '恢复后群聊可继续派活，Agent 与已导入的仓库引用保持不变。'
-          : '归档后项目变为只读：群聊可读、不能再派活，Agent 与仓库引用保留，可随时恢复。'}
-      </p>
-      {isAdmin ? (
-        <Button
-          variant={archived ? 'quiet' : 'danger'}
-          icon={<Icon name={archived ? 'refresh' : 'trash'} size={16} aria-hidden />}
-          onClick={() => setOpen(true)}
-        >
-          {archived ? `恢复 ${project.name}` : `归档 ${project.name}`}
-        </Button>
-      ) : (
-        <p className="meta">只有项目管理员可以归档或恢复项目。</p>
-      )}
+    <div className="setting-group">
+      <div className="setting-row setting-row--action">
+        <div className="setting-row__info">
+          <div className="setting-row__head">
+            <span className="setting-row__label">{archived ? '恢复项目' : '归档项目'}</span>
+            <Tag tone={archived ? 'readonly' : 'ok'}>{archived ? '已归档' : '使用中'}</Tag>
+          </div>
+          <span className="setting-row__desc">
+            {archived ? '恢复后成员可继续在项目内协作' : '归档后项目变为只读，可随时恢复'}
+          </span>
+        </div>
+        {isAdmin ? (
+          <Button
+            variant={archived ? 'quiet' : 'danger-outline'}
+            size="sm"
+            onClick={() => setOpen(true)}
+          >
+            {archived ? `恢复 ${project.name}` : `归档 ${project.name}`}
+          </Button>
+        ) : (
+          <span className="meta">只有项目管理员可以归档或恢复项目。</span>
+        )}
+      </div>
 
       <Dialog
         open={open}
@@ -480,8 +633,11 @@ function Archive({ project }: { project: Project }) {
         }}
         title={archived ? '恢复项目' : '归档项目'}
         danger={!archived}
-        description={`输入项目名称「${project.name}」确认。`}
       >
+        <div className="settings-confirm">
+          <span className="settings-confirm__label">项目</span>
+          <span className="settings-confirm__name">{project.name}</span>
+        </div>
         <Form
           form={form}
           layout="vertical"
@@ -504,7 +660,7 @@ function Archive({ project }: { project: Project }) {
               },
             ]}
           >
-            <TextField autoFocus autoComplete="off" />
+            <TextField autoFocus autoComplete="off" placeholder={project.name} />
           </Form.Item>
           <div className="dlg__foot">
             <Button

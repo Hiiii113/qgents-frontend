@@ -53,12 +53,7 @@ export default function JoinTeamPage() {
 
   return (
     <Gate>
-      <GateAside
-        kicker="加入团队"
-        title="用管理员给你的邀请"
-        description="邀请码一次性有效，过期后由团队管理员重新生成。"
-        rows={false}
-      />
+      <GateAside kicker="加入团队" title="用邀请码进入团队现场" />
       <GateForm>
         <h1 className="gate__title">加入团队</h1>
         {error ? (
@@ -105,7 +100,7 @@ export default function JoinTeamPage() {
             <Skeleton rows={2} />
           ) : invitations.isError ? (
             <EmptyState
-              description="邀请列表加载失败。"
+              title="邀请列表加载失败"
               action={
                 <Button
                   variant="link"
@@ -117,13 +112,16 @@ export default function JoinTeamPage() {
               }
             />
           ) : !invitations.data.data.length ? (
-            <EmptyState description="暂时没有待处理邀请。" />
+            <EmptyState title="没有待处理邀请" />
           ) : (
             <ul className="rows">
               {invitations.data.data.map((invite) => {
                 const expired = invite.status === 'EXPIRED'
                 return (
                   <li key={invite.id} className="rows__item">
+                    <span className="gate__invite-mark" aria-hidden>
+                      {invite.teamName.slice(0, 1)}
+                    </span>
                     <span className="od-fill">
                       <span className="name">{invite.teamName}</span>
                       <span className="meta">

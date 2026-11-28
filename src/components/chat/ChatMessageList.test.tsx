@@ -250,6 +250,6 @@ describe('停止执行', () => {
       canStop: () => true,
       stoppingMessageId: 'm1',
     })
-    expect(screen.getByRole('button', { name: '停止中…' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '停止中' })).toBeDisabled()
   })
 })

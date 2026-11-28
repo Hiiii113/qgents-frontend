@@ -1,6 +1,7 @@
-import { cleanup, screen } from '@testing-library/react'
+import { cleanup, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { agentApi } from '@/api/agent'
+import { chatApi } from '@/api/chat'
 import { renderWorkspace } from '@/test/renderWorkspace'
 import AgentsPage from './AgentsPage'
 
@@ -9,7 +10,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-it('separates the default agent from member applications and states the approval rule', async () => {
+it('separates the default agent from member applications and links pending approvals to the default group', async () => {
   vi.spyOn(agentApi, 'list').mockResolvedValue([
     {
       id: 'ag_1',
@@ -26,6 +27,9 @@ it('separates the default agent from member applications and states the approval
       status: 'PENDING',
     },
   ])
+  vi.spyOn(chatApi, 'groups').mockResolvedValue([
+    { id: 'g1', projectId: 'p1', title: '默认群', defaultGroup: true },
+  ])
   renderWorkspace(
     <AgentsPage />,
     '/app/projects/p1/agents',
@@ -37,5 +41,11 @@ it('separates the default agent from member applications and states the approval
   expect(screen.getByText('ag_1')).toBeInTheDocument()
   expect(screen.getByText('测试雷达')).toBeInTheDocument()
   expect(screen.getByText('待审批')).toBeInTheDocument()
-  expect(screen.getByText(/待审批的 Agent 不能邀请入群/)).toBeInTheDocument()
+
+  const heroLink = screen.getByRole('link', { name: '去默认群' })
+  const approveLink = await screen.findByRole('link', { name: '去默认群审批 测试雷达' })
+  await waitFor(() => {
+    expect(heroLink).toHaveAttribute('href', '/app/projects/p1/chat?groupId=g1')
+    expect(approveLink).toHaveAttribute('href', '/app/projects/p1/chat?groupId=g1')
+  })
 })

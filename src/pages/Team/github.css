@@ -1,14 +1,78 @@
-/* GitHub：连接与可访问仓库都是「信息列 + 行尾操作」，窄屏交给设计系统的单列堆叠。 */
-.github-page__connections .table__row {
-  grid-template-columns: minmax(0, 1.6fr) 110px 96px 110px;
+/* GitHub：集成状态卡与可访问仓库表。 */
+
+.github-page .section + .section {
+  margin-top: var(--s-8);
+}
+.github-page__card {
+  max-width: none;
+}
+.gh-conn {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 14px 18px;
+  border-top: 1px solid var(--line);
+}
+.gh-conn:first-child {
+  border-top: 0;
+}
+.gh-conn__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink-700);
+}
+.gh-conn__main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.gh-conn__head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.gh-conn__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: none;
+}
+.github-page .table__row:not(.table__row--head) {
+  padding-top: 11px;
+  padding-bottom: 11px;
 }
 
 .github-page__repos .table__row {
   grid-template-columns: minmax(0, 2.4fr) 120px 90px 130px;
 }
 
+.github-page__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  color: var(--ink-400);
+  transition:
+    background-color var(--d-fast) var(--ease),
+    color var(--d-fast) var(--ease);
+}
+.github-page__open:hover {
+  background: var(--surface-sunken);
+  color: var(--ink-900);
+  text-decoration: none;
+}
+
 @media (max-width: 760px) {
-  .github-page__connections .table__row,
+  .gh-conn {
+    flex-wrap: wrap;
+  }
   .github-page__repos .table__row {
     grid-template-columns: minmax(0, 1fr);
   }

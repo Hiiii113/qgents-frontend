@@ -92,6 +92,7 @@ export function ChatPanel({
       ),
     [members.data],
   )
+  const membersCount = members.data?.length ?? group.memberCount ?? 0
 
   const stop = useMutation({
     mutationFn: (item: ChatMessage) => chatApi.cancel(projectId, groupId, item.id),
@@ -175,16 +176,16 @@ export function ChatPanel({
         <section className="view view--chat">
           <header className="chathead">
             <div className="chathead__main">
-              <h1 className="h2">{group.title}</h1>
+              <h1 className="h2 chathead__title">{group.title}</h1>
               <p className="meta">
-                <span className="mono">{project.data?.name ?? projectId}</span> ·{' '}
-                {members.data?.length ?? group.memberCount ?? 0} 名成员，含 {agentNames.size} 个
-                Agent
+                <span className="mono">{project.data?.name ?? projectId}</span> · {membersCount}{' '}
+                名成员，含 {agentNames.size} 个 Agent
               </p>
             </div>
             <div className="chathead__actions">
               <Button
                 ref={membersButtonRef}
+                className="chathead__members"
                 variant="quiet"
                 icon={<Icon name="people" size={16} aria-hidden />}
                 aria-expanded={membersOpen}
@@ -220,6 +221,7 @@ export function ChatPanel({
           <ChatMessageList
             messages={chat.messages}
             projectId={projectId}
+            currentUserId={user?.id}
             participants={members.data}
             runs={agentRuns.runs}
             agentNames={agentNames}
@@ -292,6 +294,7 @@ export function ChatPanel({
             projectId={projectId}
             attachmentId={messageField(preview, 'attachmentId')}
             fileName={messageField(preview, 'name') || undefined}
+            isImage={preview.type === 'IMAGE'}
             onClose={() => setPreview(null)}
           />
         </Suspense>

@@ -9,6 +9,7 @@ import { buildChatEntries, groupRunsByRoot } from './agentRunRows'
 interface Props {
   messages: ChatMessage[]
   projectId?: string
+  currentUserId?: string
   participants?: ChatMember[]
   /** 该群 root + child 运行；按 rootRunId 归组后交给 Agent 消息行。 */
   runs: AgentRun[]
@@ -256,6 +257,7 @@ export const ChatMessageList = memo(function ChatMessageList(props: Props) {
                     <ChatMessageRow
                       item={entry.message}
                       projectId={props.projectId}
+                      currentUserId={props.currentUserId}
                       reply={
                         entry.message.replyToId ? byId.get(entry.message.replyToId) : undefined
                       }

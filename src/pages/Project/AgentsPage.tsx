@@ -35,7 +35,7 @@ const STATUS: Record<AgentStatus, { label: string; tone: 'ok' | 'wait' | 'stop' 
 
 /**
  * 项目 Agent：默认 Agent 卡片 + 成员申请的自定义 Agent。
- * 申请提交后为待审批，不能邀请入群；审批只在默认群里由 Qgent 工具完成。
+ * 审批只发生在默认群，待审批行直接给出进群入口。
  */
 export default function AgentsPage() {
   const { projectId = '' } = useParams<{ projectId: string }>()
@@ -54,9 +54,12 @@ export default function AgentsPage() {
   const groups = useQuery({
     queryKey: chatKeys.groups(projectId),
     queryFn: () => chatApi.groups(projectId),
-    enabled: Boolean(projectId) && Boolean(application),
+    enabled: Boolean(projectId),
   })
   const defaultGroup = groups.data?.find((group) => group.defaultGroup)
+  const groupHref = defaultGroup
+    ? PATHS.projectChat(projectId, undefined, defaultGroup.id)
+    : PATHS.projectChat(projectId)
   const apply = useMutation({
     mutationFn: (body: AgentApplication) => agentApi.apply(projectId, body),
     onSuccess: (created) => {
@@ -82,7 +85,6 @@ export default function AgentsPage() {
       <Page>
         <PageHead
           title="Agent"
-          description="每个项目有自己 ID 的默认 Agent。自定义 Agent 由成员申请，审批在默认群完成。"
           actions={
             <Button
               variant="primary"
@@ -93,6 +95,31 @@ export default function AgentsPage() {
             </Button>
           }
         />
+
+        {application ? (
+          <div className="agent-flash" role="status">
+            <span className="agent-flash__icon" aria-hidden>
+              <Icon name="check" size={14} />
+            </span>
+            <span className="agent-flash__text">
+              <span className="name">{application.name}</span>
+              <Tag tone={STATUS[application.status].tone}>
+                {STATUS[application.status].label}
+              </Tag>
+            </span>
+            <Link className="btn btn--link btn--sm agent-flash__go" to={groupHref}>
+              去默认群跟进
+            </Link>
+            <button
+              type="button"
+              className="agent-flash__close"
+              aria-label="关闭提示"
+              onClick={() => setApplication(null)}
+            >
+              <Icon name="close" size={14} />
+            </button>
+          </div>
+        ) : null}
 
         {agents.isPending ? (
           <Skeleton rows={3} />
@@ -115,31 +142,44 @@ export default function AgentsPage() {
           <>
             <Section title="默认 Agent">
               {defaultAgent ? (
-                <article className="agent-default">
+                <article className="agent-hero">
                   <Avatar
                     type="agent"
                     size="lg"
                     name={defaultAgent.name}
                     src={defaultAgent.avatarUrl ?? undefined}
                   />
-                  <div className="agent-default__body">
-                    <p className="agent-default__name">{defaultAgent.name}</p>
-                    <p className="meta">
-                      项目内独立 ID <span className="mono">{defaultAgent.id}</span> · 已在默认群启用
-                    </p>
-                    <p className="agent-default__desc">
+                  <div className="agent-hero__body">
+                    <div className="agent-hero__title">
+                      <h2 className="agent-hero__name">{defaultAgent.name}</h2>
+                      <Tag tone={STATUS[defaultAgent.status].tone}>
+                        {STATUS[defaultAgent.status].label}
+                      </Tag>
+                    </div>
+                    <div className="agent-hero__meta">
+                      <span className="mono-pill">{defaultAgent.id}</span>
+                      {defaultGroup ? (
+                        <span className="agent-hero__group">
+                          <Icon name="chat" size={13} />
+                          {defaultGroup.title}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="agent-hero__desc">
                       {defaultAgent.description ||
                         '读取群上下文、项目记忆、附件与已导入仓库，在沙箱内执行并推送分支。'}
                     </p>
                   </div>
-                  <Tag tone={STATUS[defaultAgent.status].tone}>
-                    {STATUS[defaultAgent.status].label}
-                  </Tag>
+                  <div className="agent-hero__actions">
+                    <Link className="btn btn--quiet agent-hero__cta" to={groupHref}>
+                      <Icon name="chat" size={16} />
+                      去默认群
+                    </Link>
+                  </div>
                 </article>
               ) : (
                 <EmptyState
                   title="还没有默认 Agent"
-                  description="默认 Agent 由项目创建时生成；刷新后仍没有时可以重新加载。"
                   action={
                     <Button
                       variant="link"
@@ -156,13 +196,16 @@ export default function AgentsPage() {
 
             <Section
               title="自定义 Agent"
-              aside={<span className="meta">{customAgents.length} 个</span>}
+              aside={
+                <span className="agent-count" title={`${customAgents.length} 个自定义 Agent`}>
+                  {customAgents.length}
+                </span>
+              }
             >
               {customAgents.length === 0 ? (
                 <EmptyState
                   icon="agent"
                   title="还没有自定义 Agent"
-                  description="成员可以按职责申请；通过后才会出现在群里可邀请的成员中。待审批的 Agent 不能邀请入群，到默认群 @Qgent 说明申请即可通过或拒绝。"
                   action={
                     <Button
                       variant="link"
@@ -183,53 +226,30 @@ export default function AgentsPage() {
                         <span className="meta">自定义 Agent</span>
                       </TableCell>
                       <TableCell className="meta">{agent.description || '—'}</TableCell>
-                      <TableCell>
+                      <TableCell className="agent-cell--status">
                         <Tag tone={STATUS[agent.status].tone}>{STATUS[agent.status].label}</Tag>
+                        {agent.status === 'PENDING' ? (
+                          <Link
+                            className="btn btn--link btn--sm agent-row__approve"
+                            to={groupHref}
+                            aria-label={`去默认群审批 ${agent.name}`}
+                          >
+                            <Icon name="chat" size={14} />
+                            去默认群审批
+                          </Link>
+                        ) : null}
                       </TableCell>
-                      <TableCell className="mono">{agent.id}</TableCell>
+                      <TableCell className="mono agent-row__id">{agent.id}</TableCell>
                     </TableRow>
                   ))}
                 </DataTable>
               )}
-              {customAgents.length > 0 ? (
-                <p className="note">
-                  待审批的 Agent 不能邀请入群。到默认群 <code>@Qgent</code>{' '}
-                  说明申请，即可通过或拒绝；前端没有独立的审批操作。
-                </p>
-              ) : null}
-              {application ? (
-                <p className="note note--ok">
-                  {`「${application.name}」已提交，${STATUS[application.status].label}`}
-                  {defaultGroup ? (
-                    <>
-                      {' · '}
-                      <Link to={PATHS.projectChat(projectId, undefined, defaultGroup.id)}>
-                        去默认群跟进
-                      </Link>
-                    </>
-                  ) : null}
-                  {' · '}
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => setApplication(null)}
-                    icon={<Icon name="close" size={15} />}
-                  >
-                    关闭
-                  </Button>
-                </p>
-              ) : null}
             </Section>
           </>
         )}
       </Page>
 
-      <Dialog
-        open={open}
-        onClose={closeDialog}
-        title="申请新 Agent"
-        description="提交后为待审批状态，不能邀请入群。到默认群 @Qgent 跟进即可。"
-      >
+      <Dialog open={open} onClose={closeDialog} title="申请新 Agent">
         <Form
           className="form"
           form={form}

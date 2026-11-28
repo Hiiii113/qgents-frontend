@@ -64,6 +64,7 @@ a {
 }
 a:hover {
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 :focus-visible {
   outline: 2px solid var(--mark);
@@ -79,7 +80,6 @@ a:hover {
   opacity: 1;
 }
 
-/* 浏览器自动填充保持纸底色，不出现淡蓝底。 */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
@@ -137,7 +137,6 @@ input:-webkit-autofill:focus {
   text-overflow: ellipsis;
 }
 
-/* 品牌标记：墨环 + 朱砂点，全站唯一写出品牌的图形。 */
 .mark {
   display: grid;
   place-items: center;
@@ -159,12 +158,11 @@ input:-webkit-autofill:focus {
   height: 40px;
 }
 
-/* 排版层级：显示 30，标题 24，区块 20，正文 16，UI 14，元信息 12。 */
 .h1 {
   font-size: var(--t-h1);
   font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 .h1 .mono {
   font-size: 0.78em;
@@ -182,13 +180,11 @@ input:-webkit-autofill:focus {
 .kicker {
   font-size: var(--t-xs);
   color: var(--ink-400);
-  letter-spacing: 0.02em;
 }
 .sub {
   font-size: var(--t-ui);
   color: var(--ink-500);
   max-width: 62ch;
-  /* 两行说明均分宽度，避免末行只剩一个字。 */
   text-wrap: balance;
 }
 .meta {
@@ -236,7 +232,7 @@ a.name {
   background: var(--danger);
 }
 .dot--halt {
-  background: var(--mark);
+  background: var(--wait);
 }
 .dot--live {
   background: var(--mark);
@@ -248,11 +244,10 @@ a.name {
     opacity: 1;
   }
   50% {
-    opacity: 0.25;
+    opacity: 0.3;
   }
 }
 
-/* 进入动效：只用 transform / opacity，统一走 token 时长。 */
 @keyframes qg-fade-in {
   from {
     opacity: 0;
@@ -266,13 +261,13 @@ a.name {
 @keyframes qg-pop-in {
   from {
     opacity: 0;
-    transform: translateY(-4px) scale(0.98);
+    transform: translateY(-3px);
   }
 }
 @keyframes qg-dialog-in {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.985);
+    transform: translateY(4px);
   }
 }
 @keyframes qg-slide-in {
@@ -291,7 +286,6 @@ a.name {
   }
 }
 
-/* 图标 symbol 定义：绝对定位，不参与布局。 */
 .sprite {
   position: absolute;
   width: 0;

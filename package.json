@@ -1,5 +1,5 @@
 {
-  "name": "qgents-web",
+  "name": "qgents-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,6 +12,7 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@fontsource-variable/noto-sans-sc": "^5.3.1",
     "@fontsource/geist-mono": "^5.3.0",
     "@fontsource/geist-sans": "^5.3.0",
     "@tanstack/react-query": "^5.101.4",
